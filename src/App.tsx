@@ -536,44 +536,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* 커뮤니티 섹션 */}
-      <section className="community-sec" id="커뮤니티">
-        <div className="sec-wrap">
-          <div className="comm-layout">
-            {[
-              { ico: '📋', title: '신청', desc: '보고 싶은 프로그램을\n신청해 주세요!', sub: '다양한 의견을 통해 편성에 반영합니다.\n최소 0.5%이상', btn: '신청하러 가기 →', fn: openModal },
-              { ico: '💬', title: '후기', desc: '함께 본 콘텐츠의\n후기를 남겨요!', sub: '다른 이용자들의 추천 후기를\n게시판에 남겨주세요', btn: '후기 보러 가기 →', fn: undefined },
-              { ico: '🏆', title: '포인트', desc: '활동하면 포인트가\n쌓여요!', sub: '후기를 남기면 포인트를 받아요!\n다양한 이벤트에 참여해보세요.', btn: '포인트 내역 보기 →', fn: undefined },
-            ].map((c, i) => (
-              <div key={i} className="comm-card">
-                <div className="comm-ico">{c.ico}</div>
-                <h4>{c.title}</h4>
-                <p className="comm-desc">{c.desc}</p>
-                <p className="comm-sub">{c.sub}</p>
-                <button className="comm-btn" onClick={c.fn}>{c.btn}</button>
-              </div>
-            ))}
-
-            {/* 우측 정보 패널 */}
-            <div className="comm-info-panel">
-              {[
-                { icon: <Clock size={15} />, title: '20:00 ~ 02:00 운영', desc: '하루의 끝, 우리만의 즐김 시간대' },
-                { icon: <span className="ci-star">★</span>, title: '고정 편성 · 랜덤 추천', desc: '목·금은 고정, 나머지는 매일 새롭게' },
-                { icon: <RefreshCw size={15} />, title: '매일 새롭게 갱신', desc: '실시간 데이터 기반으로 매일 업데이트' },
-              ].map((item, i) => (
-                <div key={i} className="ci-item">
-                  <div className="ci-icon">{item.icon}</div>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA 배너 */}
       <section className="cta-banner">
         <div className="cta-deco cta-l">

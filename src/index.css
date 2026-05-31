@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+/* Cafe24 Ssurround 로컬 폰트 */
+@font-face {
+  font-family: 'Cafe24Ssurround';
+  src: url('/fonts/Cafe24Ssurround-v2.0.ttf') format('truetype'),
+       url('/fonts/Cafe24Ssurround-v2.0.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Google Fonts는 index.html에서 로드 */
 
 * {
   margin: 0;
@@ -31,19 +41,7 @@ body {
   --past: #747487;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-dark);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }

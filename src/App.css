@@ -15,13 +15,19 @@
   --purple:    #a29bfe;
   --orange:    #fd9644;
   --green:     #26de81;
+
+  /* 폰트 */
+  --font-title:   'Cafe24Ssurround', 'Yeon Sung', 'Black Han Sans', sans-serif;
+  --font-sub:     'Gaegu', 'Noto Sans KR', sans-serif;
+  --font-num:     'Poppins', 'Noto Sans KR', sans-serif;
+  --font-body:    'Noto Sans KR', sans-serif;
 }
 
 /* ─── 리셋 ───────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -29,7 +35,7 @@ body {
 }
 
 a   { text-decoration: none; color: inherit; }
-button { cursor: pointer; font-family: inherit; border: none; }
+button { cursor: pointer; font-family: var(--font-body); border: none; }
 img { display: block; }
 
 ::-webkit-scrollbar        { width: 5px; height: 5px; }
@@ -115,7 +121,9 @@ img { display: block; }
   display: flex;
   align-items: center;
   gap: 5px;
+  font-family: var(--font-num);
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-sub);
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
@@ -273,8 +281,8 @@ img { display: block; }
 }
 
 .site-title {
-  font-family: 'Black Han Sans', 'Noto Sans KR', sans-serif;
-  font-size: 52px;
+  font-family: var(--font-title);
+  font-size: 58px;
   font-weight: 400;
   line-height: 1.1;
   color: #fff;
@@ -283,12 +291,14 @@ img { display: block; }
   z-index: 1;
 }
 
-.title-heart { color: var(--coral); font-size: 0.7em; }
+.title-heart { color: var(--coral); font-size: 0.75em; }
 
 .site-sub {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-sub);
+  font-size: 22px;
+  font-weight: 400;
   margin-bottom: 12px;
+  color: #fff;
   position: relative;
   z-index: 1;
 }
@@ -404,14 +414,6 @@ img { display: block; }
 
 .th-empty { width: 46px; }
 
-.sched-tbl th {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-sub);
-  padding: 3px 2px 8px;
-  position: relative;
-}
-
 .th-today { color: var(--coral) !important; }
 
 .today-dot {
@@ -424,12 +426,22 @@ img { display: block; }
 }
 
 .td-t {
+  font-family: var(--font-num);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-dim);
   vertical-align: middle;
   padding: 0 5px;
   white-space: nowrap;
+}
+
+.sched-tbl th {
+  font-family: var(--font-num);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  padding: 3px 2px 8px;
+  position: relative;
 }
 
 .td-end      { opacity: 0.55; }
