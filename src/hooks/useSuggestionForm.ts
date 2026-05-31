@@ -1,15 +1,29 @@
 import { useState, useCallback } from 'react';
 import type { SuggForm } from '../types';
 
-const LS_KEY = 'dadnosleep-suggestions';
+const LS_KEY          = 'dadnosleep-suggestions';
+const LS_SAVED_AT_KEY = 'dadnosleep-suggestions-saved-at';
 
 export interface SavedSuggestion extends SuggForm {
   id:        string;
-  createdAt: string; // ISO string
+  createdAt: string;
+}
+
+function isOlderThanOneMonth(isoDate: string): boolean {
+  const saved       = new Date(isoDate);
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  return saved < oneMonthAgo;
 }
 
 function loadSuggestions(): SavedSuggestion[] {
   try {
+    const savedAt = localStorage.getItem(LS_SAVED_AT_KEY);
+    if (savedAt && isOlderThanOneMonth(savedAt)) {
+      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(LS_SAVED_AT_KEY);
+      return [];
+    }
     const raw = localStorage.getItem(LS_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
@@ -20,6 +34,9 @@ function loadSuggestions(): SavedSuggestion[] {
 function saveSuggestions(list: SavedSuggestion[]) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(list));
+    if (!localStorage.getItem(LS_SAVED_AT_KEY)) {
+      localStorage.setItem(LS_SAVED_AT_KEY, new Date().toISOString());
+    }
   } catch { /* 무시 */ }
 }
 
