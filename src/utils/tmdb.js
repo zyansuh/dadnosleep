@@ -31,12 +31,12 @@ function getHeaders() {
   return {};
 }
 
+/** 한국어 원작 콘텐츠만 조회 (with_original_language=ko) */
 export async function fetchKoreanOTT(contentType) {
-  const headers = getHeaders();
+  const headers   = getHeaders();
   const useBearer = !!config.TMDB_READ_TOKEN;
   const keyParam  = useBearer ? "" : `api_key=${config.TMDB_API_KEY}&`;
 
-  // with_original_language=ko → 한국어 원작 콘텐츠만 조회
   const url = `${BASE}/discover/${contentType}?${keyParam}language=ko-KR&with_original_language=ko&sort_by=popularity.desc&vote_count.gte=10&page=1`;
 
   const res = await fetch(url, { headers });
@@ -45,7 +45,9 @@ export async function fetchKoreanOTT(contentType) {
   return data.results || [];
 }
 
-  const headers = getHeaders();
+/** OTT 플랫폼 or 전체 인기 콘텐츠 조회 */
+export async function fetchOTT(providerId, contentType) {
+  const headers   = getHeaders();
   const useBearer = !!config.TMDB_READ_TOKEN;
   const keyParam  = useBearer ? "" : `api_key=${config.TMDB_API_KEY}&`;
 
