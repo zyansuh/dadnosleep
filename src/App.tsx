@@ -3,7 +3,7 @@ import {
   Moon, Menu, X, Calendar, Shuffle, Heart,
   Clock, RefreshCw, Send, Plus, Sparkles,
 } from 'lucide-react';
-import { fetchOTT, type OttItem } from './utils/api';
+import { fetchOTT, fetchYouTube, type OttItem, type YtItem } from './utils/api';
 import './App.css';
 
 // ── 타입 ─────────────────────────────────────────────────────────
@@ -95,6 +95,15 @@ interface SuggForm {
   nick: string;
 }
 
+// ── 조회수 포맷 ───────────────────────────────────────────────
+function fmtViews(n?: string): string {
+  if (!n) return '';
+  const num = parseInt(n);
+  if (num >= 100_000_000) return `${Math.round(num / 100_000_000)}억회`;
+  if (num >= 10_000)      return `${Math.round(num / 10_000)}만회`;
+  return num.toLocaleString() + '회';
+}
+
 // ── CellInner 컴포넌트 ────────────────────────────────────────
 function CellInner({ cell, isLive }: { cell: Cell; isLive: boolean }) {
   return (
@@ -154,8 +163,9 @@ export default function App() {
   const [submitted,  setSubmitted]  = useState(false);
   const [sched,      setSched]      = useState<Cell[][]>(BASE_SCHED);
   const [randing,    setRanding]    = useState(false);
-  const [activeApi,  setActiveApi]  = useState<'netflix' | 'ott' | null>(null);
+  const [activeApi,  setActiveApi]  = useState<'netflix' | 'ott' | 'youtube' | null>(null);
   const [ottItems,   setOttItems]   = useState<OttItem[]>([]);
+  const [ytItems,    setYtItems]    = useState<YtItem[]>([]);
   const [ottLoading, setOttLoading] = useState(false);
   const [ottError,   setOttError]   = useState('');
   const [now,        setNow]        = useState(new Date());
@@ -203,21 +213,27 @@ export default function App() {
   };
 
   // ── API 카드 클릭 ──────────────────────────────────────────
-  const handleApiCard = async (type: 'netflix' | 'ott') => {
+  const handleApiCard = async (type: 'netflix' | 'ott' | 'youtube') => {
     if (activeApi === type) { setActiveApi(null); return; }
     setActiveApi(type);
     setOttLoading(true);
     setOttError('');
     setOttItems([]);
+    setYtItems([]);
     try {
-      const pid = type === 'netflix' ? '8' : '0';
-      const [movies, shows] = await Promise.all([
-        fetchOTT(pid, 'movie'),
-        fetchOTT(pid, 'tv'),
-      ]);
-      setOttItems([...movies.slice(0, 5), ...shows.slice(0, 5)]);
+      if (type === 'youtube') {
+        const videos = await fetchYouTube('0');
+        setYtItems(videos.slice(0, 12));
+      } else {
+        const pid = type === 'netflix' ? '8' : '0';
+        const [movies, shows] = await Promise.all([
+          fetchOTT(pid, 'movie'),
+          fetchOTT(pid, 'tv'),
+        ]);
+        setOttItems([...movies.slice(0, 5), ...shows.slice(0, 5)]);
+      }
     } catch (e) {
-      setOttError(e instanceof Error ? e.message : 'TMDB API 키를 config.js에 입력해주세요');
+      setOttError(e instanceof Error ? e.message : 'API 키를 config.js에 입력해주세요');
     } finally {
       setOttLoading(false);
     }
@@ -433,6 +449,15 @@ export default function App() {
               cls="card-ott"
             />
             <ApiCard
+              icon={<span className="yt-icon">▶</span>}
+              title="유튜브 인기 영상"
+              desc={<>국내 유튜브 실시간 인기<br />TOP 12 영상 추천</>}
+              btnLabel="유튜브 보기 →"
+              active={activeApi === 'youtube'}
+              onClick={() => handleApiCard('youtube')}
+              cls="card-yt"
+            />
+            <ApiCard
               icon={<span className="dice">🎲</span>}
               title="랜덤 편성 생성"
               desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
@@ -443,12 +468,18 @@ export default function App() {
             />
           </div>
 
-          {/* OTT 결과 */}
+          {/* 결과 표시 */}
           {activeApi && (
             <div className="ott-result-box">
-              <h4>{activeApi === 'netflix' ? '넷플릭스 TOP 10' : 'OTT 통합 인기작'}</h4>
+              <h4>
+                {activeApi === 'netflix' && '넷플릭스 TOP 10'}
+                {activeApi === 'ott'     && 'OTT 통합 인기작'}
+                {activeApi === 'youtube' && '유튜브 인기 영상 TOP 12'}
+              </h4>
               {ottLoading && <p className="result-msg">불러오는 중…</p>}
               {ottError   && <p className="result-msg err">⚠️ {ottError}</p>}
+
+              {/* OTT 그리드 */}
               {!ottLoading && !ottError && ottItems.length > 0 && (
                 <div className="ott-grid">
                   {ottItems.map((item, i) => (
@@ -472,6 +503,40 @@ export default function App() {
                       <span className="ott-name">{item.title || item.name}</span>
                     </a>
                   ))}
+                </div>
+              )}
+
+              {/* YouTube 그리드 */}
+              {!ottLoading && !ottError && ytItems.length > 0 && (
+                <div className="yt-grid">
+                  {ytItems.map((v) => {
+                    const thumb = v.snippet?.thumbnails?.medium?.url;
+                    const title = v.snippet?.title || '';
+                    const channel = v.snippet?.channelTitle || '';
+                    const views = fmtViews(v.statistics?.viewCount);
+                    return (
+                      <a
+                        key={v.id}
+                        href={`https://www.youtube.com/watch?v=${v.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="yt-card"
+                      >
+                        <div className="yt-thumb-wrap">
+                          {thumb
+                            ? <img src={thumb} alt={title} loading="lazy" />
+                            : <div className="yt-no-thumb">▶</div>
+                          }
+                          <span className="yt-play">▶</span>
+                        </div>
+                        <div className="yt-info">
+                          <p className="yt-title">{title}</p>
+                          <p className="yt-ch">{channel}</p>
+                          {views && <p className="yt-views">{views}</p>}
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </div>
