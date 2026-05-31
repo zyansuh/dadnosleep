@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Calendar } from 'lucide-react';
+import { Heart, Calendar, Pencil, Check } from 'lucide-react';
 import type { Cell } from '../types';
 import { ScheduleTable } from './ScheduleTable';
 
@@ -8,10 +8,16 @@ interface Props {
   todayIdx:        number;
   nowMin:          number;
   randing:         boolean;
+  isEditMode:      boolean;
   handleRandomize: () => void;
+  toggleEditMode:  () => void;
+  onEditCell:      (dayIdx: number, timeIdx: number) => void;
 }
 
-export function HeroSection({ sched, todayIdx, nowMin, randing, handleRandomize }: Props) {
+export function HeroSection({
+  sched, todayIdx, nowMin, randing, isEditMode,
+  handleRandomize, toggleEditMode, onEditCell,
+}: Props) {
   return (
     <section className="hero">
 
@@ -48,7 +54,30 @@ export function HeroSection({ sched, todayIdx, nowMin, randing, handleRandomize 
 
       {/* 우측: 편성표 */}
       <div className="hero-right" id="schedule-section">
-        <ScheduleTable sched={sched} todayIdx={todayIdx} nowMin={nowMin} />
+        {/* 편집 토글 버튼 */}
+        <div className="sched-edit-bar">
+          <button
+            className={`btn-edit-toggle ${isEditMode ? 'active' : ''}`}
+            onClick={toggleEditMode}
+          >
+            {isEditMode ? (
+              <><Check size={14} /> 편집 완료</>
+            ) : (
+              <><Pencil size={14} /> 편성표 편집</>
+            )}
+          </button>
+          {isEditMode && (
+            <span className="edit-mode-hint">셀을 클릭해 프로그램을 변경하세요</span>
+          )}
+        </div>
+
+        <ScheduleTable
+          sched={sched}
+          todayIdx={todayIdx}
+          nowMin={nowMin}
+          isEditMode={isEditMode}
+          onEditCell={onEditCell}
+        />
       </div>
     </section>
   );

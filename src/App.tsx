@@ -10,21 +10,32 @@ import { HeroSection }     from './components/HeroSection';
 import { ApiSection }      from './components/ApiSection';
 import { InfoSection }     from './components/InfoSection';
 import { SuggestionModal } from './components/SuggestionModal';
+import { EditCellModal }   from './components/EditCellModal';
 
 import './App.css';
 
+interface EditTarget {
+  dayIdx:  number;
+  timeIdx: number;
+}
+
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [editTarget,  setEditTarget]  = useState<EditTarget | null>(null);
 
   const clock   = useClock();
   const sched   = useSchedule();
   const api     = useApiCards();
   const suggest = useSuggestionForm();
 
+  const openEditCell = (dayIdx: number, timeIdx: number) => {
+    setEditTarget({ dayIdx, timeIdx });
+  };
+
   return (
     <div className="app">
 
-      {/* 헤더 (플로팅 카드) */}
+      {/* 헤더 */}
       <header className="header">
         <a href="#" className="logo">
           <span className="logo-ico">🛌</span>
@@ -62,7 +73,10 @@ export default function App() {
         todayIdx={clock.todayIdx}
         nowMin={clock.nowMin}
         randing={sched.randing}
+        isEditMode={sched.isEditMode}
         handleRandomize={sched.handleRandomize}
+        toggleEditMode={sched.toggleEditMode}
+        onEditCell={openEditCell}
       />
 
       {/* API 추천 */}
@@ -116,6 +130,18 @@ export default function App() {
           setSubmitted={suggest.setSubmitted}
           validate={suggest.validate}
           onClose={suggest.closeModal}
+        />
+      )}
+
+      {/* 셀 편집 모달 */}
+      {editTarget && (
+        <EditCellModal
+          cell={sched.sched[editTarget.dayIdx][editTarget.timeIdx]}
+          dayIdx={editTarget.dayIdx}
+          timeIdx={editTarget.timeIdx}
+          onSave={sched.updateCell}
+          onReset={sched.resetCell}
+          onClose={() => setEditTarget(null)}
         />
       )}
     </div>

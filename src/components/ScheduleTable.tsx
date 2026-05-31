@@ -5,20 +5,19 @@ import { slotStatus } from '../utils/scheduleTime';
 import { CellInner } from './CellInner';
 
 interface Props {
-  sched:    Cell[][];
-  todayIdx: number;
-  nowMin:   number;
+  sched:      Cell[][];
+  todayIdx:   number;
+  nowMin:     number;
+  isEditMode: boolean;
+  onEditCell: (dayIdx: number, timeIdx: number) => void;
 }
 
-export function ScheduleTable({ sched, todayIdx, nowMin }: Props) {
+export function ScheduleTable({ sched, todayIdx, nowMin, isEditMode, onEditCell }: Props) {
   return (
     <div className="sched-card">
       <div className="sched-head">
-        <h3>이번 주 편성표 (20:00 ~ 02:00)</h3>
+        <h3>📅 이번 주 편성표 미리보기</h3>
         <span className="sched-op">20:00 ~ 02:00 운영</span>
-      </div>
-      <div className="sched-note">
-        ① 편성표는 매일 업데이트되며, 실시간으로 달라질 수 있어요.
       </div>
       <div className="table-scroll">
         <table className="sched-tbl">
@@ -42,16 +41,22 @@ export function ScheduleTable({ sched, todayIdx, nowMin }: Props) {
                   const isToday = di === todayIdx;
                   const status  = isToday ? slotStatus(ti, nowMin) : '';
                   const isLive  = status === 'live';
+
                   const cellCls = [
                     'td-cell',
                     `cell-${cell.type}`,
-                    isToday ? 'cell-today' : '',
-                    isLive  ? 'cell-live'  : '',
+                    isToday     ? 'cell-today' : '',
+                    isLive      ? 'cell-live'  : '',
+                    isEditMode  ? 'cell-editable' : '',
                   ].filter(Boolean).join(' ');
+
+                  const handleClick = isEditMode
+                    ? () => onEditCell(di, ti)
+                    : undefined;
 
                   return (
                     <td key={di} className={cellCls}>
-                      {cell.link ? (
+                      {cell.link && !isEditMode ? (
                         <a
                           href={cell.link}
                           target="_blank"
@@ -61,7 +66,15 @@ export function ScheduleTable({ sched, todayIdx, nowMin }: Props) {
                           <CellInner cell={cell} isLive={isLive} />
                         </a>
                       ) : (
-                        <div className="cell-inner">
+                        <div
+                          className="cell-inner"
+                          onClick={handleClick}
+                          role={isEditMode ? 'button' : undefined}
+                          tabIndex={isEditMode ? 0 : undefined}
+                        >
+                          {isEditMode && (
+                            <span className="cell-edit-icon">✏️</span>
+                          )}
                           <CellInner cell={cell} isLive={isLive} />
                         </div>
                       )}

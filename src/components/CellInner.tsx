@@ -12,7 +12,6 @@ export function CellInner({ cell, isLive }: Props) {
       <>
         <span className="cell-fixed-label">⭐ 고정 편성</span>
         <span className="cell-title">{cell.title}</span>
-        <span className="cell-time-label">22:00</span>
         {isLive && <span className="live-dot-anim" />}
       </>
     );
