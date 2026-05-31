@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Moon, Menu, X, Calendar, Shuffle, Heart,
+  Moon, Menu, X, Calendar, Heart,
   Clock, RefreshCw, Send, Plus, Sparkles,
 } from 'lucide-react';
 import { fetchOTT, fetchYouTube, type OttItem, type YtItem } from './utils/api';
@@ -310,11 +310,18 @@ export default function App() {
 
           {/* 좌측 */}
           <div className="hero-left">
+            <div className="hero-moon">🌙</div>
             <div className="hero-pill">
               <Heart size={12} fill="currentColor" />
               목·금 고정 편성 + 실시간 랜덤 추천 ✦
             </div>
-            <h1 className="site-title">아빠안잔다<span className="title-heart">♥</span></h1>
+            <div className="hero-title-wrap">
+              <span className="sp sp1">✦</span>
+              <span className="sp sp2">✦</span>
+              <span className="sp sp3">⋆</span>
+              <span className="sp sp4">✦</span>
+              <h1 className="site-title">아빠안잔다<span className="title-heart">♥</span></h1>
+            </div>
             <p className="site-sub">우리가 함께 보는 OTT 편성표</p>
             <p className="site-desc">
               하루의 끝, 가족·연인·친구가 함께 즐길 수 있는<br />
@@ -322,11 +329,11 @@ export default function App() {
               매일 새롭게 만나보세요.
             </p>
             <div className="hero-ctas">
-              <a href="#schedule-section" className="btn-coral">
-                <Calendar size={15} /> 오늘 편성표 보기
+              <a href="#schedule-section" className="btn-hero">
+                <Calendar size={14} /> 오늘 편성표 보기
               </a>
-              <button className="btn-outline" onClick={handleRandomize} disabled={randing}>
-                <Shuffle size={15} /> {randing ? '생성 중…' : '랜덤 편성 생성하기'}
+              <button className="btn-hero" onClick={handleRandomize} disabled={randing}>
+                <span>☆</span> {randing ? '생성 중…' : '랜덤 편성 생성하기'}
               </button>
             </div>
             <div className="hero-viewers">
@@ -419,11 +426,18 @@ export default function App() {
       {/* API 추천 섹션 */}
       <section className="api-section" id="추천">
         <div className="sec-wrap">
-          <div className="sec-head">
-            <span className="sec-eyebrow"><Sparkles size={14} /> 데이터로 더 똑똑하게</span>
-            <h2>API 기반 추천 엔진</h2>
-          </div>
-          <div className="api-grid">
+          <div className="api-layout">
+
+            {/* 설명 패널 */}
+            <div className="api-desc-panel">
+              <span className="api-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
+              <h2 className="api-title">API 기반<br />추천 엔진</h2>
+              <p className="api-desc-text">
+                API 키와 통합 인기 데이터를 실시간으로 분석하여
+                최적의 편성표를 생성합니다.
+              </p>
+            </div>
+
             <ApiCard
               icon={<span className="n-icon">N</span>}
               title="넷플릭스 TOP 10"
@@ -449,15 +463,6 @@ export default function App() {
               cls="card-ott"
             />
             <ApiCard
-              icon={<span className="yt-icon">▶</span>}
-              title="유튜브 인기 영상"
-              desc={<>국내 유튜브 실시간 인기<br />TOP 12 영상 추천</>}
-              btnLabel="유튜브 보기 →"
-              active={activeApi === 'youtube'}
-              onClick={() => handleApiCard('youtube')}
-              cls="card-yt"
-            />
-            <ApiCard
               icon={<span className="dice">🎲</span>}
               title="랜덤 편성 생성"
               desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
@@ -465,6 +470,19 @@ export default function App() {
               active={false}
               onClick={handleRandomize}
               cls="card-random"
+            />
+          </div>
+
+          {/* YouTube 카드 (별도 행) */}
+          <div className="yt-api-row">
+            <ApiCard
+              icon={<span className="yt-icon">▶</span>}
+              title="유튜브 인기 영상"
+              desc={<>국내 유튜브 실시간 인기 TOP 12 영상 추천</>}
+              btnLabel="유튜브 보기 →"
+              active={activeApi === 'youtube'}
+              onClick={() => handleApiCard('youtube')}
+              cls="card-yt"
             />
           </div>
 
@@ -547,15 +565,11 @@ export default function App() {
       {/* 커뮤니티 섹션 */}
       <section className="community-sec" id="커뮤니티">
         <div className="sec-wrap">
-          <h2 className="comm-title">
-            함께 만들어가는 따뜻한 커뮤니티
-            <Heart size={16} fill="currentColor" style={{ marginLeft: 8, color: 'var(--coral)' }} />
-          </h2>
-          <div className="comm-grid">
+          <div className="comm-layout">
             {[
-              { ico: '📋', title: '신청', desc: '보고 싶은 프로그램을\n신청해 주세요!', sub: '다양한 의견을 통해 편성에 반영합니다.\n최소 0.5%이상', btn: '신청하기 →', fn: openModal },
-              { ico: '💬', title: '후기', desc: '함께 본 콘텐츠의\n후기를 남겨요!', sub: '다른 이용자들의 추천 후기를\n게시판에 남겨주세요', btn: '후기 남기기 →', fn: undefined },
-              { ico: '🏆', title: '포인트', desc: '활동하면 포인트가\n쌓여요!', sub: '후기를 남기면 포인트를 받아요!\n다양한 이벤트에 참여해보세요.', btn: '포인트 안내 →', fn: undefined },
+              { ico: '📋', title: '신청', desc: '보고 싶은 프로그램을\n신청해 주세요!', sub: '다양한 의견을 통해 편성에 반영합니다.\n최소 0.5%이상', btn: '신청하러 가기 →', fn: openModal },
+              { ico: '💬', title: '후기', desc: '함께 본 콘텐츠의\n후기를 남겨요!', sub: '다른 이용자들의 추천 후기를\n게시판에 남겨주세요', btn: '후기 보러 가기 →', fn: undefined },
+              { ico: '🏆', title: '포인트', desc: '활동하면 포인트가\n쌓여요!', sub: '후기를 남기면 포인트를 받아요!\n다양한 이벤트에 참여해보세요.', btn: '포인트 내역 보기 →', fn: undefined },
             ].map((c, i) => (
               <div key={i} className="comm-card">
                 <div className="comm-ico">{c.ico}</div>
@@ -565,18 +579,45 @@ export default function App() {
                 <button className="comm-btn" onClick={c.fn}>{c.btn}</button>
               </div>
             ))}
+
+            {/* 우측 정보 패널 */}
+            <div className="comm-info-panel">
+              {[
+                { icon: <Clock size={15} />, title: '20:00 ~ 02:00 운영', desc: '하루의 끝, 우리만의 즐김 시간대' },
+                { icon: <span className="ci-star">★</span>, title: '고정 편성 · 랜덤 추천', desc: '목·금은 고정, 나머지는 매일 새롭게' },
+                { icon: <RefreshCw size={15} />, title: '매일 새롭게 갱신', desc: '실시간 데이터 기반으로 매일 업데이트' },
+              ].map((item, i) => (
+                <div key={i} className="ci-item">
+                  <div className="ci-icon">{item.icon}</div>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA 배너 */}
       <section className="cta-banner">
+        <div className="cta-deco cta-l">
+          <span className="deco-pop">🍿</span>
+          <span className="deco-sp1">✦</span>
+          <span className="deco-sp2">⋆</span>
+        </div>
         <div className="cta-inner">
           <p className="cta-eye">오늘 밤, 우리 함께 볼까요? 🌙</p>
           <a href="#schedule-section" className="cta-btn">
             지금 바로 편성표 보러가기 →
           </a>
           <p className="cta-sub">매일 밤 8시, 새로운 편성표가 당신을 기다립니다!</p>
+        </div>
+        <div className="cta-deco cta-r">
+          <span className="deco-mug">☕</span>
+          <span className="deco-plant">🌱</span>
+          <span className="deco-sp3">✦</span>
         </div>
       </section>
 
