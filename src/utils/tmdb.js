@@ -1,4 +1,4 @@
-import config from "../config";
+import { ENV } from './env.js';
 
 const BASE = "https://api.themoviedb.org/3";
 const IMG  = "https://image.tmdb.org/t/p/w300";
@@ -21,7 +21,7 @@ export function getPosterUrl(path) {
 }
 
 function getHeaders() {
-  const token = config.TMDB_READ_TOKEN;
+  const token = ENV.TMDB_READ_TOKEN;
   if (token) {
     return {
       Authorization: `Bearer ${token}`,
@@ -34,8 +34,8 @@ function getHeaders() {
 /** 한국어 원작 콘텐츠만 조회 (with_original_language=ko) */
 export async function fetchKoreanOTT(contentType) {
   const headers   = getHeaders();
-  const useBearer = !!config.TMDB_READ_TOKEN;
-  const keyParam  = useBearer ? "" : `api_key=${config.TMDB_API_KEY}&`;
+  const useBearer = !!ENV.TMDB_READ_TOKEN;
+  const keyParam  = useBearer ? "" : `api_key=${ENV.TMDB_API_KEY}&`;
 
   const url = `${BASE}/discover/${contentType}?${keyParam}language=ko-KR&with_original_language=ko&sort_by=popularity.desc&vote_count.gte=10&page=1`;
 
@@ -48,8 +48,8 @@ export async function fetchKoreanOTT(contentType) {
 /** OTT 플랫폼 or 전체 인기 콘텐츠 조회 */
 export async function fetchOTT(providerId, contentType) {
   const headers   = getHeaders();
-  const useBearer = !!config.TMDB_READ_TOKEN;
-  const keyParam  = useBearer ? "" : `api_key=${config.TMDB_API_KEY}&`;
+  const useBearer = !!ENV.TMDB_READ_TOKEN;
+  const keyParam  = useBearer ? "" : `api_key=${ENV.TMDB_API_KEY}&`;
 
   let url;
   if (providerId === "0") {

@@ -1,4 +1,4 @@
-import config from "../config";
+import { ENV } from './env.js';
 
 const BASE = "https://www.googleapis.com/youtube/v3";
 
@@ -21,7 +21,7 @@ export function formatViews(n) {
 }
 
 export async function fetchYouTube(categoryId) {
-  const key = config.YOUTUBE_API_KEY;
+  const key = ENV.YOUTUBE_API_KEY;
   let url = `${BASE}/videos?part=snippet,statistics&chart=mostPopular&regionCode=KR&maxResults=50&key=${key}`;
   if (categoryId !== "0") url += `&videoCategoryId=${categoryId}`;
 
