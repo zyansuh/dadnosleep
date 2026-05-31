@@ -25,21 +25,19 @@ export function ApiSection({
 
           {/* 설명 패널 */}
           <div className="api-desc-panel">
-            <span className="api-eyebrow">
-              <Sparkles size={13} /> 데이터로 더 똑똑하게
-            </span>
-            <h2 className="api-title">API 기반<br />추천 엔진</h2>
+            <div className="api-eyebrow">
+              <Sparkles size={14} /> 데이터로 더 똑똑하게
+            </div>
+            <h2 className="api-title">API 기반 추천 엔진</h2>
             <p className="api-desc-text">
-              API 키와 통합 인기 데이터를<br />
-              실시간으로 분석하여<br />
-              최적의 편성표를 생성합니다.
+              넷플릭스 TOP 10과 통합 인기 데이터를 실시간으로 분석하여 최적의 편성표를 생성합니다.
             </p>
           </div>
 
           <ApiCard
             icon={<span className="n-icon">N</span>}
             title="넷플릭스 TOP 10"
-            desc={<>국내 넷플릭스 TOP 10<br />실시간 인기 현황</>}
+            desc={<>국내 넷플릭스 TOP 10<br />실시간 연동</>}
             btnLabel="TOP 10 보기 →"
             active={activeApi === 'netflix'}
             onClick={() => handleApiCard('netflix')}
@@ -48,14 +46,13 @@ export function ApiSection({
 
           <ApiCard
             icon={
-              <span className="ott-logos">
-                <span style={{ color: '#e50914' }}>N</span>
-                <span style={{ color: '#0072f5' }}>D</span>
-                <span style={{ color: '#1d6fa4' }}>W</span>
+              <span className="api-icon-multi">
+                <span>N</span><span>D+</span>
+                <span>T</span><span>W</span>
               </span>
             }
             title="OTT 통합 인기작"
-            desc={<>넷플릭스, 디즈니+, 티빙, wavve<br />통합 인기작 랭킹</>}
+            desc={<>넷플릭스, 디즈니+, 티빙, wavve<br />통합 인기 랭킹</>}
             btnLabel="인기작 보기 →"
             active={activeApi === 'ott'}
             onClick={() => handleApiCard('ott')}

@@ -7,13 +7,22 @@ interface Props {
 }
 
 export function CellInner({ cell, isLive }: Props) {
+  if (cell.type === 'fixed') {
+    return (
+      <>
+        <span className="cell-fixed-label">⭐ 고정 편성</span>
+        <span className="cell-title">{cell.title}</span>
+        <span className="cell-time-label">22:00</span>
+        {isLive && <span className="live-dot-anim" />}
+      </>
+    );
+  }
+
   return (
     <>
-      <span className={`cb badge-${cell.bt}`}>{cell.badge}</span>
-      <span className="ct">
-        {cell.title}
-        {isLive && <span className="live-dot-anim" />}
-      </span>
+      <span className="cell-title">{cell.title}</span>
+      <span className={`tag tag-${cell.bt}`}>{cell.badge}</span>
+      {isLive && <span className="live-dot-anim" />}
     </>
   );
 }

@@ -8,40 +8,20 @@
   font-display: swap;
 }
 
-/* Google Fonts는 index.html에서 로드 */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background: #0f0f14;
-  color: #e8e8f0;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg, #1a1530 0%, #0f0a1f 50%, #1a1530 100%);
+  background-attachment: fixed;
+  color: #fff;
   min-height: 100vh;
 }
 
-:root {
-  --primary: #6c63ff;
-  --primary-light: #8b85ff;
-  --primary-dark: #4a43cc;
-  --accent: #ff6584;
-  --bg-dark: #0f0f14;
-  --bg-card: #1a1a24;
-  --bg-card-hover: #22223a;
-  --bg-modal: #1a1a24;
-  --border: #2a2a3a;
-  --text-main: #e8e8f0;
-  --text-sub: #9090a8;
-  --text-muted: #5a5a72;
-  --live: #ff4757;
-  --upcoming: #2ed573;
-  --past: #747487;
-}
+a   { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; border: none; }
+img { display: block; }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: #0f0a1f; }
+::-webkit-scrollbar-thumb  { background: #3d2a6a; border-radius: 3px; }

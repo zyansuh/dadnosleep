@@ -1,5 +1,4 @@
-// ── 배지/셀 타입 ──────────────────────────────────────────────
-export type BadgeType = 'pink' | 'teal' | 'purple' | 'orange' | 'green';
+export type BadgeType = 'pink' | 'teal' | 'purple' | 'orange' | 'green' | 'yellow' | 'blue';
 export type CellType  = 'fixed' | 'ott' | 'random' | 'community';
 export type ApiType   = 'netflix' | 'ott' | 'youtube';
 
@@ -12,7 +11,6 @@ export interface Cell {
   link?: string;
 }
 
-// ── 건의 폼 ──────────────────────────────────────────────────
 export interface SuggForm {
   title:    string;
   category: string;
@@ -21,14 +19,13 @@ export interface SuggForm {
   nick:     string;
 }
 
-// ── OTT / YouTube ─────────────────────────────────────────────
 export interface OttItem {
-  id:            number;
-  title?:        string;
-  name?:         string;
-  poster_path?:  string;
-  vote_average?: number;
-  release_date?: string;
+  id:              number;
+  title?:          string;
+  name?:           string;
+  poster_path?:    string;
+  vote_average?:   number;
+  release_date?:   string;
   first_air_date?: string;
 }
 

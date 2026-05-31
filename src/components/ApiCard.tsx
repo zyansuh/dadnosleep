@@ -20,8 +20,8 @@ export function ApiCard({ icon, title, desc, btnLabel, active, onClick, cls }: P
       <div className="api-body">
         <h4>{title}</h4>
         <p>{desc}</p>
+        <button className="api-cta">{btnLabel}</button>
       </div>
-      <button className="api-cta">{btnLabel}</button>
     </div>
   );
 }
