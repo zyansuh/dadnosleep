@@ -1,39 +1,51 @@
 @media (max-width: 1024px) {
   .hero           { grid-template-columns: 1fr; }
-  .api-layout     { grid-template-columns: 1fr 1fr; }
+  .api-layout     { grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .api-desc-panel { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; }
   .info-section   { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-  .app       { padding: 16px; }
+  .app       { padding: 12px; }
   .hamburger { display: flex; }
   .op-pill   { display: none; }
 
-  .site-title { font-size: 52px; }
+  .site-title { font-size: 48px; }
   .hero-ctas  { flex-direction: column; }
   .btn-hero-primary, .btn-hero-secondary { width: 100%; justify-content: center; }
 
   .sched-tbl  { min-width: 480px; }
-  .cell-title { font-size: 11px; }
-  .tag        { font-size: 9px; padding: 1px 6px; }
+  .cell-title { font-size: 10px; }
+  .tag        { font-size: 8px; padding: 1px 4px; }
 
-  .api-layout { grid-template-columns: 1fr; }
-  .api-card   { flex-direction: row; }
+  .api-layout     { grid-template-columns: 1fr 1fr; }
+  .api-desc-panel { grid-column: 1 / -1; }
+  .api-card       { flex-direction: column; gap: 10px; }
 
   .ott-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
   .yt-grid  { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 
-  .cta-banner { flex-direction: column; text-align: center; padding: 32px 24px; }
+  .cta-banner { flex-direction: column; text-align: center; padding: 32px 20px; }
   .cta-deco   { display: none; }
-  .cta-btn    { font-size: 18px; }
+  .cta-btn    { font-size: 17px; }
 
-  .fab { bottom: 20px; right: 20px; padding: 10px 18px; }
+  .fab { bottom: 20px; right: 16px; padding: 10px 16px; font-size: 13px; }
 }
 
 @media (max-width: 640px) {
+  .app        { padding: 10px; }
+  .site-title { font-size: 38px; }
+  .site-sub   { font-size: 16px; }
+  .site-desc  { font-size: 13px; }
+
+  .sched-tbl  { min-width: 400px; }
+  .cell-inner { min-height: 52px; padding: 5px 3px; }
+
   .api-layout { grid-template-columns: 1fr; }
-  .sched-tbl  { min-width: 420px; }
-  .site-title { font-size: 42px; }
-  .cell-inner { min-height: 56px; padding: 6px 4px; }
+  .api-card   { flex-direction: row; }
+
+  .ott-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+
+  .header { padding: 12px 16px; }
+  .logo   { font-size: 17px; }
 }

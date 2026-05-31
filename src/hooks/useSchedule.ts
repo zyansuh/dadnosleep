@@ -44,6 +44,7 @@ function loadSched(): Cell[][] {
 interface UseScheduleReturn {
   sched:           Cell[][];
   randing:         boolean;
+  randError:       string;
   isEditMode:      boolean;
   handleRandomize: () => Promise<void>;
   updateCell:      (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
@@ -55,6 +56,7 @@ interface UseScheduleReturn {
 export function useSchedule(): UseScheduleReturn {
   const [sched,      setSched]      = useState<Cell[][]>(loadSched);
   const [randing,    setRanding]    = useState(false);
+  const [randError,  setRandError]  = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
 
   const persist = useCallback((next: Cell[][]) => {
@@ -121,11 +123,16 @@ export function useSchedule(): UseScheduleReturn {
   /** 랜덤 편성 생성 (한국어 콘텐츠) */
   const handleRandomize = async () => {
     setRanding(true);
+    setRandError('');
     try {
       const [dramas, movies] = await Promise.all([
         fetchKoreanOTT('tv'),
         fetchKoreanOTT('movie'),
       ]);
+      if (!dramas.length && !movies.length) {
+        setRandError('TMDB API 키를 Vercel 환경변수에 설정해주세요 (VITE_TMDB_READ_TOKEN)');
+        return;
+      }
       const pool = [...dramas, ...movies].sort(() => Math.random() - 0.5);
       let pi = 0;
       setSched(prev => {
@@ -145,9 +152,10 @@ export function useSchedule(): UseScheduleReturn {
         persist(next);
         return next;
       });
-    } catch { /* API 키 미설정 시 무시 */ }
-    finally { setRanding(false); }
+    } catch (e) {
+      setRandError(e instanceof Error ? e.message : 'API 오류 — 환경변수 설정을 확인해주세요');
+    } finally { setRanding(false); }
   };
 
-  return { sched, randing, isEditMode, handleRandomize, updateCell, updateMany, resetCell, toggleEditMode };
+  return { sched, randing, randError, isEditMode, handleRandomize, updateCell, updateMany, resetCell, toggleEditMode };
 }

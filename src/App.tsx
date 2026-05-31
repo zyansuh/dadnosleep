@@ -73,6 +73,7 @@ export default function App() {
         todayIdx={clock.todayIdx}
         nowMin={clock.nowMin}
         randing={sched.randing}
+        randError={sched.randError}
         handleRandomize={sched.handleRandomize}
         onOpenScheduleEdit={() => setSchedEditOpen(true)}
       />

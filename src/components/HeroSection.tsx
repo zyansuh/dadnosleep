@@ -1,4 +1,4 @@
-import { Heart, Calendar, Edit3 } from 'lucide-react';
+import { Heart, Calendar, Edit3, AlertCircle } from 'lucide-react';
 import type { Cell } from '../types';
 import { ScheduleTable } from './ScheduleTable';
 
@@ -7,12 +7,13 @@ interface Props {
   todayIdx:            number;
   nowMin:              number;
   randing:             boolean;
+  randError:           string;
   onOpenScheduleEdit:  () => void;
   handleRandomize:     () => void;
 }
 
 export function HeroSection({
-  sched, todayIdx, nowMin, randing, onOpenScheduleEdit, handleRandomize,
+  sched, todayIdx, nowMin, randing, randError, onOpenScheduleEdit, handleRandomize,
 }: Props) {
   return (
     <section className="hero">
@@ -52,6 +53,14 @@ export function HeroSection({
             <Edit3 size={14} /> 편성표 수정하기
           </button>
         </div>
+
+        {/* 랜덤 생성 에러 메시지 */}
+        {randError && (
+          <div className="rand-error">
+            <AlertCircle size={14} />
+            <span>{randError}</span>
+          </div>
+        )}
       </div>
 
       {/* 우측: 편성표 */}
