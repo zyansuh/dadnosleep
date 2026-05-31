@@ -9,8 +9,8 @@
 
 .api-layout {
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  gap: 14px;
 }
 
 /* ── 설명 패널 */
@@ -78,6 +78,8 @@
 .card-ott     .api-icon { background: rgba(255,255,255,0.05); display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 8px; font-size: 10px; font-weight: 700; }
 .card-ott     .api-icon span { background: rgba(100,100,200,0.4); border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 .card-random  .api-icon { background: linear-gradient(135deg, var(--coral), var(--coral2)); }
+.card-yt      .api-icon { background: rgba(255,0,0,0.14); }
+.yt-card-icon { font-size: 22px; color: #ff4444; font-weight: 900; }
 
 .n-icon   { font-size: 28px; font-weight: 900; color: #fff; font-family: Georgia, serif; }
 .dice     { font-size: 28px; }

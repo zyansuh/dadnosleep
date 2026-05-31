@@ -1,36 +1,33 @@
 import { useState } from 'react';
-import { Moon, Menu, X, Plus } from 'lucide-react';
+import { Moon, Menu, X, Plus, MessageSquare } from 'lucide-react';
 
 import { useClock }          from './hooks/useClock';
 import { useSchedule }       from './hooks/useSchedule';
 import { useApiCards }       from './hooks/useApiCards';
 import { useSuggestionForm } from './hooks/useSuggestionForm';
 
-import { HeroSection }     from './components/HeroSection';
-import { ApiSection }      from './components/ApiSection';
-import { InfoSection }     from './components/InfoSection';
-import { SuggestionModal } from './components/SuggestionModal';
-import { EditCellModal }   from './components/EditCellModal';
+import { HeroSection }        from './components/HeroSection';
+import { ApiSection }         from './components/ApiSection';
+import { InfoSection }        from './components/InfoSection';
+import { SuggestionModal }    from './components/SuggestionModal';
+import { EditCellModal }      from './components/EditCellModal';
+import { ScheduleEditModal }  from './components/ScheduleEditModal';
+import { SuggestionBoard }    from './components/SuggestionBoard';
 
 import './App.css';
 
-interface EditTarget {
-  dayIdx:  number;
-  timeIdx: number;
-}
+interface EditTarget { dayIdx: number; timeIdx: number; }
 
 export default function App() {
-  const [menuOpen,    setMenuOpen]    = useState(false);
-  const [editTarget,  setEditTarget]  = useState<EditTarget | null>(null);
+  const [menuOpen,       setMenuOpen]       = useState(false);
+  const [editTarget,     setEditTarget]     = useState<EditTarget | null>(null);
+  const [schedEditOpen,  setSchedEditOpen]  = useState(false);
+  const [boardOpen,      setBoardOpen]      = useState(false);
 
   const clock   = useClock();
   const sched   = useSchedule();
   const api     = useApiCards();
   const suggest = useSuggestionForm();
-
-  const openEditCell = (dayIdx: number, timeIdx: number) => {
-    setEditTarget({ dayIdx, timeIdx });
-  };
 
   return (
     <div className="app">
@@ -45,11 +42,21 @@ export default function App() {
         <span className="op-pill">
           <Moon size={13} /> 20:00 ~ 02:00 운영
         </span>
+
+        {/* 건의함 버튼 */}
         <button
-          className="hamburger"
-          onClick={() => setMenuOpen(v => !v)}
-          aria-label="메뉴"
+          className="btn-board"
+          onClick={() => setBoardOpen(true)}
+          aria-label="건의함 열기"
         >
+          <MessageSquare size={15} />
+          <span>건의함</span>
+          {suggest.suggestions.length > 0 && (
+            <span className="board-badge">{suggest.suggestions.length}</span>
+          )}
+        </button>
+
+        <button className="hamburger" onClick={() => setMenuOpen(v => !v)} aria-label="메뉴">
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </header>
@@ -58,10 +65,10 @@ export default function App() {
         <nav className="mobile-nav">
           <a href="#schedule-section" onClick={() => setMenuOpen(false)}>📅 편성표</a>
           <a href="#추천"             onClick={() => setMenuOpen(false)}>✨ 추천</a>
-          <button
-            className="btn-suggest mob-cta"
-            onClick={() => { setMenuOpen(false); suggest.openModal(); }}
-          >
+          <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setBoardOpen(true); }}>
+            💬 건의함 ({suggest.suggestions.length})
+          </button>
+          <button className="btn-suggest mob-cta" onClick={() => { setMenuOpen(false); suggest.openModal(); }}>
             ✏️ 프로그램 신청하기
           </button>
         </nav>
@@ -76,7 +83,8 @@ export default function App() {
         isEditMode={sched.isEditMode}
         handleRandomize={sched.handleRandomize}
         toggleEditMode={sched.toggleEditMode}
-        onEditCell={openEditCell}
+        onEditCell={(di, ti) => setEditTarget({ dayIdx: di, timeIdx: ti })}
+        onOpenScheduleEdit={() => setSchedEditOpen(true)}
       />
 
       {/* API 추천 */}
@@ -96,31 +104,25 @@ export default function App() {
 
       {/* CTA 배너 */}
       <section className="cta-banner">
-        <div className="cta-deco cta-l">
-          <span className="deco-pop">🍿</span>
-        </div>
+        <div className="cta-deco cta-l"><span className="deco-pop">🍿</span></div>
         <div className="cta-inner">
           <a href="#schedule-section" className="cta-btn">
             지금 바로 편성표 보러가기 →
           </a>
           <p className="cta-sub">매일 밤 8시, 새로운 편성표가 당신을 기다려요!</p>
         </div>
-        <div className="cta-deco cta-r">
-          <span className="deco-mug">☕</span>
-        </div>
+        <div className="cta-deco cta-r"><span className="deco-mug">☕</span></div>
       </section>
 
       {/* 푸터 */}
-      <footer className="site-footer">
-        <span>© 2026 아빠안잔다. All rights reserved.</span>
-      </footer>
+      <footer className="site-footer">© 2026 아빠안잔다. All rights reserved.</footer>
 
       {/* FAB */}
       <button className="fab" onClick={suggest.openModal} aria-label="프로그램 건의하기">
         <Plus size={18} /><span>건의</span>
       </button>
 
-      {/* 건의 모달 */}
+      {/* ─ 모달들 ─ */}
       {suggest.modalOpen && (
         <SuggestionModal
           form={suggest.form}
@@ -133,7 +135,6 @@ export default function App() {
         />
       )}
 
-      {/* 셀 편집 모달 */}
       {editTarget && (
         <EditCellModal
           cell={sched.sched[editTarget.dayIdx][editTarget.timeIdx]}
@@ -142,6 +143,21 @@ export default function App() {
           onSave={sched.updateCell}
           onReset={sched.resetCell}
           onClose={() => setEditTarget(null)}
+        />
+      )}
+
+      {schedEditOpen && (
+        <ScheduleEditModal
+          sched={sched.sched}
+          onSaveAll={sched.updateMany}
+          onClose={() => setSchedEditOpen(false)}
+        />
+      )}
+
+      {boardOpen && (
+        <SuggestionBoard
+          suggestions={suggest.suggestions}
+          onClose={() => setBoardOpen(false)}
         />
       )}
     </div>

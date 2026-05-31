@@ -1,45 +1,81 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import type { SuggForm } from '../types';
+
+const LS_KEY = 'dadnosleep-suggestions';
+
+export interface SavedSuggestion extends SuggForm {
+  id:        string;
+  createdAt: string; // ISO string
+}
+
+function loadSuggestions(): SavedSuggestion[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSuggestions(list: SavedSuggestion[]) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(list));
+  } catch { /* 무시 */ }
+}
 
 const EMPTY_FORM: SuggForm = { title: '', category: '', time: '', desc: '', nick: '' };
 
 interface UseSuggestionFormReturn {
-  form:       SuggForm;
-  setForm:    React.Dispatch<React.SetStateAction<SuggForm>>;
-  errors:     Partial<SuggForm>;
-  modalOpen:  boolean;
-  submitted:  boolean;
-  openModal:  () => void;
-  closeModal: () => void;
+  form:         SuggForm;
+  setForm:      React.Dispatch<React.SetStateAction<SuggForm>>;
+  errors:       Partial<SuggForm>;
+  modalOpen:    boolean;
+  submitted:    boolean;
+  suggestions:  SavedSuggestion[];
+  openModal:    () => void;
+  closeModal:   () => void;
   setSubmitted: React.Dispatch<React.SetStateAction<boolean>>;
-  validate:   () => boolean;
+  validate:     () => boolean;
 }
 
 export function useSuggestionForm(): UseSuggestionFormReturn {
-  const [form,      setForm]      = useState<SuggForm>(EMPTY_FORM);
-  const [errors,    setErrors]    = useState<Partial<SuggForm>>({});
-  const [modalOpen, setModalOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [form,        setForm]        = useState<SuggForm>(EMPTY_FORM);
+  const [errors,      setErrors]      = useState<Partial<SuggForm>>({});
+  const [modalOpen,   setModalOpen]   = useState(false);
+  const [submitted,   setSubmitted]   = useState(false);
+  const [suggestions, setSuggestions] = useState<SavedSuggestion[]>(loadSuggestions);
 
-  const openModal = () => {
+  const openModal  = useCallback(() => {
     setForm(EMPTY_FORM);
     setErrors({});
     setSubmitted(false);
     setModalOpen(true);
-  };
+  }, []);
 
-  const closeModal = () => setModalOpen(false);
+  const closeModal = useCallback(() => setModalOpen(false), []);
 
-  const validate = (): boolean => {
+  const validate = useCallback((): boolean => {
     const e: Partial<SuggForm> = {};
-    if (!form.title.trim())    e.title    = '프로그램명을 입력해주세요';
-    if (!form.category)        e.category = '카테고리를 선택해주세요';
-    if (!form.time.trim())     e.time     = '시간대를 입력해주세요';
-    if (!form.desc.trim())     e.desc     = '내용을 입력해주세요';
-    if (!form.nick.trim())     e.nick     = '닉네임을 입력해주세요';
+    if (!form.title.trim())     e.title    = '프로그램명을 입력해주세요';
+    if (!form.category)         e.category = '카테고리를 선택해주세요';
+    if (!form.time.trim())      e.time     = '시간대를 입력해주세요';
+    if (!form.desc.trim())      e.desc     = '내용을 입력해주세요';
+    if (!form.nick.trim())      e.nick     = '닉네임을 입력해주세요';
     setErrors(e);
-    return Object.keys(e).length === 0;
-  };
 
-  return { form, setForm, errors, modalOpen, submitted, openModal, closeModal, setSubmitted, validate };
+    if (Object.keys(e).length === 0) {
+      // 제출 성공 시 localStorage에 저장
+      const newItem: SavedSuggestion = {
+        ...form,
+        id:        `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [newItem, ...suggestions];
+      setSuggestions(updated);
+      saveSuggestions(updated);
+    }
+    return Object.keys(e).length === 0;
+  }, [form, suggestions]);
+
+  return { form, setForm, errors, modalOpen, submitted, suggestions, openModal, closeModal, setSubmitted, validate };
 }

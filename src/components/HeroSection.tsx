@@ -1,22 +1,23 @@
 import React from 'react';
-import { Heart, Calendar, Pencil, Check } from 'lucide-react';
+import { Heart, Calendar, Pencil, Check, Edit3 } from 'lucide-react';
 import type { Cell } from '../types';
 import { ScheduleTable } from './ScheduleTable';
 
 interface Props {
-  sched:           Cell[][];
-  todayIdx:        number;
-  nowMin:          number;
-  randing:         boolean;
-  isEditMode:      boolean;
-  handleRandomize: () => void;
-  toggleEditMode:  () => void;
-  onEditCell:      (dayIdx: number, timeIdx: number) => void;
+  sched:               Cell[][];
+  todayIdx:            number;
+  nowMin:              number;
+  randing:             boolean;
+  isEditMode:          boolean;
+  handleRandomize:     () => void;
+  toggleEditMode:      () => void;
+  onEditCell:          (dayIdx: number, timeIdx: number) => void;
+  onOpenScheduleEdit:  () => void;
 }
 
 export function HeroSection({
   sched, todayIdx, nowMin, randing, isEditMode,
-  handleRandomize, toggleEditMode, onEditCell,
+  handleRandomize, toggleEditMode, onEditCell, onOpenScheduleEdit,
 }: Props) {
   return (
     <section className="hero">
@@ -49,25 +50,29 @@ export function HeroSection({
           >
             ⭐ {randing ? '생성 중…' : '랜덤 편성 생성하기'}
           </button>
+          <button
+            className="btn-hero-secondary btn-hero-edit"
+            onClick={onOpenScheduleEdit}
+          >
+            <Edit3 size={14} /> 편성표 수정하기
+          </button>
         </div>
       </div>
 
       {/* 우측: 편성표 */}
       <div className="hero-right" id="schedule-section">
-        {/* 편집 토글 버튼 */}
         <div className="sched-edit-bar">
           <button
             className={`btn-edit-toggle ${isEditMode ? 'active' : ''}`}
             onClick={toggleEditMode}
           >
-            {isEditMode ? (
-              <><Check size={14} /> 편집 완료</>
-            ) : (
-              <><Pencil size={14} /> 편성표 편집</>
-            )}
+            {isEditMode
+              ? <><Check size={14} /> 편집 완료</>
+              : <><Pencil size={14} /> 셀 직접 편집</>
+            }
           </button>
           {isEditMode && (
-            <span className="edit-mode-hint">셀을 클릭해 프로그램을 변경하세요</span>
+            <span className="edit-mode-hint">셀을 클릭해 바꾸세요</span>
           )}
         </div>
 

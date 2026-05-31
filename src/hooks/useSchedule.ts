@@ -5,15 +5,35 @@ import { fetchKoreanOTT } from '../utils/api';
 
 const LS_KEY = 'dadnosleep-sched';
 
-/** localStorage에서 저장된 편성표를 불러옴. 없으면 기본 데이터 반환 */
+/** ISO 주차 문자열 반환: "2026-W22" 형태 */
+function getISOWeekKey(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((d.getTime() - yearStart.getTime()) / 86_400_000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+interface StoredSched {
+  week: string;   // "YYYY-Www"
+  data: Cell[][];
+}
+
+/** localStorage에서 주차 검증 후 편성표 불러오기. 새 주면 기본값 반환 */
 function loadSched(): Cell[][] {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return BASE_SCHED;
-    const parsed: Cell[][] = JSON.parse(raw);
-    // 행/열 크기가 맞을 때만 복원
-    if (parsed.length === BASE_SCHED.length && parsed[0]?.length === BASE_SCHED[0].length) {
-      return parsed;
+    const stored: StoredSched = JSON.parse(raw);
+    const currentWeek = getISOWeekKey(new Date());
+    // 저장된 주차와 다르면(= 일요일 기준 새 주) 초기화
+    if (stored.week !== currentWeek) {
+      localStorage.removeItem(LS_KEY);
+      return BASE_SCHED;
+    }
+    const { data } = stored;
+    if (data.length === BASE_SCHED.length && data[0]?.length === BASE_SCHED[0].length) {
+      return data;
     }
   } catch {
     // 파싱 실패 시 기본값
@@ -27,6 +47,7 @@ interface UseScheduleReturn {
   isEditMode:      boolean;
   handleRandomize: () => Promise<void>;
   updateCell:      (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
+  updateMany:      (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => void;
   resetCell:       (dayIdx: number, timeIdx: number) => void;
   toggleEditMode:  () => void;
 }
@@ -37,42 +58,58 @@ export function useSchedule(): UseScheduleReturn {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const persist = useCallback((next: Cell[][]) => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* 무시 */ }
+    try {
+      const payload: StoredSched = {
+        week: getISOWeekKey(new Date()),
+        data: next,
+      };
+      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    } catch { /* 무시 */ }
   }, []);
 
-  /** 셀을 고정 편성으로 업데이트 */
+  /** 단일 셀 → 고정 편성으로 업데이트 */
   const updateCell = useCallback((dayIdx: number, timeIdx: number, title: string, link?: string) => {
     setSched(prev => {
       const next = prev.map((day, di) =>
-        day.map((cell, ti) => {
-          if (di === dayIdx && ti === timeIdx) {
-            return {
-              ...cell,
-              title,
-              link:  link?.trim() || undefined,
-              type:  'fixed' as const,
-              badge: '★ 고정 편성',
-              bt:    'pink' as const,
-            };
-          }
-          return cell;
-        })
+        day.map((cell, ti) =>
+          di === dayIdx && ti === timeIdx
+            ? { ...cell, title, link: link?.trim() || undefined, type: 'fixed' as const, badge: '★ 고정 편성', bt: 'pink' as const }
+            : cell
+        )
       );
       persist(next);
       return next;
     });
   }, [persist]);
 
-  /** 셀을 기본 데이터로 초기화 */
+  /** 복수 셀 일괄 업데이트 */
+  const updateMany = useCallback(
+    (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => {
+      setSched(prev => {
+        let next = prev;
+        for (const e of edits) {
+          next = next.map((day, di) =>
+            day.map((cell, ti) =>
+              di === e.dayIdx && ti === e.timeIdx
+                ? { ...cell, title: e.title, link: e.link, type: 'fixed' as const, badge: '★ 고정 편성', bt: 'pink' as const }
+                : cell
+            )
+          );
+        }
+        persist(next);
+        return next;
+      });
+    },
+    [persist]
+  );
+
+  /** 셀 기본값으로 초기화 */
   const resetCell = useCallback((dayIdx: number, timeIdx: number) => {
     setSched(prev => {
       const next = prev.map((day, di) =>
-        day.map((cell, ti) => {
-          if (di === dayIdx && ti === timeIdx) {
-            return BASE_SCHED[di][ti];
-          }
-          return cell;
-        })
+        day.map((cell, ti) =>
+          di === dayIdx && ti === timeIdx ? BASE_SCHED[di][ti] : cell
+        )
       );
       persist(next);
       return next;
@@ -81,7 +118,7 @@ export function useSchedule(): UseScheduleReturn {
 
   const toggleEditMode = useCallback(() => setIsEditMode(v => !v), []);
 
-  /** 랜덤 편성 생성 (한국어 콘텐츠만) */
+  /** 랜덤 편성 생성 (한국어 콘텐츠) */
   const handleRandomize = async () => {
     setRanding(true);
     try {
@@ -91,7 +128,6 @@ export function useSchedule(): UseScheduleReturn {
       ]);
       const pool = [...dramas, ...movies].sort(() => Math.random() - 0.5);
       let pi = 0;
-
       setSched(prev => {
         const next = prev.map(day =>
           day.map(cell => {
@@ -109,12 +145,9 @@ export function useSchedule(): UseScheduleReturn {
         persist(next);
         return next;
       });
-    } catch {
-      // API 키 미설정 시 무시
-    } finally {
-      setRanding(false);
-    }
+    } catch { /* API 키 미설정 시 무시 */ }
+    finally { setRanding(false); }
   };
 
-  return { sched, randing, isEditMode, handleRandomize, updateCell, resetCell, toggleEditMode };
+  return { sched, randing, isEditMode, handleRandomize, updateCell, updateMany, resetCell, toggleEditMode };
 }

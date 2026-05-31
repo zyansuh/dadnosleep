@@ -43,7 +43,51 @@
   font-family: var(--font-num);
 }
 
-.btn-suggest {
+/* 건의함 버튼 */
+.btn-board {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  white-space: nowrap;
+}
+
+.btn-board:hover { background: rgba(255,255,255,0.12); }
+
+.board-badge {
+  background: var(--coral);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.mob-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+  text-align: left;
+  transition: all 0.18s;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mob-nav-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
   display: flex;
   align-items: center;
   gap: 7px;

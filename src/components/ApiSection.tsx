@@ -68,6 +68,16 @@ export function ApiSection({
             onClick={handleRandomize}
             cls="card-random"
           />
+
+          <ApiCard
+            icon={<span className="yt-card-icon">▶</span>}
+            title="유튜브 인기 영상"
+            desc={<>국내 유튜브 실시간 인기<br />TOP 12 영상 추천</>}
+            btnLabel="유튜브 보기 →"
+            active={activeApi === 'youtube'}
+            onClick={() => handleApiCard('youtube')}
+            cls="card-yt"
+          />
         </div>
 
         {/* 결과 영역 */}
