@@ -129,11 +129,14 @@ export function useSchedule(): UseScheduleReturn {
         fetchKoreanOTT('tv'),
         fetchKoreanOTT('movie'),
       ]);
-      if (!dramas.length && !movies.length) {
-        setRandError('TMDB API 키를 Vercel 환경변수에 설정해주세요 (VITE_TMDB_READ_TOKEN)');
+
+      const pool = [...dramas, ...movies];
+
+      if (pool.length === 0) {
+        setRandError('콘텐츠를 불러오지 못했습니다. Vercel 환경변수(VITE_TMDB_READ_TOKEN)를 확인하고 재배포해주세요.');
         return;
       }
-      const pool = [...dramas, ...movies].sort(() => Math.random() - 0.5);
+      pool.sort(() => Math.random() - 0.5);
       let pi = 0;
       setSched(prev => {
         const next = prev.map(day =>
@@ -153,7 +156,9 @@ export function useSchedule(): UseScheduleReturn {
         return next;
       });
     } catch (e) {
-      setRandError(e instanceof Error ? e.message : 'API 오류 — 환경변수 설정을 확인해주세요');
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[랜덤 편성]', msg);
+      setRandError(`오류: ${msg} — Vercel 재배포 후 다시 시도해주세요.`);
     } finally { setRanding(false); }
   };
 
