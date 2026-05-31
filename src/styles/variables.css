@@ -1,0 +1,30 @@
+:root {
+  --bg:        #0c0c16;
+  --bg2:       #12121e;
+  --bg-card:   #161625;
+  --bg-card2:  #1e1e30;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.05);
+  --text:      #f0f0f8;
+  --text-sub:  #9090a8;
+  --text-dim:  #5a5a72;
+  --coral:     #ff5170;
+  --coral2:    #ff7b54;
+  --teal:      #2ed573;
+  --purple:    #a29bfe;
+  --orange:    #fd9644;
+  --green:     #26de81;
+  --font-title: 'Cafe24Ssurround', 'Yeon Sung', 'Black Han Sans', sans-serif;
+  --font-sub:   'Gaegu', 'Noto Sans KR', sans-serif;
+  --font-num:   'Poppins', 'Noto Sans KR', sans-serif;
+  --font-body:  'Noto Sans KR', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: var(--font-body); border: none; }
+img { display: block; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }

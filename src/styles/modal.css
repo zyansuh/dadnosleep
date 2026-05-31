@@ -1,0 +1,75 @@
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; padding: 16px; animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+.modal {
+  width: 100%; max-width: 500px; max-height: 92vh; overflow-y: auto;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; box-shadow: 0 20px 80px rgba(0,0,0,0.65); animation: slideUp 0.25s;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+
+.modal-hd { display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 22px 0; margin-bottom: 18px; }
+.modal-title-row { display: flex; align-items: center; gap: 12px; }
+.modal-ico {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--coral), var(--coral2));
+  display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0;
+}
+.modal-hd h3 { font-size: 17px; font-weight: 700; }
+.modal-hd p  { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.modal-close {
+  background: transparent; border: 1px solid var(--border); color: var(--text-sub);
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; transition: all 0.18s; flex-shrink: 0;
+}
+.modal-close:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+.modal-form { padding: 0 22px 24px; display: flex; flex-direction: column; gap: 15px; }
+.ff  { display: flex; flex-direction: column; gap: 6px; }
+.fl  { font-size: 13px; font-weight: 600; color: var(--text-sub); }
+.req { color: var(--coral); }
+.inp {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; color: var(--text);
+  font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.18s; width: 100%;
+}
+.inp:focus    { border-color: var(--coral); background: rgba(255,81,112,0.04); }
+.inp-err      { border-color: var(--coral) !important; }
+.inp::placeholder { color: var(--text-dim); }
+.inp-ta { resize: vertical; }
+.fe     { font-size: 12px; color: var(--coral); }
+.cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cat-btn {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  color: var(--text-sub); padding: 8px; border-radius: 8px;
+  font-size: 13px; font-family: inherit; transition: all 0.18s;
+}
+.cat-btn:hover  { background: rgba(255,81,112,0.07); border-color: rgba(255,81,112,0.3); color: var(--text); }
+.cat-btn.active { background: rgba(255,81,112,0.14); border-color: var(--coral); color: var(--coral); font-weight: 700; }
+.form-actions { display: flex; gap: 8px; margin-top: 4px; }
+.btn-ghost-sm {
+  flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-sub);
+  padding: 10px; border-radius: 10px; font-size: 13px; font-family: inherit; transition: all 0.18s;
+}
+.btn-ghost-sm:hover { color: var(--text); }
+.btn-coral-form {
+  flex: 2; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: linear-gradient(135deg, var(--coral), var(--coral2));
+  border: none; color: #fff; padding: 10px; border-radius: 10px;
+  font-size: 13px; font-weight: 700; font-family: inherit; transition: opacity 0.18s;
+}
+.btn-coral-form:hover { opacity: 0.9; }
+.success-box { padding: 16px 22px 28px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.success-emoji   { font-size: 50px; }
+.success-box h3  { font-size: 18px; font-weight: 700; }
+.success-box p   { font-size: 14px; color: var(--text-sub); line-height: 1.65; }
+.summary { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; flex-direction: column; gap: 7px; text-align: left; margin: 4px 0; }
+.sum-row { display: flex; justify-content: space-between; font-size: 13px; }
+.sk      { color: var(--text-dim); }
+.sv      { color: var(--text); font-weight: 600; }
+.success-box .btn-coral-form { flex: none; width: 100%; margin-top: 6px; }

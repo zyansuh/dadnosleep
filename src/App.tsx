@@ -1,264 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Moon, Menu, X, Calendar, Heart,
-  Clock, RefreshCw, Send, Plus, Sparkles,
-} from 'lucide-react';
-import { fetchOTT, fetchKoreanOTT, fetchYouTube, type OttItem, type YtItem } from './utils/api';
+import { useState } from 'react';
+import { Moon, Menu, X, Clock, RefreshCw, Plus } from 'lucide-react';
+
+import { useClock }          from './hooks/useClock';
+import { useSchedule }       from './hooks/useSchedule';
+import { useApiCards }       from './hooks/useApiCards';
+import { useSuggestionForm } from './hooks/useSuggestionForm';
+
+import { HeroSection }      from './components/HeroSection';
+import { ApiSection }       from './components/ApiSection';
+import { SuggestionModal }  from './components/SuggestionModal';
+
 import './App.css';
 
-// ── 타입 ─────────────────────────────────────────────────────────
-type BadgeType = 'pink' | 'teal' | 'purple' | 'orange' | 'green';
-type CellType  = 'fixed' | 'ott' | 'random' | 'community';
-
-interface Cell {
-  title: string;
-  sub:   string;
-  type:  CellType;
-  badge: string;
-  bt:    BadgeType;
-  link?: string;
-}
-
-// ── 주간 편성표 데이터 ──────────────────────────────────────────
-// sched[dayIndex(0=월)][timeSlotIndex(0=20:00, 1=22:00, 2=00:00)]
-const BASE_SCHED: Cell[][] = [
-  // 월(0)
-  [
-    { title: '랜덤 애뇨', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-    { title: 'TOP 10 드라마', sub: '넷플릭스 TOP 10', type: 'ott', badge: 'TOP 10', bt: 'pink', link: 'https://www.netflix.com/kr/browse/genre/83' },
-    { title: '심야 영화', sub: '오늘의 픽', type: 'ott', badge: '오늘의 픽', bt: 'orange', link: 'https://www.netflix.com/kr/' },
-  ],
-  // 화(1)
-  [
-    { title: '랜덤 애니', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-    { title: '실시간 인기작', sub: 'OTT 통합 인기', type: 'ott', badge: '실시간 인기', bt: 'purple', link: 'https://www.netflix.com/kr/' },
-    { title: '랜덤 다큐', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-  ],
-  // 수(2)
-  [
-    { title: '로맨스 추천', sub: '랜덤 추천', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-    { title: 'OTT 화제작', sub: 'OTT 통합', type: 'ott', badge: 'OTT 통합', bt: 'orange', link: 'https://www.wavve.com/' },
-    { title: '랜덤 시리즈', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-  ],
-  // 목(3)
-  [
-    { title: '커뮤니티 픽', sub: '커뮤니티 투표', type: 'community', badge: '커뮤니티', bt: 'green' },
-    { title: '나는 솔로', sub: 'TV 조선 22:00', type: 'fixed', badge: '★ 고정 편성', bt: 'pink', link: 'https://www.youtube.com/results?search_query=나는솔로+최신+다시보기' },
-    { title: '랜덤 애뇨', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-  ],
-  // 금(4)
-  [
-    { title: '주간 인기작', sub: '주간 TOP', type: 'ott', badge: '주간 인기', bt: 'purple', link: 'https://www.netflix.com/kr/' },
-    { title: '이혼숙려캠프', sub: 'TV 조선 22:00', type: 'fixed', badge: '★ 고정 편성', bt: 'pink', link: 'https://www.youtube.com/results?search_query=이혼숙려캠프+최신+다시보기' },
-    { title: '심야 토크', sub: '오늘의 픽', type: 'ott', badge: '오늘의 픽', bt: 'orange' },
-  ],
-  // 토(5)
-  [
-    { title: '정주행 추천', sub: '오늘의 픽', type: 'ott', badge: '오늘의 픽', bt: 'orange', link: 'https://www.netflix.com/kr/' },
-    { title: '랜덤 영화', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-    { title: '실시간 TOP 10', sub: '실시간 인기', type: 'ott', badge: '실시간 인기', bt: 'purple', link: 'https://www.netflix.com/kr/' },
-  ],
-  // 일(6)
-  [
-    { title: '휴일 추천', sub: '오늘의 픽', type: 'ott', badge: '오늘의 픽', bt: 'orange', link: 'https://www.netflix.com/kr/' },
-    { title: '랜덤 드라마', sub: 'OTT 통합', type: 'random', badge: '랜덤 추천', bt: 'teal' },
-    { title: '다음주 예고', sub: '커뮤니티', type: 'community', badge: '커뮤니티', bt: 'green' },
-  ],
-];
-
-const DAYS   = ['월', '화', '수', '목', '금', '토', '일'];
-const TIMES  = ['20:00', '22:00', '00:00'];
-
-// ── 시간 → 분 변환 (새벽 0~5시 = +1440) ─────────────────────
-function toMin(hhmm: string): number {
-  const h = parseInt(hhmm.split(':')[0]);
-  const m = parseInt(hhmm.split(':')[1]);
-  return (h < 6 ? h + 24 : h) * 60 + m;
-}
-
-const SLOT_END_TIMES = ['22:00', '00:00', '02:00'];
-
-function slotStatus(timeIdx: number, nowMin: number): 'past' | 'live' | 'upcoming' {
-  const start = toMin(TIMES[timeIdx]);
-  const end   = toMin(SLOT_END_TIMES[timeIdx]);
-  if (nowMin >= end)   return 'past';
-  if (nowMin >= start) return 'live';
-  return 'upcoming';
-}
-
-// ── 건의 폼 타입 ─────────────────────────────────────────────
-interface SuggForm {
-  title: string;
-  category: string;
-  time: string;
-  desc: string;
-  nick: string;
-}
-
-// ── 조회수 포맷 ───────────────────────────────────────────────
-function fmtViews(n?: string): string {
-  if (!n) return '';
-  const num = parseInt(n);
-  if (num >= 100_000_000) return `${Math.round(num / 100_000_000)}억회`;
-  if (num >= 10_000)      return `${Math.round(num / 10_000)}만회`;
-  return num.toLocaleString() + '회';
-}
-
-// ── CellInner 컴포넌트 ────────────────────────────────────────
-function CellInner({ cell, isLive }: { cell: Cell; isLive: boolean }) {
-  return (
-    <>
-      <span className={`cb badge-${cell.bt}`}>{cell.badge}</span>
-      <span className="ct">
-        {cell.title}
-        {isLive && <span className="live-dot-anim" />}
-      </span>
-    </>
-  );
-}
-
-// ── ApiCard 컴포넌트 ───────────────────────────────────────────
-function ApiCard({
-  icon, title, desc, btnLabel, active, onClick, cls,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: React.ReactNode;
-  btnLabel: string;
-  active: boolean;
-  onClick: () => void;
-  cls: string;
-}) {
-  return (
-    <div className={`api-card ${cls} ${active ? 'api-active' : ''}`} onClick={onClick}>
-      <div className="api-icon">{icon}</div>
-      <div className="api-body">
-        <h4>{title}</h4>
-        <p>{desc}</p>
-      </div>
-      <button className="api-cta">{btnLabel}</button>
-    </div>
-  );
-}
-
-// ── Field 컴포넌트 ─────────────────────────────────────────────
-function Field({ label, error, children }: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="ff">
-      <label className="fl">{label} <span className="req">*</span></label>
-      {children}
-      {error && <span className="fe">{error}</span>}
-    </div>
-  );
-}
-
-// ── 메인 앱 ───────────────────────────────────────────────────
 export default function App() {
-  const [menuOpen,   setMenuOpen]   = useState(false);
-  const [modalOpen,  setModalOpen]  = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [sched,      setSched]      = useState<Cell[][]>(BASE_SCHED);
-  const [randing,    setRanding]    = useState(false);
-  const [activeApi,  setActiveApi]  = useState<'netflix' | 'ott' | 'youtube' | null>(null);
-  const [ottItems,   setOttItems]   = useState<OttItem[]>([]);
-  const [ytItems,    setYtItems]    = useState<YtItem[]>([]);
-  const [ottLoading, setOttLoading] = useState(false);
-  const [ottError,   setOttError]   = useState('');
-  const [now,        setNow]        = useState(new Date());
-  const [form,       setForm]       = useState<SuggForm>({ title: '', category: '', time: '', desc: '', nick: '' });
-  const [errors,     setErrors]     = useState<Partial<SuggForm>>({});
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
+  const clock   = useClock();
+  const sched   = useSchedule();
+  const api     = useApiCards();
+  const suggest = useSuggestionForm();
 
-  const todayIdx = (now.getDay() + 6) % 7;
-  const nowH     = now.getHours();
-  const nowMin   = (nowH < 6 ? nowH + 24 : nowH) * 60 + now.getMinutes();
-
-  // ── 랜덤 편성 생성 (한국어 콘텐츠만) ─────────────────────
-  const handleRandomize = async () => {
-    setRanding(true);
-    try {
-      const [dramas, movies] = await Promise.all([
-        fetchKoreanOTT('tv'),
-        fetchKoreanOTT('movie'),
-      ]);
-      const pool = [...dramas, ...movies].sort(() => Math.random() - 0.5);
-      let pi = 0;
-      const newSched = sched.map(day =>
-        day.map(cell => {
-          if (cell.type === 'fixed') return cell;
-          const item = pool[pi++];
-          if (!item) return cell;
-          return {
-            ...cell,
-            title: ((item.title || item.name || cell.title) as string).slice(0, 11),
-            sub:   'TMDB 한국 추천',
-            link:  `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`,
-          };
-        })
-      );
-      setSched(newSched);
-    } catch {
-      // API 키 미설정 시 무시
-    } finally {
-      setRanding(false);
-    }
-  };
-
-  // ── API 카드 클릭 ──────────────────────────────────────────
-  const handleApiCard = async (type: 'netflix' | 'ott' | 'youtube') => {
-    if (activeApi === type) { setActiveApi(null); return; }
-    setActiveApi(type);
-    setOttLoading(true);
-    setOttError('');
-    setOttItems([]);
-    setYtItems([]);
-    try {
-      if (type === 'youtube') {
-        const videos = await fetchYouTube('0');
-        setYtItems(videos.slice(0, 12));
-      } else {
-        const pid = type === 'netflix' ? '8' : '0';
-        const [movies, shows] = await Promise.all([
-          fetchOTT(pid, 'movie'),
-          fetchOTT(pid, 'tv'),
-        ]);
-        setOttItems([...movies.slice(0, 5), ...shows.slice(0, 5)]);
-      }
-    } catch (e) {
-      setOttError(e instanceof Error ? e.message : 'API 키를 config.js에 입력해주세요');
-    } finally {
-      setOttLoading(false);
-    }
-  };
-
-  // ── 건의 폼 ────────────────────────────────────────────────
-  const validate = () => {
-    const e: Partial<SuggForm> = {};
-    if (!form.title.trim())    e.title    = '프로그램명을 입력해주세요';
-    if (!form.category)        e.category = '카테고리를 선택해주세요';
-    if (!form.time.trim())     e.time     = '시간대를 입력해주세요';
-    if (!form.desc.trim())     e.desc     = '내용을 입력해주세요';
-    if (!form.nick.trim())     e.nick     = '닉네임을 입력해주세요';
-    setErrors(e);
-    return !Object.keys(e).length;
-  };
-
-  const openModal = () => {
-    setModalOpen(true);
-    setSubmitted(false);
-    setForm({ title: '', category: '', time: '', desc: '', nick: '' });
-    setErrors({});
-  };
-
-  // ── JSX ────────────────────────────────────────────────────
   return (
     <div className="app">
 
@@ -279,130 +40,45 @@ export default function App() {
             <span>아빠안잔다</span>
           </a>
           <div className="hd-spacer" />
-          <span className="op-pill"><Moon size={12} /> 20:00 ~ 02:00 운영</span>
-          <button className="hamburger" onClick={() => setMenuOpen(v => !v)}>
+          <span className="op-pill">
+            <Moon size={12} /> 20:00 ~ 02:00 운영
+          </span>
+          <button
+            className="hamburger"
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label="메뉴 열기"
+          >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
         {menuOpen && (
           <nav className="mobile-nav">
             <a href="#schedule-section" onClick={() => setMenuOpen(false)}>📅 편성표</a>
-            <a href="#추천" onClick={() => setMenuOpen(false)}>✨ 추천</a>
-            <a href="#커뮤니티" onClick={() => setMenuOpen(false)}>💬 커뮤니티</a>
-            <button className="btn-suggest mob-cta" onClick={() => { setMenuOpen(false); openModal(); }}>
+            <a href="#추천"            onClick={() => setMenuOpen(false)}>✨ 추천</a>
+            <button
+              className="btn-suggest mob-cta"
+              onClick={() => { setMenuOpen(false); suggest.openModal(); }}
+            >
               ✏️ 프로그램 신청하기
             </button>
           </nav>
         )}
       </header>
 
-      {/* 히어로 */}
-      <section className="hero" id="편성표">
-        <div className="hero-inner">
-
-          {/* 좌측 */}
-          <div className="hero-left">
-            <div className="hero-moon">🌙</div>
-            <div className="hero-pill">
-              <Heart size={12} fill="currentColor" />
-              목·금 고정 편성 + 실시간 랜덤 추천 ✦
-            </div>
-            <div className="hero-title-wrap">
-              <span className="sp sp1">✦</span>
-              <span className="sp sp2">✦</span>
-              <span className="sp sp3">⋆</span>
-              <span className="sp sp4">✦</span>
-              <h1 className="site-title">아빠안잔다<span className="title-heart">♥</span></h1>
-            </div>
-            <p className="site-sub">우리가 함께 보는 OTT 편성표</p>
-            <p className="site-desc">
-              하루의 끝, 가족·연인·친구가 함께 즐길 수 있는<br />
-              OTT 프로그램을 고정 편성과 실시간 추천으로<br />
-              매일 새롭게 만나보세요.
-            </p>
-            <div className="hero-ctas">
-              <a href="#schedule-section" className="btn-hero">
-                <Calendar size={14} /> 오늘 편성표 보기
-              </a>
-              <button className="btn-hero" onClick={handleRandomize} disabled={randing}>
-                <span>☆</span> {randing ? '생성 중…' : '랜덤 편성 생성하기'}
-              </button>
-            </div>
-          </div>
-
-          {/* 우측: 편성표 미리보기 */}
-          <div className="hero-right" id="schedule-section">
-            <div className="sched-card">
-              <div className="sched-head">
-                <h3>이번 주 편성표 (20:00 ~ 02:00)</h3>
-                <span className="sched-op">20:00 ~ 02:00 운영</span>
-              </div>
-              <div className="sched-note">
-                ① 편성표는 매일 업데이트되며, 주간 경우는 실시간으로 달라질 수 있어요.
-              </div>
-              <div className="table-scroll">
-                <table className="sched-tbl">
-                  <thead>
-                    <tr>
-                      <th className="th-empty" />
-                      {DAYS.map((d, i) => (
-                        <th key={d} className={i === todayIdx ? 'th-today' : ''}>
-                          {d}
-                          {i === todayIdx && <span className="today-dot" />}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {TIMES.map((t, ti) => (
-                      <tr key={t}>
-                        <td className="td-t">{t}</td>
-                        {sched.map((day, di) => {
-                          const cell   = day[ti];
-                          const isToday = di === todayIdx;
-                          const st     = isToday ? slotStatus(ti, nowMin) : '';
-                          const isLive  = st === 'live';
-                          return (
-                            <td
-                              key={di}
-                              className={[
-                                'td-cell',
-                                `cell-${cell.type}`,
-                                isToday  ? 'cell-today' : '',
-                                isLive   ? 'cell-live'  : '',
-                              ].filter(Boolean).join(' ')}
-                            >
-                              {cell.link ? (
-                                <a href={cell.link} target="_blank" rel="noopener noreferrer" className="cell-inner">
-                                  <CellInner cell={cell} isLive={isLive} />
-                                </a>
-                              ) : (
-                                <div className="cell-inner">
-                                  <CellInner cell={cell} isLive={isLive} />
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                    <tr>
-                      <td className="td-t td-end">02:00</td>
-                      <td colSpan={7} className="td-end-label">— 방송 종료 —</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 히어로 + 편성표 */}
+      <HeroSection
+        sched={sched.sched}
+        todayIdx={clock.todayIdx}
+        nowMin={clock.nowMin}
+        randing={sched.randing}
+        handleRandomize={sched.handleRandomize}
+      />
 
       {/* 인포 스트립 */}
       <div className="info-strip">
         {[
-          { icon: <Clock size={13} />, text: '20:00 ~ 02:00 운영' },
-          { icon: <span>★</span>,     text: '고정 편성 + 랜덤 추천' },
+          { icon: <Clock size={13} />,     text: '20:00 ~ 02:00 운영' },
+          { icon: <span>★</span>,          text: '고정 편성 + 랜덤 추천' },
           { icon: <RefreshCw size={13} />, text: '매일 새롭게 갱신' },
         ].map((b, i) => (
           <div key={i} className="info-chip">{b.icon}<span>{b.text}</span></div>
@@ -410,131 +86,16 @@ export default function App() {
       </div>
 
       {/* API 추천 섹션 */}
-      <section className="api-section" id="추천">
-        <div className="sec-wrap">
-          <div className="api-layout">
-
-            {/* 설명 패널 */}
-            <div className="api-desc-panel">
-              <span className="api-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
-              <h2 className="api-title">API 기반<br />추천 엔진</h2>
-              <p className="api-desc-text">
-                API 키와 통합 인기 데이터를<br />
-                실시간으로 분석하여<br />
-                최적의 편성표를 생성합니다.
-              </p>
-            </div>
-
-            <ApiCard
-              icon={<span className="n-icon">N</span>}
-              title="넷플릭스 TOP 10"
-              desc={<>국내 넷플릭스 TOP 10<br />실시간 인기 현황</>}
-              btnLabel="TOP 10 보기 →"
-              active={activeApi === 'netflix'}
-              onClick={() => handleApiCard('netflix')}
-              cls="card-netflix"
-            />
-            <ApiCard
-              icon={
-                <span className="ott-logos">
-                  <span style={{ color: '#e50914' }}>N</span>
-                  <span style={{ color: '#0072f5' }}>D</span>
-                  <span style={{ color: '#1d6fa4' }}>W</span>
-                </span>
-              }
-              title="OTT 통합 인기작"
-              desc={<>넷플릭스, 디즈니+, 티빙, wavve<br />통합 인기작 랭킹</>}
-              btnLabel="인기작 보기 →"
-              active={activeApi === 'ott'}
-              onClick={() => handleApiCard('ott')}
-              cls="card-ott"
-            />
-            <ApiCard
-              icon={<span className="dice">🎲</span>}
-              title="랜덤 편성 생성"
-              desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
-              btnLabel={randing ? '생성 중…' : '랜덤 생성하기 →'}
-              active={false}
-              onClick={handleRandomize}
-              cls="card-random"
-            />
-          </div>
-
-          {/* 결과 표시 */}
-          {activeApi && (
-            <div className="ott-result-box">
-              <h4>
-                {activeApi === 'netflix' && '넷플릭스 TOP 10'}
-                {activeApi === 'ott'     && 'OTT 통합 인기작'}
-                {activeApi === 'youtube' && '유튜브 인기 영상 TOP 12'}
-              </h4>
-              {ottLoading && <p className="result-msg">불러오는 중…</p>}
-              {ottError   && <p className="result-msg err">⚠️ {ottError}</p>}
-
-              {/* OTT 그리드 */}
-              {!ottLoading && !ottError && ottItems.length > 0 && (
-                <div className="ott-grid">
-                  {ottItems.map((item, i) => (
-                    <a
-                      key={item.id}
-                      href={`https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ott-card"
-                    >
-                      {item.poster_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
-                          alt={item.title || item.name}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="ott-no-poster">🎬</div>
-                      )}
-                      <span className="ott-rank">#{i + 1}</span>
-                      <span className="ott-name">{item.title || item.name}</span>
-                    </a>
-                  ))}
-                </div>
-              )}
-
-              {/* YouTube 그리드 */}
-              {!ottLoading && !ottError && ytItems.length > 0 && (
-                <div className="yt-grid">
-                  {ytItems.map((v) => {
-                    const thumb = v.snippet?.thumbnails?.medium?.url;
-                    const title = v.snippet?.title || '';
-                    const channel = v.snippet?.channelTitle || '';
-                    const views = fmtViews(v.statistics?.viewCount);
-                    return (
-                      <a
-                        key={v.id}
-                        href={`https://www.youtube.com/watch?v=${v.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="yt-card"
-                      >
-                        <div className="yt-thumb-wrap">
-                          {thumb
-                            ? <img src={thumb} alt={title} loading="lazy" />
-                            : <div className="yt-no-thumb">▶</div>
-                          }
-                          <span className="yt-play">▶</span>
-                        </div>
-                        <div className="yt-info">
-                          <p className="yt-title">{title}</p>
-                          <p className="yt-ch">{channel}</p>
-                          {views && <p className="yt-views">{views}</p>}
-                        </div>
-                      </a>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
+      <ApiSection
+        activeApi={api.activeApi}
+        ottItems={api.ottItems}
+        ytItems={api.ytItems}
+        ottLoading={api.ottLoading}
+        ottError={api.ottError}
+        randing={sched.randing}
+        handleApiCard={api.handleApiCard}
+        handleRandomize={sched.handleRandomize}
+      />
 
       {/* CTA 배너 */}
       <section className="cta-banner">
@@ -563,102 +124,21 @@ export default function App() {
       </footer>
 
       {/* FAB */}
-      <button className="fab" onClick={openModal}>
+      <button className="fab" onClick={suggest.openModal} aria-label="프로그램 건의하기">
         <Plus size={18} /><span>건의</span>
       </button>
 
       {/* 건의 모달 */}
-      {modalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={e => e.target === e.currentTarget && setModalOpen(false)}
-        >
-          <div className="modal">
-            <div className="modal-hd">
-              <div className="modal-title-row">
-                <div className="modal-ico"><Send size={15} /></div>
-                <div>
-                  <h3>편성표 건의하기</h3>
-                  <p>원하는 프로그램을 알려주세요 🎤</p>
-                </div>
-              </div>
-              <button className="modal-close" onClick={() => setModalOpen(false)}><X size={18} /></button>
-            </div>
-
-            {!submitted ? (
-              <form
-                className="modal-form"
-                onSubmit={e => { e.preventDefault(); if (validate()) setSubmitted(true); }}
-              >
-                <Field label="프로그램명" error={errors.title}>
-                  <input
-                    className={`inp ${errors.title ? 'inp-err' : ''}`}
-                    placeholder="원하는 프로그램명"
-                    value={form.title}
-                    onChange={e => setForm({ ...form, title: e.target.value })}
-                  />
-                </Field>
-                <Field label="카테고리" error={errors.category}>
-                  <div className="cat-grid">
-                    {['드라마', '예능', '영화', '애니', '다큐', '기타'].map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`cat-btn ${form.category === c ? 'active' : ''}`}
-                        onClick={() => setForm({ ...form, category: c })}
-                      >{c}</button>
-                    ))}
-                  </div>
-                </Field>
-                <Field label="희망 시간대" error={errors.time}>
-                  <input
-                    className={`inp ${errors.time ? 'inp-err' : ''}`}
-                    placeholder="예: 매주 금요일 밤 11시"
-                    value={form.time}
-                    onChange={e => setForm({ ...form, time: e.target.value })}
-                  />
-                </Field>
-                <Field label="건의 내용" error={errors.desc}>
-                  <textarea
-                    className={`inp inp-ta ${errors.desc ? 'inp-err' : ''}`}
-                    rows={3}
-                    placeholder="어떤 프로그램인지 설명해주세요"
-                    value={form.desc}
-                    onChange={e => setForm({ ...form, desc: e.target.value })}
-                  />
-                </Field>
-                <Field label="닉네임" error={errors.nick}>
-                  <input
-                    className={`inp ${errors.nick ? 'inp-err' : ''}`}
-                    placeholder="닉네임"
-                    value={form.nick}
-                    onChange={e => setForm({ ...form, nick: e.target.value })}
-                  />
-                </Field>
-                <div className="form-actions">
-                  <button type="button" className="btn-ghost-sm" onClick={() => setModalOpen(false)}>취소</button>
-                  <button type="submit" className="btn-coral-form">
-                    <Send size={14} /> 제출하기
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="success-box">
-                <div className="success-emoji">🎉</div>
-                <h3>건의가 접수됐어요!</h3>
-                <p>소중한 의견 감사합니다.<br />검토 후 편성에 반영하겠습니다.</p>
-                <div className="summary">
-                  {[['프로그램', form.title], ['카테고리', form.category], ['시간대', form.time]].map(([k, v]) => (
-                    <div key={k} className="sum-row">
-                      <span className="sk">{k}</span><span className="sv">{v}</span>
-                    </div>
-                  ))}
-                </div>
-                <button className="btn-coral-form" onClick={() => setModalOpen(false)}>확인</button>
-              </div>
-            )}
-          </div>
-        </div>
+      {suggest.modalOpen && (
+        <SuggestionModal
+          form={suggest.form}
+          setForm={suggest.setForm}
+          errors={suggest.errors}
+          submitted={suggest.submitted}
+          setSubmitted={suggest.setSubmitted}
+          validate={suggest.validate}
+          onClose={suggest.closeModal}
+        />
       )}
     </div>
   );
