@@ -20,18 +20,31 @@ export function getPosterUrl(path) {
   return path ? `${IMG}${path}` : null;
 }
 
-export async function fetchOTT(providerId, contentType) {
-  const key = config.TMDB_API_KEY;
-  let url;
+function getHeaders() {
+  const token = config.TMDB_READ_TOKEN;
+  if (token) {
+    return {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+  }
+  return {};
+}
 
+export async function fetchOTT(providerId, contentType) {
+  const headers = getHeaders();
+  const useBearer = !!config.TMDB_READ_TOKEN;
+  const keyParam  = useBearer ? "" : `api_key=${config.TMDB_API_KEY}&`;
+
+  let url;
   if (providerId === "0") {
-    url = `${BASE}/${contentType}/popular?api_key=${key}&language=ko-KR&region=KR&page=1`;
+    url = `${BASE}/${contentType}/popular?${keyParam}language=ko-KR&region=KR&page=1`;
   } else {
-    url = `${BASE}/discover/${contentType}?api_key=${key}&language=ko-KR&watch_region=KR&with_watch_providers=${providerId}&sort_by=popularity.desc&page=1`;
+    url = `${BASE}/discover/${contentType}?${keyParam}language=ko-KR&watch_region=KR&with_watch_providers=${providerId}&sort_by=popularity.desc&page=1`;
   }
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`TMDB 오류 (${res.status}) — API 키를 확인해주세요`);
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(`TMDB 오류 (${res.status}) — API 키/토큰을 확인해주세요`);
   const data = await res.json();
   return data.results || [];
 }
