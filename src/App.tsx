@@ -278,15 +278,8 @@ export default function App() {
             <span className="logo-ico">🤖</span>
             <span>아빠안잔다</span>
           </a>
-          <a href="#schedule-section" className="hd-sched-link">
-            <Calendar size={15} />
-            <span>편성표</span>
-          </a>
           <div className="hd-spacer" />
           <span className="op-pill"><Moon size={12} /> 20:00 ~ 02:00 운영</span>
-          <button className="btn-suggest" onClick={openModal}>
-            ✏️ 프로그램 신청
-          </button>
           <button className="hamburger" onClick={() => setMenuOpen(v => !v)}>
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -419,11 +412,19 @@ export default function App() {
       {/* API 추천 섹션 */}
       <section className="api-section" id="추천">
         <div className="sec-wrap">
-          <div className="sec-head-row">
-            <span className="sec-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
-            <h2 className="sec-h2">API 기반 추천 엔진</h2>
-          </div>
-          <div className="api-row">
+          <div className="api-layout">
+
+            {/* 설명 패널 */}
+            <div className="api-desc-panel">
+              <span className="api-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
+              <h2 className="api-title">API 기반<br />추천 엔진</h2>
+              <p className="api-desc-text">
+                API 키와 통합 인기 데이터를<br />
+                실시간으로 분석하여<br />
+                최적의 편성표를 생성합니다.
+              </p>
+            </div>
+
             <ApiCard
               icon={<span className="n-icon">N</span>}
               title="넷플릭스 TOP 10"
@@ -449,18 +450,9 @@ export default function App() {
               cls="card-ott"
             />
             <ApiCard
-              icon={<span className="yt-icon">▶</span>}
-              title="유튜브 인기 영상"
-              desc={<>국내 유튜브 실시간 인기<br />TOP 12 영상 추천</>}
-              btnLabel="유튜브 보기 →"
-              active={activeApi === 'youtube'}
-              onClick={() => handleApiCard('youtube')}
-              cls="card-yt"
-            />
-            <ApiCard
               icon={<span className="dice">🎲</span>}
               title="랜덤 편성 생성"
-              desc={<>한국 드라마·영화 기반<br />스마트 랜덤 추천</>}
+              desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
               btnLabel={randing ? '생성 중…' : '랜덤 생성하기 →'}
               active={false}
               onClick={handleRandomize}

@@ -69,7 +69,7 @@ img { display: block; }
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
-  height: 60px;
+  height: 56px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -577,14 +577,26 @@ img { display: block; }
   background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 50%, var(--bg) 100%);
 }
 
-.sec-head-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
+/* 설명 패널 + 3카드 4열 */
+.api-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.sec-eyebrow {
+/* 설명 패널 */
+.api-desc-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.api-eyebrow {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -593,20 +605,19 @@ img { display: block; }
   color: var(--coral);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  white-space: nowrap;
 }
 
-.sec-h2 {
-  font-size: 20px;
+.api-title {
+  font-size: 22px;
   font-weight: 800;
+  line-height: 1.25;
 }
 
-/* 4카드 한 줄 */
-.api-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 16px;
+.api-desc-text {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.75;
+  margin-top: auto;
 }
 
 .api-card {
@@ -1226,7 +1237,6 @@ img { display: block; }
   .api-desc-panel { grid-column: 1 / -1; }
 
   .api-row { grid-template-columns: 1fr 1fr; gap: 12px; }
-
   .comm-layout {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
