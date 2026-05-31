@@ -1,5 +1,4 @@
-import React from 'react';
-import { Heart, Calendar, Pencil, Check, Edit3 } from 'lucide-react';
+import { Heart, Calendar, Edit3 } from 'lucide-react';
 import type { Cell } from '../types';
 import { ScheduleTable } from './ScheduleTable';
 
@@ -8,16 +7,12 @@ interface Props {
   todayIdx:            number;
   nowMin:              number;
   randing:             boolean;
-  isEditMode:          boolean;
-  handleRandomize:     () => void;
-  toggleEditMode:      () => void;
-  onEditCell:          (dayIdx: number, timeIdx: number) => void;
   onOpenScheduleEdit:  () => void;
+  handleRandomize:     () => void;
 }
 
 export function HeroSection({
-  sched, todayIdx, nowMin, randing, isEditMode,
-  handleRandomize, toggleEditMode, onEditCell, onOpenScheduleEdit,
+  sched, todayIdx, nowMin, randing, onOpenScheduleEdit, handleRandomize,
 }: Props) {
   return (
     <section className="hero">
@@ -61,27 +56,12 @@ export function HeroSection({
 
       {/* 우측: 편성표 */}
       <div className="hero-right" id="schedule-section">
-        <div className="sched-edit-bar">
-          <button
-            className={`btn-edit-toggle ${isEditMode ? 'active' : ''}`}
-            onClick={toggleEditMode}
-          >
-            {isEditMode
-              ? <><Check size={14} /> 편집 완료</>
-              : <><Pencil size={14} /> 셀 직접 편집</>
-            }
-          </button>
-          {isEditMode && (
-            <span className="edit-mode-hint">셀을 클릭해 바꾸세요</span>
-          )}
-        </div>
-
         <ScheduleTable
           sched={sched}
           todayIdx={todayIdx}
           nowMin={nowMin}
-          isEditMode={isEditMode}
-          onEditCell={onEditCell}
+          isEditMode={false}
+          onEditCell={() => {}}
         />
       </div>
     </section>

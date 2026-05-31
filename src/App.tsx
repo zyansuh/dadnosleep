@@ -10,17 +10,13 @@ import { HeroSection }        from './components/HeroSection';
 import { ApiSection }         from './components/ApiSection';
 import { InfoSection }        from './components/InfoSection';
 import { SuggestionModal }    from './components/SuggestionModal';
-import { EditCellModal }      from './components/EditCellModal';
 import { ScheduleEditModal }  from './components/ScheduleEditModal';
 import { SuggestionBoard }    from './components/SuggestionBoard';
 
 import './App.css';
 
-interface EditTarget { dayIdx: number; timeIdx: number; }
-
 export default function App() {
   const [menuOpen,       setMenuOpen]       = useState(false);
-  const [editTarget,     setEditTarget]     = useState<EditTarget | null>(null);
   const [schedEditOpen,  setSchedEditOpen]  = useState(false);
   const [boardOpen,      setBoardOpen]      = useState(false);
 
@@ -80,10 +76,7 @@ export default function App() {
         todayIdx={clock.todayIdx}
         nowMin={clock.nowMin}
         randing={sched.randing}
-        isEditMode={sched.isEditMode}
         handleRandomize={sched.handleRandomize}
-        toggleEditMode={sched.toggleEditMode}
-        onEditCell={(di, ti) => setEditTarget({ dayIdx: di, timeIdx: ti })}
         onOpenScheduleEdit={() => setSchedEditOpen(true)}
       />
 
@@ -132,17 +125,6 @@ export default function App() {
           setSubmitted={suggest.setSubmitted}
           validate={suggest.validate}
           onClose={suggest.closeModal}
-        />
-      )}
-
-      {editTarget && (
-        <EditCellModal
-          cell={sched.sched[editTarget.dayIdx][editTarget.timeIdx]}
-          dayIdx={editTarget.dayIdx}
-          timeIdx={editTarget.timeIdx}
-          onSave={sched.updateCell}
-          onReset={sched.resetCell}
-          onClose={() => setEditTarget(null)}
         />
       )}
 
