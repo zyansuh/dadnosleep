@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { X, MessageSquare } from 'lucide-react';
 import type { SavedSuggestion } from '../hooks/useSuggestionForm';
 

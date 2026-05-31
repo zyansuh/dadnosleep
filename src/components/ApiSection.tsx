@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Sparkles } from 'lucide-react';
 import type { ApiType, OttItem, YtItem } from '../types';
 import { ApiCard } from './ApiCard';

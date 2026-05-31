@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Save, Lock } from 'lucide-react';
 import type { Cell } from '../types';
 import { DAYS, TIMES } from '../constants/schedule';
@@ -15,7 +15,6 @@ interface Props {
   onClose:    () => void;
 }
 
-const TIME_LABELS = ['20:00 슬롯', '22:00 슬롯', '00:00 슬롯'];
 
 export function ScheduleEditModal({ sched, onSaveAll, onClose }: Props) {
   const today = new Date();

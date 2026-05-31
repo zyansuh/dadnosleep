@@ -1,4 +1,4 @@
-import React from 'react';
+
 import type { Cell } from '../types';
 import { DAYS, TIMES } from '../constants/schedule';
 import { slotStatus } from '../utils/scheduleTime';
