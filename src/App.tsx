@@ -3,7 +3,7 @@ import {
   Moon, Menu, X, Calendar, Heart,
   Clock, RefreshCw, Send, Plus, Sparkles,
 } from 'lucide-react';
-import { fetchOTT, fetchYouTube, type OttItem, type YtItem } from './utils/api';
+import { fetchOTT, fetchKoreanOTT, fetchYouTube, type OttItem, type YtItem } from './utils/api';
 import './App.css';
 
 // ── 타입 ─────────────────────────────────────────────────────────
@@ -181,15 +181,15 @@ export default function App() {
   const nowH     = now.getHours();
   const nowMin   = (nowH < 6 ? nowH + 24 : nowH) * 60 + now.getMinutes();
 
-  // ── 랜덤 편성 생성 ─────────────────────────────────────────
+  // ── 랜덤 편성 생성 (한국어 콘텐츠만) ─────────────────────
   const handleRandomize = async () => {
     setRanding(true);
     try {
-      const [movies, shows] = await Promise.all([
-        fetchOTT('0', 'movie'),
-        fetchOTT('0', 'tv'),
+      const [dramas, movies] = await Promise.all([
+        fetchKoreanOTT('tv'),
+        fetchKoreanOTT('movie'),
       ]);
-      const pool = [...movies, ...shows].sort(() => Math.random() - 0.5);
+      const pool = [...dramas, ...movies].sort(() => Math.random() - 0.5);
       let pi = 0;
       const newSched = sched.map(day =>
         day.map(cell => {
@@ -199,7 +199,7 @@ export default function App() {
           return {
             ...cell,
             title: ((item.title || item.name || cell.title) as string).slice(0, 11),
-            sub:   'TMDB 추천',
+            sub:   'TMDB 한국 추천',
             link:  `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`,
           };
         })
@@ -278,27 +278,26 @@ export default function App() {
             <span className="logo-ico">🤖</span>
             <span>아빠안잔다</span>
           </a>
-          <nav className="main-nav">
-            {['편성표', '추천', '신청', '후기', '포인트', '커뮤니티'].map(n => (
-              <a key={n} href={`#${n}`}>{n}</a>
-            ))}
-          </nav>
-          <div className="hd-actions">
-            <span className="op-pill"><Moon size={12} /> 20:00 ~ 02:00 운영</span>
-            <button className="btn-ghost">로그인</button>
-            <button className="btn-coral-sm">회원가입</button>
-            <button className="hamburger" onClick={() => setMenuOpen(v => !v)}>
-              {menuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+          <a href="#schedule-section" className="hd-sched-link">
+            <Calendar size={15} />
+            <span>편성표</span>
+          </a>
+          <div className="hd-spacer" />
+          <span className="op-pill"><Moon size={12} /> 20:00 ~ 02:00 운영</span>
+          <button className="btn-suggest" onClick={openModal}>
+            ✏️ 프로그램 신청
+          </button>
+          <button className="hamburger" onClick={() => setMenuOpen(v => !v)}>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
         {menuOpen && (
           <nav className="mobile-nav">
-            {['편성표', '추천', '신청', '후기', '포인트', '커뮤니티'].map(n => (
-              <a key={n} href={`#${n}`} onClick={() => setMenuOpen(false)}>{n}</a>
-            ))}
-            <button className="btn-coral-sm mob-cta" onClick={() => { setMenuOpen(false); openModal(); }}>
-              + 편성 건의하기
+            <a href="#schedule-section" onClick={() => setMenuOpen(false)}>📅 편성표</a>
+            <a href="#추천" onClick={() => setMenuOpen(false)}>✨ 추천</a>
+            <a href="#커뮤니티" onClick={() => setMenuOpen(false)}>💬 커뮤니티</a>
+            <button className="btn-suggest mob-cta" onClick={() => { setMenuOpen(false); openModal(); }}>
+              ✏️ 프로그램 신청하기
             </button>
           </nav>
         )}
@@ -335,12 +334,6 @@ export default function App() {
               <button className="btn-hero" onClick={handleRandomize} disabled={randing}>
                 <span>☆</span> {randing ? '생성 중…' : '랜덤 편성 생성하기'}
               </button>
-            </div>
-            <div className="hero-viewers">
-              <div className="viewer-avatars">
-                {'🧑👩👨👦'.split('').map((e, i) => <span key={i}>{e}</span>)}
-              </div>
-              <span>2,345명이 함께 보고 있어요</span>
             </div>
           </div>
 
@@ -426,18 +419,11 @@ export default function App() {
       {/* API 추천 섹션 */}
       <section className="api-section" id="추천">
         <div className="sec-wrap">
-          <div className="api-layout">
-
-            {/* 설명 패널 */}
-            <div className="api-desc-panel">
-              <span className="api-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
-              <h2 className="api-title">API 기반<br />추천 엔진</h2>
-              <p className="api-desc-text">
-                API 키와 통합 인기 데이터를 실시간으로 분석하여
-                최적의 편성표를 생성합니다.
-              </p>
-            </div>
-
+          <div className="sec-head-row">
+            <span className="sec-eyebrow"><Sparkles size={13} /> 데이터로 더 똑똑하게</span>
+            <h2 className="sec-h2">API 기반 추천 엔진</h2>
+          </div>
+          <div className="api-row">
             <ApiCard
               icon={<span className="n-icon">N</span>}
               title="넷플릭스 TOP 10"
@@ -463,26 +449,22 @@ export default function App() {
               cls="card-ott"
             />
             <ApiCard
-              icon={<span className="dice">🎲</span>}
-              title="랜덤 편성 생성"
-              desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
-              btnLabel={randing ? '생성 중…' : '랜덤 생성하기 →'}
-              active={false}
-              onClick={handleRandomize}
-              cls="card-random"
-            />
-          </div>
-
-          {/* YouTube 카드 (별도 행) */}
-          <div className="yt-api-row">
-            <ApiCard
               icon={<span className="yt-icon">▶</span>}
               title="유튜브 인기 영상"
-              desc={<>국내 유튜브 실시간 인기 TOP 12 영상 추천</>}
+              desc={<>국내 유튜브 실시간 인기<br />TOP 12 영상 추천</>}
               btnLabel="유튜브 보기 →"
               active={activeApi === 'youtube'}
               onClick={() => handleApiCard('youtube')}
               cls="card-yt"
+            />
+            <ApiCard
+              icon={<span className="dice">🎲</span>}
+              title="랜덤 편성 생성"
+              desc={<>한국 드라마·영화 기반<br />스마트 랜덤 추천</>}
+              btnLabel={randing ? '생성 중…' : '랜덤 생성하기 →'}
+              active={false}
+              onClick={handleRandomize}
+              cls="card-random"
             />
           </div>
 

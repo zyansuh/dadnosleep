@@ -1,5 +1,5 @@
 // @ts-ignore
-import { fetchOTT as _fetchOTT } from './tmdb';
+import { fetchOTT as _fetchOTT, fetchKoreanOTT as _fetchKoreanOTT } from './tmdb';
 // @ts-ignore
 import { fetchYouTube as _fetchYouTube } from './youtube';
 
@@ -18,20 +18,17 @@ export interface YtItem {
   snippet?: {
     title?: string;
     channelTitle?: string;
-    thumbnails?: {
-      medium?: { url?: string };
-    };
+    thumbnails?: { medium?: { url?: string } };
   };
-  statistics?: {
-    viewCount?: string;
-  };
+  statistics?: { viewCount?: string };
 }
 
-export async function fetchOTT(
-  providerId: string,
-  contentType: string
-): Promise<OttItem[]> {
+export async function fetchOTT(providerId: string, contentType: string): Promise<OttItem[]> {
   return _fetchOTT(providerId, contentType);
+}
+
+export async function fetchKoreanOTT(contentType: string): Promise<OttItem[]> {
+  return _fetchKoreanOTT(contentType);
 }
 
 export async function fetchYouTube(categoryId: string): Promise<YtItem[]> {
