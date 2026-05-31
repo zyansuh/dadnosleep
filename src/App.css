@@ -730,6 +730,70 @@
   margin-top: 4px;
 }
 
+/* ─── 방송 OFF 카드 ──────────────────────────── */
+.hero-off-card {
+  flex-shrink: 0;
+  width: 260px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.off-card-icon {
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+.off-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+
+.off-card-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ─── 편성표 섹션 헤더 ───────────────────────── */
+.schedule-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.broadcast-time-badge {
+  font-size: 12px;
+  color: var(--primary-light);
+  background: rgba(108, 99, 255, 0.12);
+  border: 1px solid rgba(108, 99, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ─── 종료 시각 표시 ─────────────────────────── */
+.time-end {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
 /* ─── 반응형 ─────────────────────────────────── */
 @media (max-width: 640px) {
   .hero {
@@ -741,7 +805,8 @@
     font-size: 32px;
   }
 
-  .hero-live-card {
+  .hero-live-card,
+  .hero-off-card {
     width: 100%;
   }
 

@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { Clock, Radio, Plus, X, Send, ChevronLeft, ChevronRight, Mic, Music, Gamepad2, Film, BookOpen, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Radio, Plus, X, Send, ChevronLeft, ChevronRight, Mic, Music, Gamepad2, Film, BookOpen, Zap, Utensils } from 'lucide-react';
 import './App.css';
 
 interface ScheduleItem {
   id: number;
-  time: string;
+  time: string;       // "HH:MM"
+  endTime: string;    // "HH:MM" — 종료 시각 (상태 자동 계산용)
   title: string;
   host: string;
   category: string;
-  status: 'live' | 'upcoming' | 'past';
   duration: string;
   description: string;
 }
@@ -22,39 +22,101 @@ interface SuggestionForm {
 }
 
 const CATEGORIES = [
-  { id: 'music', label: '음악', icon: Music },
-  { id: 'talk', label: '토크', icon: Mic },
-  { id: 'game', label: '게임', icon: Gamepad2 },
-  { id: 'movie', label: '영화/드라마', icon: Film },
-  { id: 'edu', label: '교양/정보', icon: BookOpen },
-  { id: 'special', label: '특집', icon: Zap },
+  { id: 'game',    label: '게임',    icon: Gamepad2 },
+  { id: 'talk',    label: '토크',    icon: Mic },
+  { id: 'movie',   label: '영화/드라마', icon: Film },
+  { id: 'music',   label: '음악',    icon: Music },
+  { id: 'mukbang', label: '먹방',    icon: Utensils },
+  { id: 'special', label: '특집',    icon: Zap },
+  { id: 'edu',     label: '교양/정보', icon: BookOpen },
 ];
 
+// 저녁 9시 ~ 새벽 2시 편성표
 const SCHEDULE_DATA: ScheduleItem[] = [
-  { id: 1, time: '00:00', title: '심야 음악 여행', host: 'DJ 문라이트', category: 'music', status: 'past', duration: '120분', description: '잠들기 전 편안한 선율과 함께하는 심야 음악 여행' },
-  { id: 2, time: '02:00', title: '새벽 힐링 토크', host: '라디오 수다방', category: 'talk', status: 'past', duration: '60분', description: '새벽을 함께하는 따뜻한 이야기' },
-  { id: 3, time: '06:00', title: '모닝 뮤직 박스', host: 'DJ 선샤인', category: 'music', status: 'past', duration: '120분', description: '활기찬 하루를 여는 아침 음악' },
-  { id: 4, time: '08:00', title: '오늘의 게임 뉴스', host: '게임스타', category: 'game', status: 'past', duration: '60분', description: '최신 게임 트렌드와 리뷰' },
-  { id: 5, time: '10:00', title: '라이브 토크쇼', host: '아나운서 김민지', category: 'talk', status: 'past', duration: '90분', description: '다양한 게스트와 함께하는 활기찬 토크쇼' },
-  { id: 6, time: '12:00', title: '점심 영화 특선', host: '시네마 클럽', category: 'movie', status: 'live', duration: '120분', description: '오늘의 점심과 함께 즐기는 영화 한 편' },
-  { id: 7, time: '14:00', title: '오후 음악 파티', host: 'DJ 애프터눈', category: 'music', status: 'upcoming', duration: '120분', description: '신나는 오후를 만들어줄 핫한 음악 파티' },
-  { id: 8, time: '16:00', title: '게임 스트리밍 라이브', host: '프로게이머 팀A', category: 'game', status: 'upcoming', duration: '120분', description: '프로게이머와 함께하는 실시간 게임 방송' },
-  { id: 9, time: '18:00', title: '저녁 교양 시간', host: '강사 이지훈', category: 'edu', status: 'upcoming', duration: '60분', description: '알면 도움이 되는 생활 속 교양 정보' },
-  { id: 10, time: '19:00', title: '황금 뮤직쇼', host: 'DJ 골든타임', category: 'music', status: 'upcoming', duration: '120분', description: '황금 시간대를 장식하는 최고의 뮤직쇼' },
-  { id: 11, time: '21:00', title: '특집 드라마 상영', host: '드라마 채널', category: 'movie', status: 'upcoming', duration: '90분', description: '화제의 드라마 특집 상영' },
-  { id: 12, time: '22:30', title: '늦은 밤 토크', host: '나이트 스튜디오', category: 'talk', status: 'upcoming', duration: '90분', description: '오늘 하루를 마무리하는 심야 토크 프로그램' },
+  {
+    id: 1,
+    time: '21:00', endTime: '21:30',
+    title: '아빠안잔다 오프닝',
+    host: '아빠안잔다',
+    category: 'talk',
+    duration: '30분',
+    description: '오늘 방송 소개와 시청자 인사, 하루 근황 토크',
+  },
+  {
+    id: 2,
+    time: '21:30', endTime: '23:00',
+    title: '저녁 게임 라이브',
+    host: '아빠안잔다',
+    category: 'game',
+    duration: '90분',
+    description: '시청자와 함께하는 실시간 게임 방송. 참여 이벤트 진행',
+  },
+  {
+    id: 3,
+    time: '23:00', endTime: '23:30',
+    title: '자정 전 먹방 타임',
+    host: '아빠안잔다',
+    category: 'mukbang',
+    duration: '30분',
+    description: '야식과 함께하는 편안한 먹방 & 수다 타임',
+  },
+  {
+    id: 4,
+    time: '23:30', endTime: '00:30',
+    title: '심야 영화 / 드라마 감상',
+    host: '아빠안잔다',
+    category: 'movie',
+    duration: '60분',
+    description: '화제의 영화·드라마 클립 감상 및 실시간 리액션',
+  },
+  {
+    id: 5,
+    time: '00:30', endTime: '01:30',
+    title: '자정 토크 & 시청자 사연',
+    host: '아빠안잔다',
+    category: 'talk',
+    duration: '60분',
+    description: '시청자 사연 소개와 함께하는 진솔한 심야 토크쇼',
+  },
+  {
+    id: 6,
+    time: '01:30', endTime: '02:00',
+    title: '새벽 음악 & 마무리',
+    host: '아빠안잔다',
+    category: 'music',
+    duration: '30분',
+    description: '잠들기 전 편안한 음악과 함께하는 오늘 방송 마무리',
+  },
 ];
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 
 const categoryColors: Record<string, string> = {
-  music: '#6c63ff',
-  talk: '#ff6584',
-  game: '#2ed573',
-  movie: '#ffa502',
-  edu: '#1e90ff',
+  game:    '#2ed573',
+  talk:    '#ff6584',
+  movie:   '#ffa502',
+  music:   '#6c63ff',
+  mukbang: '#ff9f43',
   special: '#ff4757',
+  edu:     '#1e90ff',
 };
+
+// 시간 문자열(HH:MM)을 분 단위 숫자로 변환 (00:00~05:59는 다음 날로 처리)
+function timeToMinutes(hhmm: string, nextDay = false): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  const base = h * 60 + m;
+  // 새벽 0~5시는 자정 이후로 간주 (1440 더함)
+  if (h < 6) return base + 1440;
+  return base + (nextDay ? 1440 : 0);
+}
+
+function getStatus(item: ScheduleItem, nowMinutes: number): 'live' | 'upcoming' | 'past' {
+  const start = timeToMinutes(item.time);
+  const end   = timeToMinutes(item.endTime);
+  if (nowMinutes >= end)   return 'past';
+  if (nowMinutes >= start) return 'live';
+  return 'upcoming';
+}
 
 const StatusBadge = ({ status }: { status: string }) => {
   if (status === 'live') {
@@ -65,35 +127,48 @@ const StatusBadge = ({ status }: { status: string }) => {
       </span>
     );
   }
-  if (status === 'upcoming') {
-    return <span className="badge badge-upcoming">예정</span>;
-  }
+  if (status === 'upcoming') return <span className="badge badge-upcoming">예정</span>;
   return <span className="badge badge-past">종료</span>;
 };
 
-const getCategoryInfo = (categoryId: string) => {
-  return CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
-};
+const getCategoryInfo = (categoryId: string) =>
+  CATEGORIES.find(c => c.id === categoryId) || CATEGORIES[0];
 
 function App() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [now, setNow] = useState(new Date());
   const [form, setForm] = useState<SuggestionForm>({
-    title: '',
-    category: '',
-    preferredTime: '',
-    description: '',
-    nickname: '',
+    title: '', category: '', preferredTime: '', description: '', nickname: '',
   });
   const [errors, setErrors] = useState<Partial<SuggestionForm>>({});
 
-  const today = new Date();
+  // 1분마다 현재 시각 갱신 → 편성 상태 자동 업데이트
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const today = now;
   const dayIndex = (today.getDay() + 6) % 7;
 
-  const handleDayChange = (dir: number) => {
+  // 현재 시각을 분으로 환산 (새벽 0~5시 → +1440)
+  const currentHour    = today.getHours();
+  const currentMinutes =
+    currentHour < 6
+      ? currentHour * 60 + today.getMinutes() + 1440
+      : currentHour * 60 + today.getMinutes();
+
+  const scheduleWithStatus = SCHEDULE_DATA.map(item => ({
+    ...item,
+    status: getStatus(item, currentMinutes),
+  }));
+
+  const liveProgram = scheduleWithStatus.find(s => s.status === 'live');
+
+  const handleDayChange = (dir: number) =>
     setSelectedDay(prev => (prev + dir + 7) % 7);
-  };
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -102,29 +177,23 @@ function App() {
     setErrors({});
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const closeModal = () => setIsModalOpen(false);
 
   const validate = () => {
-    const newErrors: Partial<SuggestionForm> = {};
-    if (!form.title.trim()) newErrors.title = '프로그램명을 입력해주세요';
-    if (!form.category) newErrors.category = '카테고리를 선택해주세요';
-    if (!form.preferredTime.trim()) newErrors.preferredTime = '원하는 방송 시간을 입력해주세요';
-    if (!form.description.trim()) newErrors.description = '건의 내용을 입력해주세요';
-    if (!form.nickname.trim()) newErrors.nickname = '닉네임을 입력해주세요';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e: Partial<SuggestionForm> = {};
+    if (!form.title.trim())        e.title        = '프로그램명을 입력해주세요';
+    if (!form.category)            e.category     = '카테고리를 선택해주세요';
+    if (!form.preferredTime.trim()) e.preferredTime = '원하는 방송 시간을 입력해주세요';
+    if (!form.description.trim())  e.description  = '건의 내용을 입력해주세요';
+    if (!form.nickname.trim())     e.nickname     = '닉네임을 입력해주세요';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      setIsSubmitted(true);
-    }
+    if (validate()) setIsSubmitted(true);
   };
-
-  const liveProgram = SCHEDULE_DATA.find(s => s.status === 'live');
 
   return (
     <div className="app">
@@ -133,7 +202,7 @@ function App() {
         <div className="header-inner">
           <div className="header-logo">
             <Radio size={24} />
-            <span>dadnosleep</span>
+            <span>아빠안잔다</span>
             <span className="logo-sub">• 편성표</span>
           </div>
           <div className="header-right">
@@ -157,13 +226,16 @@ function App() {
         <section className="hero">
           <div className="hero-content">
             <h1 className="hero-title">
-              <span className="gradient-text">dadnosleep</span>
+              <span className="gradient-text">아빠안잔다</span>
               <br />
               편성표
             </h1>
-            <p className="hero-desc">좋아하는 방송을 언제든지 확인하고,<br />원하는 프로그램을 건의해보세요!</p>
+            <p className="hero-desc">
+              매일 밤 <strong>오후 9시 ~ 새벽 2시</strong><br />
+              잠 못 드는 아빠와 함께해요!
+            </p>
           </div>
-          {liveProgram && (
+          {liveProgram ? (
             <div className="hero-live-card">
               <div className="live-card-label">
                 <span className="live-dot" />
@@ -173,12 +245,22 @@ function App() {
               <div className="live-card-host">{liveProgram.host}</div>
               <div className="live-card-desc">{liveProgram.description}</div>
             </div>
+          ) : (
+            <div className="hero-off-card">
+              <div className="off-card-icon">🌙</div>
+              <div className="off-card-title">방송 시간 외</div>
+              <div className="off-card-desc">오후 9시에 다시 만나요!</div>
+            </div>
           )}
         </section>
 
         {/* 편성표 섹션 */}
         <section className="schedule-section">
           <div className="schedule-header">
+            <div className="schedule-title-row">
+              <h2 className="section-title">📺 오늘의 편성표</h2>
+              <span className="broadcast-time-badge">📡 매일 21:00 ~ 02:00</span>
+            </div>
             <div className="day-selector">
               <button className="day-nav" onClick={() => handleDayChange(-1)}>
                 <ChevronLeft size={18} />
@@ -202,7 +284,7 @@ function App() {
           </div>
 
           <div className="schedule-list">
-            {SCHEDULE_DATA.map(item => {
+            {scheduleWithStatus.map(item => {
               const catInfo = getCategoryInfo(item.category);
               const CatIcon = catInfo.icon;
               return (
@@ -213,12 +295,13 @@ function App() {
                 >
                   <div className="schedule-time">
                     <span className="time-text">{item.time}</span>
+                    <span className="time-end">~ {item.endTime}</span>
                     <span className="duration-text">{item.duration}</span>
                   </div>
                   <div className="schedule-bar" />
                   <div className="schedule-content">
                     <div className="schedule-top">
-                      <div className="schedule-category">
+                      <div className="schedule-category" style={{ background: `${categoryColors[item.category]}18`, color: categoryColors[item.category] }}>
                         <CatIcon size={12} />
                         <span>{catInfo.label}</span>
                       </div>
@@ -252,7 +335,7 @@ function App() {
                 </div>
                 <div>
                   <h2 className="modal-title">편성표 건의하기</h2>
-                  <p className="modal-subtitle">원하는 프로그램을 알려주세요</p>
+                  <p className="modal-subtitle">원하는 프로그램을 알려주세요 🎤</p>
                 </div>
               </div>
               <button className="modal-close" onClick={closeModal}>
@@ -300,7 +383,7 @@ function App() {
                   <input
                     className={`form-input ${errors.preferredTime ? 'error' : ''}`}
                     type="text"
-                    placeholder="예: 매주 금요일 오후 8시"
+                    placeholder="예: 매주 금요일 밤 11시"
                     value={form.preferredTime}
                     onChange={e => setForm({ ...form, preferredTime: e.target.value })}
                   />
