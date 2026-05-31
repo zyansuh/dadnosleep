@@ -5,6 +5,9 @@
   border-radius: 20px;
   padding: 24px;
   backdrop-filter: blur(10px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .sched-head {
@@ -28,7 +31,11 @@
 
 .sched-note { display: none; }
 
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
 
 /* ── 편성표 테이블 */
 .sched-tbl {

@@ -4,7 +4,7 @@
   grid-template-columns: 1fr 1.3fr;
   gap: 32px;
   margin-bottom: 40px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* ── 좌측 히어로 */
@@ -109,4 +109,8 @@
 }
 
 /* ── 우측 */
-.hero-right { min-width: 0; }
+.hero-right {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
