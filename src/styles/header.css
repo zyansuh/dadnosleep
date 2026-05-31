@@ -15,6 +15,7 @@
   border-radius: 16px;
   backdrop-filter: blur(10px);
   margin-bottom: 24px;
+  gap: 16px;
 }
 
 .logo {
@@ -51,7 +52,7 @@
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
   color: #fff;
-  padding: 7px 14px;
+  padding: 7px 16px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
@@ -59,6 +60,7 @@
   transition: all 0.2s;
   position: relative;
   white-space: nowrap;
+  margin-right: 8px;
 }
 
 .btn-board:hover { background: rgba(255,255,255,0.12); }

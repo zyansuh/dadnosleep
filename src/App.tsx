@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Moon, Menu, X, Plus, MessageSquare } from 'lucide-react';
+import { Menu, X, Plus, MessageSquare } from 'lucide-react';
 
 import { useClock }          from './hooks/useClock';
 import { useSchedule }       from './hooks/useSchedule';
@@ -35,9 +35,6 @@ export default function App() {
           <span>아빠안잔다</span>
         </a>
         <div className="hd-spacer" />
-        <span className="op-pill">
-          <Moon size={13} /> 20:00 ~ 02:00 운영
-        </span>
 
         {/* 건의함 버튼 */}
         <button
