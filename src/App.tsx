@@ -606,11 +606,6 @@ export default function App() {
       {/* 푸터 */}
       <footer className="site-footer">
         <span>© 2026 아빠안잔다. All rights reserved.</span>
-        <div className="footer-socials">
-          {['📷 Instagram', '🐦 Twitter', '💬 Discord'].map((s, i) => (
-            <a key={i} href="#" className="social-link">{s}</a>
-          ))}
-        </div>
       </footer>
 
       {/* FAB */}
