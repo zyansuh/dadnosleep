@@ -1,0 +1,423 @@
+/* ── 홈 포인트 랭킹 섹션 ─────────────────────────────── */
+.home-ranking-section {
+  background: rgba(30,25,50,0.6);
+  border: 1px solid rgba(180,100,255,0.2);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+
+.home-ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.home-ranking-title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.home-ranking-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(180,100,255,0.12);
+  border: 1px solid rgba(180,100,255,0.25);
+  color: #c8a3ff;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.home-ranking-more:hover { background: rgba(180,100,255,0.2); }
+
+.home-ranking-empty {
+  text-align: center;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.home-ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.home-rank-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+
+.home-rank-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+.rank-top {
+  background: rgba(255,213,122,0.06);
+  border-color: rgba(255,213,122,0.18);
+}
+
+.rank-more {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: rgba(255,255,255,0.15);
+}
+
+.hrk-medal  { font-size: 28px; }
+.hrk-nick   { font-size: 14px; font-weight: 700; color: #fff; text-align: center; word-break: break-all; }
+.hrk-pts    { font-size: 16px; font-weight: 800; color: var(--gold); font-family: var(--font-num); }
+.hrk-cnt    { font-size: 11px; color: var(--text-dim); }
+.hrk-more-txt { font-size: 13px; color: var(--text-dim); text-align: center; }
+
+/* ── 커뮤니티 페이지 ────────────────────────────────── */
+.comm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.comm-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-sub);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.comm-page-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* ── 프로모 OTT 카드 ────────────────────────────────── */
+.rv-promo-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: linear-gradient(135deg, #2a0a4a 0%, #1a0a2e 50%, #3a1060 100%);
+  border: 1px solid rgba(180,100,255,0.3);
+  border-radius: 20px;
+  padding: 32px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.rv-promo-card::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(180,100,255,0.15), transparent 70%);
+  pointer-events: none;
+}
+
+.rv-promo-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rv-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,213,122,0.15);
+  border: 1px solid rgba(255,213,122,0.3);
+  color: var(--gold);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.rv-promo-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.rv-promo-desc {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.7;
+}
+
+.rv-promo-desc strong { color: var(--gold); }
+
+.rv-promo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--coral), var(--coral2));
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,107,138,0.4);
+  transition: all 0.2s;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.rv-promo-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(255,107,138,0.55); }
+
+.rv-promo-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.rv-promo-points {
+  font-size: 52px;
+  font-weight: 900;
+  font-family: var(--font-num);
+  background: linear-gradient(135deg, #ffd57a, #ff9a5a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.rv-promo-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ── 본문 레이아웃 ───────────────────────────────────── */
+.comm-body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── 포인트 랭킹 패널 ───────────────────────────────── */
+.pr-panel {
+  background: rgba(30,25,50,0.7);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.pr-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.pr-empty {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 20px 0;
+  line-height: 2;
+}
+
+.pr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin-bottom: 12px;
+}
+
+.pr-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  transition: background 0.18s;
+}
+
+.pr-item:hover { background: rgba(255,255,255,0.06); }
+.pr-top { background: rgba(255,213,122,0.06); border: 1px solid rgba(255,213,122,0.12); }
+
+.pr-rank { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.pr-nick { font-size: 13px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.pr-pts   { font-size: 13px; font-weight: 700; color: var(--gold); font-family: var(--font-num); }
+.pr-cnt   { font-size: 10px; color: var(--text-dim); }
+.pr-note  { font-size: 11px; color: var(--text-dim); text-align: center; }
+
+/* ── 후기 목록 ─────────────────────────────────────── */
+.comm-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.comm-list-header h3 { font-size: 16px; font-weight: 700; }
+.comm-count { color: var(--text-dim); font-weight: 400; font-size: 14px; }
+
+.rv-write-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--coral), var(--coral2));
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rv-write-btn:hover { transform: translateY(-1px); }
+
+.comm-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 2.2;
+}
+
+.comm-empty p:first-child { font-size: 40px; }
+
+.rv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+/* ── 후기 카드 (OTT 스타일) ─────────────────────────── */
+.rv-card {
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s, border-color 0.2s;
+  min-height: 160px;
+}
+
+.rv-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.15); }
+
+.rv-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rv-program {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.rv-stars { font-size: 12px; flex-shrink: 0; }
+
+.rv-content {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.65;
+  flex: 1;
+}
+
+.rv-more {
+  background: none;
+  border: none;
+  color: rgba(255,213,122,0.8);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+
+.rv-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 8px;
+}
+
+.rv-nick { font-size: 12px; font-weight: 600; color: var(--gold); }
+.rv-time { font-size: 11px; color: var(--text-dim); }
+
+/* ── 별점 입력 ──────────────────────────────────────── */
+.rv-star-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rv-star-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.rv-star-btn:hover { transform: scale(1.15); }
+.rv-rating-text { font-size: 13px; color: var(--gold); font-family: var(--font-num); margin-left: 6px; }
+
+/* ── 반응형 ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .comm-body { grid-template-columns: 1fr; }
+  .rv-promo-card { flex-direction: column; text-align: center; padding: 28px 24px; }
+  .rv-promo-btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .rv-promo-title { font-size: 20px; }
+  .rv-promo-points { font-size: 38px; }
+  .rv-grid { grid-template-columns: 1fr; }
+}
