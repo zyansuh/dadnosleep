@@ -26,6 +26,8 @@
   font-weight: 700;
   color: #fff;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .logo-ico { font-size: 24px; }
