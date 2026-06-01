@@ -64,6 +64,11 @@
 }
 
 .btn-board:hover { background: rgba(255,255,255,0.12); }
+.btn-board-active {
+  background: rgba(180,100,255,0.15) !important;
+  border-color: rgba(180,100,255,0.4) !important;
+  color: #c8a3ff !important;
+}
 
 .board-badge {
   background: var(--coral);
