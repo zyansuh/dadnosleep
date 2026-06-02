@@ -12,6 +12,31 @@ import { loadMembersFromBin, saveMembersRecord } from '../jsonbin/jsonbinRecord'
 
 export type { MemberEntry, MembersBinRecord };
 
+const LS_MEMBERS_CACHE = 'dadnosleep-members-cache-v1';
+
+function readMembersCache(): MemberEntry[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_MEMBERS_CACHE) ?? '[]') as unknown;
+    return normalizeRecord(Array.isArray(raw) ? raw : []);
+  } catch {
+    return [];
+  }
+}
+
+function writeMembersCache(members: MemberEntry[]): void {
+  try {
+    localStorage.setItem(LS_MEMBERS_CACHE, JSON.stringify(members));
+  } catch { /* 무시 */ }
+}
+
+/** 캐시·원격 병합 (동일 rowKey는 나중 목록 우선 = 원격 우선) */
+function mergeMemberLists(cache: MemberEntry[], remote: MemberEntry[]): MemberEntry[] {
+  const map = new Map<string, MemberEntry>();
+  for (const m of cache) map.set(getMemberRowKey(m), m);
+  for (const m of remote) map.set(getMemberRowKey(m), m);
+  return [...map.values()];
+}
+
 export function hasMembersRemote(): boolean {
   return hasMembersBinConfigured();
 }
@@ -87,19 +112,38 @@ export async function loadMembersBin(options?: { forAdmin?: boolean }): Promise<
   const configMsg =
     '회원 명단 저장소가 연결되지 않았습니다. 사이트 운영 담당자에게 문의해 주세요.';
 
+  const cached = readMembersCache();
+
   if (!hasMembersRemote()) {
     if (options?.forAdmin) throw new Error(configMsg);
-    return { members: [] };
+    return { members: cached };
   }
 
   try {
     const raw = await loadMembersFromBin();
-    return { members: normalizeRecord(raw) };
+    const remote = normalizeRecord(raw);
+    const merged = mergeMemberLists(cached, remote);
+
+    if (merged.length > 0) {
+      writeMembersCache(merged);
+    }
+
+    // 공유 Bin에서 후기 저장 등으로 members 필드가 빠진 경우 캐시로 복구
+    if (options?.forAdmin && remote.length === 0 && cached.length > 0) {
+      try {
+        await saveMembersRecord(merged);
+      } catch {
+        /* 복구 실패 시에도 화면에는 캐시 표시 */
+      }
+    }
+
+    return { members: merged.length > 0 ? merged : remote };
   } catch (e) {
     if (options?.forAdmin) {
+      if (cached.length > 0) return { members: cached };
       throw e instanceof Error ? e : new Error('회원 명단을 불러오지 못했습니다.');
     }
-    return { members: [] };
+    return { members: cached };
   }
 }
 
@@ -107,6 +151,7 @@ export async function saveMembersBin(data: MembersBinRecord): Promise<void> {
   if (!hasMembersRemote()) {
     throw new Error('회원 명단을 저장할 수 없습니다. 운영 담당자에게 문의해 주세요.');
   }
+  writeMembersCache(data.members);
   await saveMembersRecord(data.members);
 }
 
