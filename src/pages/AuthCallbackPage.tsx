@@ -8,14 +8,12 @@ export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
   const { refresh }    = useDiscordAuth();
-  const [error, setError] = useState<string | null>(null);
+  const code = searchParams.get('code');
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const error = !code ? '인증 코드가 없습니다.' : fetchError;
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    if (!code) {
-      setError('인증 코드가 없습니다.');
-      return;
-    }
+    if (!code) return;
 
     let cancelled = false;
 
@@ -58,13 +56,13 @@ export function AuthCallbackPage() {
         navigate('/', { replace: true });
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : '로그인 처리 중 오류가 발생했습니다.');
+          setFetchError(e instanceof Error ? e.message : '로그인 처리 중 오류가 발생했습니다.');
         }
       }
     })();
 
     return () => { cancelled = true; };
-  }, [searchParams, navigate, refresh]);
+  }, [code, navigate, refresh]);
 
   if (error) {
     return (
