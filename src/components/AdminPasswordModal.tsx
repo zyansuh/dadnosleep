@@ -35,7 +35,7 @@ export function AdminPasswordModal({ onSuccess, onClose }: Props) {
     if (locked) return;
 
     if (!import.meta.env.VITE_ADMIN_PASSWORD) {
-      setError('VITE_ADMIN_PASSWORD가 설정되지 않았습니다.');
+      setError('관리자 비밀번호가 설정되지 않았습니다. 운영 담당자에게 문의해 주세요.');
       return;
     }
 

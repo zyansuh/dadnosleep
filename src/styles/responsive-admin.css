@@ -52,18 +52,6 @@
     font-size: 16px;
   }
 
-  .admin-test-panel {
-    margin-top: 20px;
-    padding: 14px;
-  }
-
-  .admin-test-actions .admin-reset-points-btn,
-  .admin-test-actions .admin-reset-invite-btn,
-  .admin-test-actions .admin-reset-all-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
   .admin-member-add-row {
     flex-direction: column;
   }

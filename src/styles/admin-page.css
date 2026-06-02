@@ -3,5 +3,7 @@
 @import './admin/shared.css';
 @import './admin/members.css';
 @import './admin/dashboard.css';
+@import './admin/test-tools.css';
+@import './admin/responsive-test-tools.css';
 @import './admin/points.css';
 @import './responsive-admin.css';

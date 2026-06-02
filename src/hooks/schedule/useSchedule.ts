@@ -145,7 +145,7 @@ export function useSchedule(): UseScheduleReturn {
     try {
       const pool = await fetchRandomRecommendPool(24);
       if (pool.length === 0) {
-        setRandError('콘텐츠를 불러오지 못했습니다. Vercel 환경변수(VITE_TMDB_READ_TOKEN)를 확인해주세요.');
+        setRandError('콘텐츠를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
       setRandomPool(pool);

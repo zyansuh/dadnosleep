@@ -1,0 +1,12 @@
+/* 테스트 초기화 — 모바일 */
+
+@media (max-width: 720px) {
+  .admin-test-panel {
+    margin-top: 20px;
+    padding: 14px;
+  }
+
+  .admin-test-block {
+    padding: 14px 16px;
+  }
+}

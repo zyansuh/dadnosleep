@@ -60,13 +60,13 @@ export function useCommunity(): UseCommunityReturn {
     });
     applyData(result.data);
     if (result.offline) {
-      showToast('이 기기에만 저장됐어요. 다른 사람 기록은 JSONBin 연결 후 새로고침하세요.');
+      showToast('이 기기에만 저장됐어요. 다른 사람이 쓴 내용은 새로고침해 보세요.');
     }
   }, [applyData, showToast]);
 
   useEffect(() => {
     if (!hasRemoteStore) {
-      showToast('후기 공유 저장소(JSONBin)가 설정되지 않아 이 브라우저에만 보입니다.');
+      showToast('후기가 이 브라우저에만 저장됩니다. 다른 기기에서는 보이지 않을 수 있어요.');
     }
   }, [showToast]);
 

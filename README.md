@@ -158,7 +158,7 @@ sequenceDiagram
 | 회원 명단 | `/admin/members` — 추가·닉 수정·**VIP 지정/해제**·필터(전체/로그인함/로그인 전/VIP) |
 | 회원 탈퇴 | `/admin/members` — 명단 삭제 + 해당인 **후기·지인초대·포인트 전부 삭제** |
 | 기간별 포인트 | `/admin/points` — 합산/후기/초대 탭, 지인초대 신고 내역 표 |
-| 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 |
+| 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 (회원 명단은 유지) |
 | 푸터 「관리자」 | 비밀번호 또는 Discord admin → `/admin` |
 
 ---
@@ -263,39 +263,44 @@ dadnosleep/
 │   │       ├── AdminMembersPage.tsx
 │   │       └── AdminPointsPage.tsx      # 기간별 포인트
 │   │
-│   ├── components/
+│   ├── components/                   # UI만 (상태·저장 로직 없음)
 │   │   ├── layout/                   # AppHeader, MobileNav, HomeOverlays
 │   │   ├── schedule/                 # ScheduleTable, EditCellModal, CellInner, scheduleSlot
 │   │   ├── community/                # CommunityPage, Review*, FriendInviteModal, PointRanking
-│   │   ├── admin/                    # AdminLayout, Member*, PointPeriod*, AdminTestTools
+│   │   ├── admin/
+│   │   │   ├── members/              # MemberAddForm, MemberTable, MemberListToolbar …
+│   │   │   ├── test/                 # AdminTestToolsPanel, AdminTestResetBlock/Modals
+│   │   │   ├── points/               # PointPeriod*, FriendInviteLog
+│   │   │   └── AdminLayout.tsx
 │   │   └── …                         # HeroSection, ApiSection, ConfirmModal 등
 │   │
-│   ├── hooks/
+│   ├── hooks/                        # 상태·비동기·폼 로직만
 │   │   ├── schedule/                 # useSchedule, useScheduleEditForm
 │   │   ├── community/                # useCommunity, useReviewForm
-│   │   ├── admin/                    # useAdminMembers, useAdminPointReport
-│   │   ├── useClock.ts · useApiCards.ts · useSuggestionForm.ts · useClickOutside.ts
+│   │   ├── admin/                    # useAdminMembers, useAdminPointReport, useAdminTestReset
+│   │   ├── members/                  # useMemberVipKeys
+│   │   └── useClock.ts · useApiCards.ts · useSuggestionForm.ts · useClickOutside.ts
 │   │
-│   ├── utils/
-│   │   ├── community/                # communityStore, pointCalc, pointPeriod, friendInvite, reviewDisplay
+│   ├── utils/                        # 순수 함수·API·저장소
+│   │   ├── community/                # communityStore, pointCalc, pointPeriod, friendInvite
 │   │   ├── schedule/                 # scheduleStorage, scheduleCell, cellDisplay
-│   │   ├── members/                  # membersStore, withdrawMember, memberIdentity, memberListMessages
-│   │   │                             # memberDisplay, purgeCommunityDataForMember(community)
+│   │   ├── members/                  # membersStore, memberIdentity, memberVip, memberDisplay
+│   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
 │   │   ├── jsonbin/                  # jsonbinEnv, jsonbinRecord
-│   │   ├── auth/                     # discordOAuth, discordSession, adminSession, processDiscordLogin
-│   │   ├── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
+│   │   ├── auth/                     # discordOAuth, discordSession, processDiscordLogin
+│   │   └── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
 │   │
-│   ├── constants/
-│   │   ├── schedule.ts · points.ts · adminPointPresets.ts · emptyCell.ts
+│   ├── constants/                    # 라벨·설정 표 (UI/훅에서 import)
+│   │   ├── schedule.ts · points.ts · adminPointPresets.ts · adminTestReset.ts · emptyCell.ts
 │   │
 │   ├── context/                      # DiscordAuth, AdminGate, Toast
 │   ├── types/                        # Cell, community, member, role
 │   │
-│   ├── styles/                       # App.css → @import 도메인 CSS
-│   │   ├── variables.css · header.css · hero.css · schedule.css
-│   │   ├── community.css · modal.css · admin/ (layout, shared, members, dashboard, points)
-│   │   ├── responsive.css            # 공통 브레이크포인트 (홈·모달·드로어)
-│   │   └── responsive-admin.css      # 관리자·기간별 포인트 모바일 카드 UI
+│   ├── styles/                       # CSS만 — App.css → @import (컴포넌트에 import 금지)
+│   │   ├── variables.css · header.css · hero.css · schedule.css · community.css
+│   │   ├── admin/                    # layout, shared, members, test-tools, points/, dashboard
+│   │   ├── responsive.css · responsive-admin.css
+│   │   └── admin/responsive-test-tools.css
 │   │
 │   └── legacy/                       # 미사용 Ott/Yt JSX, 이메일 AuthContext
 │
@@ -304,14 +309,29 @@ dadnosleep/
 └── package.json
 ```
 
+### 계층 분리 원칙
+
+| 계층 | 역할 | 금지 |
+|------|------|------|
+| **pages** | 라우트·조합 | 비즈니스 로직 직접 구현 |
+| **components** | 표시·이벤트 전달 | `fetch`, JSONBin, session 직접 호출 |
+| **hooks** | 상태·effect·저장 호출 | JSX 반환 (Provider 제외) |
+| **utils** | 순수 로직·API·store | React import |
+| **constants** | 문구·버튼 설정·enum | 부수 효과 |
+| **styles** | 클래스·미디어쿼리 | TS/JS import |
+
+관리자 **테스트 초기화** 예: `constants/adminTestReset.ts`(문구) → `hooks/admin/useAdminTestReset.ts`(실행) → `components/admin/test/*`(UI) → `styles/admin/test-tools.css`.
+
 ### import 규칙 (예시)
 
 | 계층 | 예시 |
 |------|------|
-| 페이지 → 훅 | `import { useCommunity } from '../hooks/community/useCommunity'` |
-| 페이지 → 유틸 | `import { loadMembersBin } from '../utils/members/membersStore'` |
-| 컴포넌트 → 상수 | `import { POINTS_PER_REVIEW } from '../../constants/points'` |
-| 스타일 | `App.css`에서만 `@import` — 컴포넌트 파일에 CSS import 없음 |
+| 페이지 → 훅 | `import { useAdminMembers } from '../hooks/admin/useAdminMembers'` |
+| 페이지 → UI | `import { MemberTable } from '../components/admin/members/MemberTable'` |
+| 훅 → 유틸 | `import { loadMembersBin } from '../utils/members/membersStore'` |
+| UI → 상수 | `import { ADMIN_RESET_ACTIONS } from '../../constants/adminTestReset'` |
+| 오류 문구 | `import { toUserFacingError } from '../../utils/messages/userMessages'` |
+| 스타일 | `admin-page.css`에서만 `@import` — 컴포넌트 `.tsx`에 CSS import 없음 |
 
 ---
 

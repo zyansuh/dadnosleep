@@ -1,9 +1,9 @@
 import { Check, UserMinus, X } from 'lucide-react';
 import type { MemberListFilter } from './MemberListToolbar';
-import { getMemberRowKey, type MemberEntry } from '../../utils/members/membersStore';
-import { formatJoinedAt, displayMemberNickname } from '../../utils/members/memberDisplay';
+import { getMemberRowKey, type MemberEntry } from '../../../utils/members/membersStore';
+import { formatJoinedAt, displayMemberNickname } from '../../../utils/members/memberDisplay';
 import { MemberMobileList } from './MemberMobileList';
-import { memberListEmptyMessage } from '../../utils/members/memberListMessages';
+import { memberListEmptyMessage } from '../../../utils/members/memberListMessages';
 
 interface Props {
   members:        MemberEntry[];

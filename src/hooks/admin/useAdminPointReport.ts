@@ -3,6 +3,7 @@ import type { Review, FriendInvite } from '../../types/community';
 import type { MemberEntry } from '../../types/member';
 import { loadCommunityData } from '../../utils/community/communityStore';
 import { loadMembersBin } from '../../utils/members/membersStore';
+import { toUserFacingError } from '../../utils/messages/userMessages';
 import {
   activityRowsForView,
   buildPeriodRange,
@@ -45,7 +46,7 @@ export function useAdminPointReport() {
       setFriendInvites(community.friendInvites);
       setMembers(memberData.members);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '데이터를 불러오지 못했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : '데이터를 불러오지 못했습니다.'));
     } finally {
       setLoading(false);
     }

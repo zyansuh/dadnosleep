@@ -1,7 +1,7 @@
 import { ConfirmModal } from '../../components/ConfirmModal';
-import { MemberAddForm } from '../../components/admin/MemberAddForm';
-import { MemberListToolbar } from '../../components/admin/MemberListToolbar';
-import { MemberTable } from '../../components/admin/MemberTable';
+import { MemberAddForm } from '../../components/admin/members/MemberAddForm';
+import { MemberListToolbar } from '../../components/admin/members/MemberListToolbar';
+import { MemberTable } from '../../components/admin/members/MemberTable';
 import { useAdminMembers } from '../../hooks/admin/useAdminMembers';
 import { displayMemberNickname } from '../../utils/members/memberDisplay';
 

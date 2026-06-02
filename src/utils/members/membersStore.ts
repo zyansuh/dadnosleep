@@ -85,7 +85,7 @@ function normalizeRecord(membersRaw: unknown[]): MemberEntry[] {
 
 export async function loadMembersBin(options?: { forAdmin?: boolean }): Promise<MembersBinRecord> {
   const configMsg =
-    'JSONBin이 설정되지 않았습니다. VITE_JSONBIN_ACCESS_KEY와 VITE_JSONBIN_BIN_ID를 Vercel 환경변수에 넣고 재배포해주세요.';
+    '회원 명단 저장소가 연결되지 않았습니다. 사이트 운영 담당자에게 문의해 주세요.';
 
   if (!hasMembersRemote()) {
     if (options?.forAdmin) throw new Error(configMsg);
@@ -105,7 +105,7 @@ export async function loadMembersBin(options?: { forAdmin?: boolean }): Promise<
 
 export async function saveMembersBin(data: MembersBinRecord): Promise<void> {
   if (!hasMembersRemote()) {
-    throw new Error('VITE_JSONBIN_ACCESS_KEY와 Bin ID(VITE_JSONBIN_BIN_MEMBERS 또는 VITE_JSONBIN_BIN_ID)가 필요합니다.');
+    throw new Error('회원 명단을 저장할 수 없습니다. 운영 담당자에게 문의해 주세요.');
   }
   await saveMembersRecord(data.members);
 }

@@ -236,7 +236,7 @@ async function adminWriteCommunityRecord(
   writeLocal(data);
 
   if (!hasRemoteStore) {
-    return { ok: true, message: '이 브라우저에 반영했습니다. (JSONBin 미설정)' };
+    return { ok: true, message: '' };
   }
 
   try {
@@ -248,7 +248,7 @@ async function adminWriteCommunityRecord(
       points,
       ...(hadMembers ? { members: existing.members! } : {}),
     });
-    return { ok: true, message: 'JSONBin에 반영했습니다. 회원 명단(members)은 그대로입니다.' };
+    return { ok: true, message: '' };
   } catch (e) {
     return {
       ok:      false,

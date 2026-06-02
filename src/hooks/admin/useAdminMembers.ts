@@ -12,11 +12,12 @@ import {
   withdrawMember,
   type MemberEntry,
 } from '../../utils/members/membersStore';
-import type { MemberListFilter } from '../../components/admin/MemberListToolbar';
+import type { MemberListFilter } from '../../utils/members/memberListMessages';
 import { validateNickname } from '../../utils/nickname';
 import { validateMemberIdentity } from '../../utils/members/memberIdentity';
 import { displayMemberNickname } from '../../utils/members/memberDisplay';
 import { getDiscordSession, setSessionVip } from '../../utils/auth/discordSession';
+import { toUserFacingError } from '../../utils/messages/userMessages';
 
 export function useAdminMembers() {
   const [members, setMembers]           = useState<MemberEntry[]>([]);
@@ -43,7 +44,7 @@ export function useAdminMembers() {
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : '목록을 불러오지 못했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : '목록을 불러오지 못했습니다.'));
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ export function useAdminMembers() {
 
   const persist = useCallback(async (next: MemberEntry[]) => {
     if (!hasMembersRemote()) {
-      setError('JSONBin Access Key 또는 Bin ID가 설정되지 않았습니다.');
+      setError('지금은 명단을 저장할 수 없습니다. 사이트 운영 담당자에게 문의해 주세요.');
       return false;
     }
     setSaving(true);
@@ -79,7 +80,7 @@ export function useAdminMembers() {
       setSuccess('저장되었습니다.');
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : '저장에 실패했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : '저장에 실패했습니다.'));
       return false;
     } finally {
       setSaving(false);
@@ -136,7 +137,7 @@ export function useAdminMembers() {
         `@${m.username} (${displayMemberNickname(m)}) 님을 ${next ? 'VIP로 지정' : 'VIP 해제'}했습니다.`,
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'VIP 설정에 실패했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : 'VIP 설정에 실패했습니다.'));
     } finally {
       setSaving(false);
     }
@@ -173,7 +174,7 @@ export function useAdminMembers() {
       setSuccess('닉네임이 수정되었습니다.');
       cancelEdit();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '저장에 실패했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : '저장에 실패했습니다.'));
     } finally {
       setSaving(false);
     }
@@ -205,7 +206,7 @@ export function useAdminMembers() {
       setSuccess(parts.join(' '));
       setWithdrawTarget(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '탈퇴 처리에 실패했습니다.');
+      setError(toUserFacingError(e instanceof Error ? e.message : '탈퇴 처리에 실패했습니다.'));
     } finally {
       setSaving(false);
     }

@@ -1,4 +1,4 @@
-import type { MemberListFilter } from '../../utils/members/memberListMessages';
+import type { MemberListFilter } from '../../../utils/members/memberListMessages';
 
 export type { MemberListFilter };
 

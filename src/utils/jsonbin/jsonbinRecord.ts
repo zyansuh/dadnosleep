@@ -10,9 +10,9 @@ export interface JsonBinFullRecord {
 }
 
 function classifyStatus(status: number): string {
-  if (status === 401) return 'Access Key가 유효하지 않거나 Bin 권한이 없습니다.';
-  if (status === 404) return 'Bin을 찾을 수 없습니다.';
-  return `JSONBin 오류 (${status})`;
+  if (status === 401) return '저장소 접근에 실패했습니다. 운영 담당자에게 문의해 주세요.';
+  if (status === 404) return '저장소를 찾을 수 없습니다. 운영 담당자에게 문의해 주세요.';
+  return '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
 export async function fetchJsonBinRecord(binId: string): Promise<JsonBinFullRecord> {
@@ -46,7 +46,7 @@ export async function putJsonBinRecord(binId: string, record: JsonBinFullRecord)
 export async function saveMembersRecord(members: MemberEntry[]): Promise<void> {
   const binId = getMembersBinId();
   if (!binId || !getJsonBinAccessKey()) {
-    throw new Error('JSONBin Access Key 또는 Bin ID가 설정되지 않았습니다.');
+    throw new Error('저장소가 연결되지 않았습니다. 운영 담당자에게 문의해 주세요.');
   }
 
   if (usesSharedCommunityBinForMembers()) {

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { AdminTestTools } from '../../components/admin/AdminTestTools';
+import { AdminTestToolsPanel } from '../../components/admin/test/AdminTestToolsPanel';
 
 export function AdminDashboardPage() {
   return (
@@ -23,7 +23,7 @@ export function AdminDashboardPage() {
         </li>
       </ul>
 
-      <AdminTestTools />
+      <AdminTestToolsPanel />
 
       <p className="admin-note">
         Discord 관리자 계정 또는 푸터 비밀번호로 인증된 세션입니다.

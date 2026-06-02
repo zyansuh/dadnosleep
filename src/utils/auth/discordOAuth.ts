@@ -2,7 +2,7 @@ export function buildDiscordAuthorizeUrl(): string {
   const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined;
   const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI as string | undefined;
   if (!clientId || !redirectUri) {
-    throw new Error('VITE_DISCORD_CLIENT_ID 또는 VITE_DISCORD_REDIRECT_URI가 설정되지 않았습니다.');
+    throw new Error('Discord 로그인이 설정되지 않았습니다. 운영 담당자에게 문의해 주세요.');
   }
   const params = new URLSearchParams({
     client_id:     clientId,
