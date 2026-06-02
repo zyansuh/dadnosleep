@@ -10,14 +10,18 @@ interface EditRow {
 }
 
 interface Props {
-  sched:      Cell[][];
-  onSaveAll:  (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => void;
-  onSetFixed: (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
-  onUnfix:    (dayIdx: number, timeIdx: number) => void;
-  onClose:    () => void;
+  sched:           Cell[][];
+  memberRow:       Cell[];
+  onSaveAll:       (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => void;
+  onSaveMemberAll: (edits: { dayIdx: number; title: string; link?: string }[]) => void;
+  onSetFixed:      (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
+  onUnfix:         (dayIdx: number, timeIdx: number) => void;
+  onClose:         () => void;
 }
 
-export function ScheduleEditModal({ sched, onSaveAll, onSetFixed, onUnfix, onClose }: Props) {
+export function ScheduleEditModal({
+  sched, memberRow, onSaveAll, onSaveMemberAll, onSetFixed, onUnfix, onClose,
+}: Props) {
   const today = new Date();
   const defaultDay = today.getDay() === 0 ? 6 : today.getDay() - 1;
   const [activeDay, setActiveDay] = useState(defaultDay);
@@ -31,6 +35,16 @@ export function ScheduleEditModal({ sched, onSaveAll, onSetFixed, onUnfix, onClo
       }))
     )
   );
+
+  const [memberRows, setMemberRows] = useState<{ title: string; link: string }[]>(() =>
+    memberRow.map(cell => ({ title: cell.title, link: cell.link ?? '' }))
+  );
+
+  const updateMemberRow = (dayIdx: number, field: 'title' | 'link', value: string) => {
+    setMemberRows(prev =>
+      prev.map((row, i) => (i === dayIdx ? { ...row, [field]: value } : row))
+    );
+  };
 
   const updateRow = (dayIdx: number, timeIdx: number, field: 'title' | 'link', value: string) => {
     setRows(prev =>
@@ -82,7 +96,23 @@ export function ScheduleEditModal({ sched, onSaveAll, onSetFixed, onUnfix, onClo
         }
       });
     });
+    const memberEdits: { dayIdx: number; title: string; link?: string }[] = [];
+    memberRows.forEach((row, di) => {
+      const orig = memberRow[di];
+      if (!orig) return;
+      const title = row.title.trim();
+      const link = row.link.trim();
+      if (title !== orig.title || link !== (orig.link ?? '')) {
+        memberEdits.push({
+          dayIdx: di,
+          title:  title || orig.title,
+          link:   link || undefined,
+        });
+      }
+    });
+
     onSaveAll(edits);
+    if (memberEdits.length) onSaveMemberAll(memberEdits);
     onClose();
   };
 
@@ -161,10 +191,32 @@ export function ScheduleEditModal({ sched, onSaveAll, onSetFixed, onUnfix, onClo
               </div>
             );
           })}
+
+          <div className="sem-slot sem-slot-member">
+            <div className="sem-time">👑 VIP</div>
+            <div className="sem-fields">
+              <span className="sem-member-badge">회원 전용 편성</span>
+              <input
+                className="inp sem-inp-title"
+                placeholder="프로그램명"
+                value={memberRows[activeDay]?.title ?? ''}
+                maxLength={20}
+                onChange={e => updateMemberRow(activeDay, 'title', e.target.value)}
+              />
+              <input
+                className="inp sem-inp-link"
+                placeholder="링크 (선택) https://..."
+                value={memberRows[activeDay]?.link ?? ''}
+                onChange={e => updateMemberRow(activeDay, 'link', e.target.value)}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="sem-footer">
-          <p className="sem-notice">💡 저장은 제목·링크만 반영됩니다. 고정 편성은 별도 버튼으로 지정·해제하세요.</p>
+          <p className="sem-notice">
+            💡 저장은 제목·링크만 반영됩니다. 고정 편성은 별도 버튼으로 지정·해제하세요. 회원 전용(VIP) 슬롯도 요일별로 저장됩니다.
+          </p>
           <div className="form-actions">
             <button type="button" className="btn-ghost-sm" onClick={onClose}>취소</button>
             <button type="button" className="btn-coral-form" onClick={handleSave}>

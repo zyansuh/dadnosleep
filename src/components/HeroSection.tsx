@@ -12,7 +12,7 @@ interface Props {
   nowMin:              number;
   randing:             boolean;
   randError:           string;
-  isAdmin:                 boolean;
+  canEditSchedule:         boolean;
   isLoggedIn:              boolean;
   isGuestLoggedIn:         boolean;
   canAccessMemberContent:  boolean;
@@ -35,7 +35,7 @@ type EditTarget =
 
 export function HeroSection({
   sched, memberRow, todayIdx, nowMin, randing, randError,
-  isAdmin, isLoggedIn, isGuestLoggedIn, canAccessMemberContent, onLoginClick,
+  canEditSchedule, isLoggedIn, isGuestLoggedIn, canAccessMemberContent, onLoginClick,
   isEditMode, onToggleEditMode, onOpenScheduleEdit, onOpenResetConfirm,
   onUpdateCell, onUpdateMemberCell, onSetCellFixed, onUnfixCell, onResetCell, onOpenRandomPicker,
 }: Props) {
@@ -72,7 +72,7 @@ export function HeroSection({
           <button className="btn-hero-secondary" onClick={onOpenRandomPicker} disabled={randing}>
             ⭐ {randing ? '생성 중…' : '랜덤 편성 생성하기'}
           </button>
-          {isAdmin && (
+          {canEditSchedule && (
             <button className="btn-hero-secondary btn-hero-edit" onClick={onOpenScheduleEdit}>
               <Edit3 size={14} /> 편성표 수정하기
             </button>
@@ -101,7 +101,7 @@ export function HeroSection({
       </div>
 
       <div className="hero-right" id="schedule-section">
-        {isAdmin && (
+        {canEditSchedule && (
           <div className="sched-edit-bar">
             <button
               type="button"
@@ -115,7 +115,7 @@ export function HeroSection({
               <RotateCcw size={14} /> 초기화
             </button>
             {isEditMode && (
-              <span className="edit-mode-hint">셀 클릭 수정 · 🔓 고정 해제</span>
+              <span className="edit-mode-hint">셀 클릭 수정 · 👑 회원 VIP 행 포함 · 🔓 고정 해제</span>
             )}
           </div>
         )}
@@ -125,7 +125,8 @@ export function HeroSection({
           memberRow={memberRow}
           todayIdx={todayIdx}
           nowMin={nowMin}
-          isEditMode={isAdmin && isEditMode}
+          isEditMode={canEditSchedule && isEditMode}
+          isScheduleEditor={canEditSchedule}
           canAccessMemberContent={canAccessMemberContent}
           isLoggedIn={isLoggedIn}
           isGuestLoggedIn={isGuestLoggedIn}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Plus, MessageSquare, Users, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -42,6 +42,10 @@ export function HomePage() {
   const community = useCommunity();
 
   const nav = (p: Page) => { setPage(p); setMenuOpen(false); window.scrollTo(0, 0); };
+
+  useEffect(() => {
+    if (!discord.canEditSchedule && sched.isEditMode) sched.toggleEditMode();
+  }, [discord.canEditSchedule, sched.isEditMode, sched.toggleEditMode]);
 
   return (
     <div className="app">
@@ -135,7 +139,7 @@ export function HomePage() {
             nowMin={clock.nowMin}
             randing={sched.randing}
             randError={sched.randError}
-            isAdmin={discord.isAdmin}
+            canEditSchedule={discord.canEditSchedule}
             isLoggedIn={discord.isLoggedIn}
             isGuestLoggedIn={discord.isGuestLoggedIn}
             canAccessMemberContent={discord.canAccessMemberContent}
@@ -150,7 +154,7 @@ export function HomePage() {
             onResetCell={sched.resetCell}
             onOpenRandomPicker={sched.openRandomPicker}
             onOpenScheduleEdit={() => {
-              if (!discord.isAdmin) { discord.login(); return; }
+              if (!discord.canEditSchedule) return;
               setSchedEditOpen(true);
             }}
           />
@@ -200,10 +204,14 @@ export function HomePage() {
         />
       )}
 
-      {schedEditOpen && discord.isAdmin && (
+      {schedEditOpen && discord.canEditSchedule && (
         <ScheduleEditModal
           sched={sched.sched}
+          memberRow={sched.memberRow}
           onSaveAll={sched.updateMany}
+          onSaveMemberAll={edits => {
+            for (const e of edits) sched.updateMemberCell(e.dayIdx, e.title, e.link);
+          }}
           onSetFixed={sched.setCellFixed}
           onUnfix={sched.unfixCell}
           onClose={() => setSchedEditOpen(false)}
@@ -214,7 +222,7 @@ export function HomePage() {
         <SuggestionBoard suggestions={suggest.suggestions} onClose={() => setBoardOpen(false)} />
       )}
 
-      {sched.resetConfirmOpen && discord.isAdmin && (
+      {sched.resetConfirmOpen && discord.canEditSchedule && (
         <ConfirmModal
           title="편성표 초기화"
           message="고정 편성(나는 솔로, 이혼숙려캠프)만 남기고 나머지 슬롯을 모두 비울까요? 회원 전용 편성은 유지됩니다."

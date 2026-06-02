@@ -10,6 +10,8 @@ interface Props {
   todayIdx:                number;
   nowMin:                  number;
   isEditMode:              boolean;
+  /** 편성 관리자가 편집 모드일 때 회원 셀 잠금 UI 생략 */
+  isScheduleEditor:        boolean;
   canAccessMemberContent:  boolean;
   isLoggedIn:              boolean;
   isGuestLoggedIn:         boolean;
@@ -20,15 +22,16 @@ interface Props {
 }
 
 export function ScheduleTable({
-  sched, memberRow, todayIdx, nowMin, isEditMode,
+  sched, memberRow, todayIdx, nowMin, isEditMode, isScheduleEditor,
   canAccessMemberContent, isLoggedIn, isGuestLoggedIn, onLoginClick,
   onEditCell, onEditMember, onUnfixCell,
 }: Props) {
-  const memberLockState: MemberLockState = canAccessMemberContent
-    ? 'open'
-    : isLoggedIn
-      ? 'members-only'
-      : 'login';
+  const memberLockState: MemberLockState =
+    (isEditMode && isScheduleEditor) || canAccessMemberContent
+      ? 'open'
+      : isLoggedIn
+        ? 'members-only'
+        : 'login';
 
   const renderCell = (
     cell: Cell,

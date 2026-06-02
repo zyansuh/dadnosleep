@@ -36,6 +36,8 @@ interface DiscordAuthContextValue {
   role:                   UserRole;
   isLoggedIn:             boolean;
   isAdmin:                boolean;
+  /** 편성표 수정하기·셀 편집·초기화 (Discord admin 또는 비로그인 푸터 관리자만, member 제외) */
+  canEditSchedule:        boolean;
   isMember:               boolean;
   canAccessMemberContent: boolean;
   isGuestLoggedIn:        boolean;
@@ -90,6 +92,8 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
   }, [user, role, refresh]);
 
   const isAdmin = role === 'admin' || passwordAdmin;
+  /** 동호회 member는 푸터 비밀번호로 isAdmin이 켜져도 편성표 수정 불가 */
+  const canEditSchedule = role === 'admin' || (passwordAdmin && role !== 'member');
   const memberAccess = canAccessMemberContent(role) || passwordAdmin;
   const canChangeNickname = role === 'member' && !!user;
 
@@ -98,6 +102,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     role,
     isLoggedIn:             isDiscordLoggedIn() && !!user,
     isAdmin,
+    canEditSchedule,
     isMember:               role === 'member' || role === 'admin',
     canAccessMemberContent: memberAccess,
     isGuestLoggedIn:        isDiscordLoggedIn() && role === 'guest',
@@ -108,7 +113,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     logout,
     refresh,
     updateNickname,
-  }), [user, role, isAdmin, memberAccess, canChangeNickname, login, logout, refresh, updateNickname]);
+  }), [user, role, isAdmin, canEditSchedule, memberAccess, canChangeNickname, login, logout, refresh, updateNickname]);
 
   return (
     <DiscordAuthContext.Provider value={value}>
