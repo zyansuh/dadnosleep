@@ -1,7 +1,7 @@
 
 import { Sparkles } from 'lucide-react';
 import type { ApiType, OttItem, YtItem } from '../../types';
-import { ApiCard } from '../ApiCard';
+import { ApiCard } from './media/ApiCard';
 import { fmtViews } from '../../utils/format';
 
 interface Props {

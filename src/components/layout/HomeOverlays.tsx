@@ -7,7 +7,7 @@ import { ScheduleEditModal } from '../schedule/ScheduleEditModal';
 import { SuggestionBoard } from '../SuggestionBoard';
 import { ConfirmModal } from '../ConfirmModal';
 import { RandomPickModal } from '../RandomPickModal';
-import { MediaDrawer } from '../MediaDrawer';
+import { MediaDrawer } from '../home/media/MediaDrawer';
 
 type Sched = ReturnType<typeof useSchedule>;
 type Suggest = ReturnType<typeof useSuggestionForm>;
@@ -77,6 +77,7 @@ export function HomeOverlays({
 
       {sched.randomPickerOpen && (
         <RandomPickModal
+          key={sched.randomPool.map(i => i.id).join(',')}
           items={sched.randomPool}
           onApply={sched.applyRandomSelection}
           onClose={sched.closeRandomPicker}
