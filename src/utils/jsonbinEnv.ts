@@ -27,3 +27,9 @@ export function hasJsonBinAccessKey(): boolean {
 export function hasMembersBinConfigured(): boolean {
   return Boolean(getMembersBinId() && getJsonBinAccessKey());
 }
+
+/** JSONBin Access Key 자리에 bcrypt 해시 등을 넣은 경우 (읽기 401 → 빈 명단) */
+export function looksLikeInvalidJsonBinAccessKey(): boolean {
+  const key = getJsonBinAccessKey();
+  return key.startsWith('$2a$') || key.startsWith('$2b$');
+}

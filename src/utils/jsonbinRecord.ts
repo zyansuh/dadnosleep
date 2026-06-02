@@ -61,12 +61,24 @@ export async function saveMembersRecord(members: MemberEntry[]): Promise<void> {
   await putJsonBinRecord(binId, { members });
 }
 
+/** JSONBin record에서 members 배열 추출 (스키마 호환) */
+export function extractMembersFromRecord(record: unknown): MemberEntry[] {
+  if (Array.isArray(record)) {
+    return record as MemberEntry[];
+  }
+  if (!record || typeof record !== 'object') return [];
+  const o = record as Record<string, unknown>;
+  const candidates = [o.members, o.users, o.whitelist];
+  for (const raw of candidates) {
+    if (Array.isArray(raw)) return raw as MemberEntry[];
+  }
+  return [];
+}
+
 export async function loadMembersFromBin(): Promise<MemberEntry[]> {
   const binId = getMembersBinId();
   if (!binId || !getJsonBinAccessKey()) return [];
 
   const record = await fetchJsonBinRecord(binId);
-  const membersRaw = record.members;
-  if (!Array.isArray(membersRaw)) return [];
-  return membersRaw;
+  return extractMembersFromRecord(record);
 }

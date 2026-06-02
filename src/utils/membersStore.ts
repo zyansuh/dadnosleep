@@ -10,7 +10,9 @@ import { loadMembersFromBin, saveMembersRecord } from './jsonbinRecord';
 
 export type { MemberEntry, MembersBinRecord };
 
-export const hasMembersRemote = hasMembersBinConfigured;
+export function hasMembersRemote(): boolean {
+  return hasMembersBinConfigured();
+}
 
 function todayJoinedAt(): string {
   return new Date().toISOString().slice(0, 10);
@@ -76,19 +78,28 @@ function normalizeRecord(membersRaw: unknown[]): MemberEntry[] {
     .filter((e): e is MemberEntry => e !== null);
 }
 
-export async function loadMembersBin(): Promise<MembersBinRecord> {
-  if (!hasMembersRemote) return { members: [] };
+export async function loadMembersBin(options?: { forAdmin?: boolean }): Promise<MembersBinRecord> {
+  const configMsg =
+    'JSONBin이 설정되지 않았습니다. VITE_JSONBIN_ACCESS_KEY와 VITE_JSONBIN_BIN_ID를 Vercel 환경변수에 넣고 재배포해주세요.';
+
+  if (!hasMembersRemote()) {
+    if (options?.forAdmin) throw new Error(configMsg);
+    return { members: [] };
+  }
 
   try {
     const raw = await loadMembersFromBin();
     return { members: normalizeRecord(raw) };
-  } catch {
+  } catch (e) {
+    if (options?.forAdmin) {
+      throw e instanceof Error ? e : new Error('회원 명단을 불러오지 못했습니다.');
+    }
     return { members: [] };
   }
 }
 
 export async function saveMembersBin(data: MembersBinRecord): Promise<void> {
-  if (!hasMembersRemote) {
+  if (!hasMembersRemote()) {
     throw new Error('VITE_JSONBIN_ACCESS_KEY와 Bin ID(VITE_JSONBIN_BIN_MEMBERS 또는 VITE_JSONBIN_BIN_ID)가 필요합니다.');
   }
   await saveMembersRecord(data.members);

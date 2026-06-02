@@ -10,6 +10,7 @@ import {
   updateMemberFields,
   type MemberEntry,
 } from '../../utils/membersStore';
+import { looksLikeInvalidJsonBinAccessKey } from '../../utils/jsonbinEnv';
 import { validateNickname } from '../../utils/nickname';
 import { validateDiscordUsername } from '../../utils/memberIdentity';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -39,7 +40,7 @@ export function AdminMembersPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await loadMembersBin();
+      const data = await loadMembersBin({ forAdmin: true });
       setMembers(
         [...data.members].sort(
           (a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime(),
@@ -57,7 +58,7 @@ export function AdminMembersPage() {
   }, [load]);
 
   const persist = async (next: MemberEntry[]) => {
-    if (!hasMembersRemote) {
+    if (!hasMembersRemote()) {
       setError('JSONBin Access Key 또는 Bin ID가 설정되지 않았습니다.');
       return;
     }
@@ -153,10 +154,17 @@ export function AdminMembersPage() {
         첫 로그인 시 Discord ID가 자동으로 연동됩니다. 명단에서 제거된 회원은 다음 로그인부터 guest입니다.
       </p>
 
-      {!hasMembersRemote && (
+      {!hasMembersRemote() && (
         <p className="admin-alert admin-alert-warn">
           VITE_JSONBIN_ACCESS_KEY와 VITE_JSONBIN_BIN_ID(또는 VITE_JSONBIN_BIN_MEMBERS)를
-          .env / Vercel에 설정한 뒤 dev 서버 또는 사이트를 재시작해주세요.
+          Vercel 환경변수에 설정한 뒤 <strong>재배포</strong>해주세요. (Vite는 빌드 시점에 env를 박아 넣습니다)
+        </p>
+      )}
+
+      {hasMembersRemote() && looksLikeInvalidJsonBinAccessKey() && (
+        <p className="admin-alert admin-alert-warn">
+          Access Key가 bcrypt 형태($2a$…)로 보입니다. JSONBin 대시보드 → API Keys에서
+          <strong> X-Access-Key</strong>를 복사해 VITE_JSONBIN_ACCESS_KEY에 넣어주세요.
         </p>
       )}
 
@@ -170,7 +178,7 @@ export function AdminMembersPage() {
               placeholder="예: 1000hyehyang1"
               value={newUsername}
               onChange={e => setNewUsername(e.target.value)}
-              disabled={saving || !hasMembersRemote}
+              disabled={saving || !hasMembersRemote()}
               autoComplete="off"
             />
             <p className="admin-field-hint">Discord 앱 → 내 프로필에 표시된 @사용자명 (구 형식 #태그 아님)</p>
@@ -183,7 +191,7 @@ export function AdminMembersPage() {
               placeholder="비우면 사용자명 사용"
               value={newNickname}
               onChange={e => setNewNickname(e.target.value)}
-              disabled={saving || !hasMembersRemote}
+              disabled={saving || !hasMembersRemote()}
             />
           </div>
         </div>
@@ -191,7 +199,7 @@ export function AdminMembersPage() {
           type="button"
           className="btn-modal-save admin-member-add-btn"
           onClick={() => void handleAdd()}
-          disabled={saving || !hasMembersRemote || !newUsername.trim()}
+          disabled={saving || !hasMembersRemote() || !newUsername.trim()}
         >
           <Plus size={16} /> 회원 추가
         </button>
@@ -219,7 +227,10 @@ export function AdminMembersPage() {
               </tr>
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={6} className="admin-table-empty">등록된 회원이 없습니다.</td>
+                <td colSpan={6} className="admin-table-empty">
+                  등록된 회원이 없습니다. 위에서 Discord <strong>@사용자명</strong>을 추가한 뒤 저장하면,
+                  해당 계정으로 로그인할 때 member 등급이 부여됩니다. (JSONBin에 동기화됩니다)
+                </td>
               </tr>
             ) : (
               members.map(m => {

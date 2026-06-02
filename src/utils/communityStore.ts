@@ -1,5 +1,4 @@
 import type { Review, PointRecord } from '../types/community';
-import type { MemberEntry } from '../types/member';
 import { getCommunityBinId, hasJsonBinAccessKey } from './jsonbinEnv';
 import { fetchJsonBinRecord, putJsonBinRecord } from './jsonbinRecord';
 
@@ -92,10 +91,13 @@ async function fetchRemote(): Promise<RemoteResult<CommunityData>> {
   if (!hasRemoteStore) return { ok: false, reason: 'unconfigured' };
   try {
     const record = await fetchJsonBinRecord(BIN_ID);
-    if (!Array.isArray(record.reviews) || !Array.isArray(record.points)) {
-      return { ok: true, data: { reviews: [], points: [] } };
-    }
-    return { ok: true, data: { reviews: record.reviews, points: record.points } };
+    return {
+      ok:   true,
+      data: {
+        reviews: Array.isArray(record.reviews) ? record.reviews : [],
+        points:  Array.isArray(record.points) ? record.points : [],
+      },
+    };
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -104,16 +106,14 @@ async function fetchRemote(): Promise<RemoteResult<CommunityData>> {
 async function saveRemote(data: CommunityData): Promise<RemoteResult<true>> {
   if (!hasRemoteStore) return { ok: false, reason: 'unconfigured' };
   try {
-    let members: MemberEntry[] = [];
-    try {
-      const existing = await fetchJsonBinRecord(BIN_ID);
-      if (Array.isArray(existing.members)) members = existing.members;
-    } catch { /* members 필드 없으면 빈 배열 */ }
+    const existing = await fetchJsonBinRecord(BIN_ID);
+    const hadMembers = Array.isArray(existing.members);
+    const members = hadMembers ? existing.members! : [];
 
     await putJsonBinRecord(BIN_ID, {
       reviews: data.reviews,
       points:  data.points,
-      members,
+      ...(hadMembers ? { members } : {}),
     });
     return { ok: true, data: true };
   } catch {
