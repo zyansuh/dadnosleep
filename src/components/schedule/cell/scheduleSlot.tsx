@@ -1,6 +1,8 @@
 import type { MouseEvent, ReactNode } from 'react';
-import type { Cell } from '../../types';
+import type { Cell } from '../../../types';
 import { CellInner, type MemberLockState } from './CellInner';
+
+export type { MemberLockState };
 
 export interface ScheduleSlotContext {
   isEditMode:             boolean;
