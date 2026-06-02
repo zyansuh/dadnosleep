@@ -48,6 +48,7 @@
 | **관리** | `/admin` — 회원 명단·탈퇴(포인트 포함 삭제), 기간별 포인트, 테스트 초기화 |
 | **반응형** | 1024 / 768 / 640 / 420px — 홈·커뮤니티·관리자·모달 전 화면 대응 |
 | **UI 색상** | 모바일·데스크톱 동일 `--bg-card` 단색 카드 (블러/반투명 보정 없음) |
+| **코드 구조** | 도메인별 `store/` · `table|cell|modals/` · `pages/home/` — 기존 import는 re-export로 유지 |
 
 ### 운영 시간대 (편성표 UI 기준)
 
@@ -62,7 +63,7 @@
 
 | 경로 | 설명 | 인증 |
 |------|------|------|
-| `/` | 메인 (`HomePage` — 홈·커뮤니티 탭) | 없음 |
+| `/` | 메인 (`HomePage` — `pages/home/*` 조합, 홈·커뮤니티 탭) | 없음 |
 | `/auth/callback` | Discord OAuth code 처리 | 없음 |
 | `/admin` | 관리 대시보드 · 테스트 초기화 | 푸터 비밀번호 **또는** Discord admin |
 | `/admin/members` | 회원 명단 (로그인 전 사전 등록 가능) | 동일 |
@@ -126,7 +127,7 @@ sequenceDiagram
 | 랜덤 편성 생성 | TMDB 한국어 + `recommend.ts` |
 | 유튜브 인기 | YouTube Data API v3 |
 
-**MediaDrawer:** OTT 통합·랜덤 추천 결과를 슬라이드 패널로 표시합니다.
+**MediaDrawer** (`components/home/media/MediaDrawer.tsx`): OTT 통합·랜덤 추천 결과를 슬라이드 패널로 표시합니다. **ApiCard**는 동일 `home/media/`에 있습니다.
 
 ### 💬 커뮤니티
 
@@ -238,11 +239,13 @@ nickname (사이트·JSONBin) → globalName (Discord) → username
 
 **상태 관리:** Redux/Zustand 없음 — React Context (`DiscordAuthContext`, `AdminGateContext`, `ToastContext`) + 커스텀 Hooks.
 
+**품질:** `npm run lint` (ESLint + React 19 Hooks 규칙) · `npm run build` (`tsc -b` + Vite). effect 본문 동기 `setState`·render 중 ref 갱신은 피하고, 필요 시 `hooks/shared/useLatestRef`를 사용합니다.
+
 ---
 
 ## 6. 폴더 구조
 
-코드는 **도메인별 폴더**로 나눕니다. CSS는 `src/styles/`, 비즈니스 로직은 `utils/`, UI 상태는 `hooks/`에 둡니다.
+코드는 **도메인별 폴더**로 나눕니다. CSS는 `src/styles/`, 비즈니스 로직은 `utils/*/store/`, UI 상태는 `hooks/`에 둡니다. 리팩터 후에도 `communityStore.ts` · `membersStore.ts` · `ScheduleTable.tsx` 등 **기존 import 경로**는 루트 re-export 파일로 유지합니다.
 
 ```
 dadnosleep/
@@ -291,7 +294,12 @@ dadnosleep/
 │   │
 │   ├── hooks/
 │   │   ├── shared/                   # useClock, useApiCards, useLatestRef, useClickOutside
-│   │   ├── schedule/                 # useScheduleCore, useScheduleRandom, useScheduleUi
+│   │   ├── schedule/
+│   │   │   ├── useScheduleCore.ts    # 셀·memberRow·persist
+│   │   │   ├── useScheduleRandom.ts  # TMDB 랜덤·피커
+│   │   │   ├── useScheduleUi.ts      # 편집 모드·초기화 모달 플래그
+│   │   │   ├── useScheduleEditForm.ts
+│   │   │   └── useSchedule.ts        # re-export 조합
 │   │   ├── community/                # useCommunity, useReviewForm
 │   │   ├── members/                  # useMemberVipKeys
 │   │   ├── admin/
@@ -311,7 +319,8 @@ dadnosleep/
 │   │   │   ├── membersStore.ts       # re-export
 │   │   │   └── memberIdentity, memberVip, memberDisplay
 │   │   ├── schedule/
-│   │   │   ├── store/                # read, write, weekKey (scheduleStorage re-export)
+│   │   │   ├── store/                # constants, read, write, weekKey
+│   │   │   ├── scheduleStorage.ts    # re-export
 │   │   │   └── scheduleCell, cellDisplay
 │   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
 │   │   ├── jsonbin/
@@ -363,6 +372,29 @@ dadnosleep/
 **편성표 훅** (`hooks/schedule/`): `useScheduleCore`(셀·저장) · `useScheduleRandom`(랜덤 추천) · `useScheduleUi`(편집·초기화 모달) → `useSchedule.ts`에서 조합.
 
 **JSONBin** (`utils/jsonbin/`): `fetch` · `put` · `communityPut` · `membersBin` · `extractMembers` — `jsonbinRecord.ts`는 re-export.
+
+**메인 페이지** (`pages/` + `pages/home/`):
+
+| 파일 | 역할 |
+|------|------|
+| `HomePage.tsx` | `AppHeader` · 탭 전환 · `HomeOverlays` |
+| `home/HomeMainView.tsx` | 홈 탭 — Hero · API · Info · Ranking · CTA · Footer |
+| `home/HomeCommunityView.tsx` | 커뮤니티 탭 — `CommunityPage` 래퍼 |
+| `home/HomeCtaBanner.tsx` | 하단 「편성표 보러가기」 배너 |
+| `home/useHomePageEffects.ts` | 편집 모드·커뮤니티 refresh effect |
+
+**re-export 진입점** (새 코드는 하위 폴더, 기존 import는 유지):
+
+| 경로 | 실제 구현 |
+|------|-----------|
+| `utils/community/communityStore.ts` | `utils/community/store/*` |
+| `utils/members/membersStore.ts` | `utils/members/store/*` |
+| `utils/schedule/scheduleStorage.ts` | `utils/schedule/store/*` |
+| `utils/jsonbin/jsonbinRecord.ts` | `utils/jsonbin/fetch.ts` 등 |
+| `components/schedule/ScheduleTable.tsx` | `components/schedule/table/*` |
+| `components/HeroSection.tsx` | `components/home/HeroSection.tsx` → `home/hero/*` |
+| `components/ApiCard.tsx` · `MediaDrawer.tsx` | `components/home/media/*` |
+| `hooks/useClock.ts` 등 | `hooks/shared/*` |
 
 ### 더 나눌 수 있는 후보 (점진적)
 
@@ -687,6 +719,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
   "points": [
     { "nickname": "시청자", "points": 5500, "reviewCount": 1, "inviteCount": 2 }
   ],
+  "pointsCleared": false,
   "members": [
     {
       "discordId": "123456789012345678",
@@ -701,11 +734,18 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 }
 ```
 
+| 필드 | 설명 |
+|------|------|
+| `pointsCleared` | `true`면 후기·초대는 유지하고 랭킹 `points[]`만 0 (관리자 **포인트만 초기화**) |
+| `members` | 회원 명단 — 후기 저장 시 `putCommunityBinRecord`가 **항상 보존** |
+
 ### localStorage
 
 | 키 | 내용 | 만료 |
 |----|------|------|
 | `dadnosleep-sched` | `{ week, data, memberRow }` 편성표 | 주차 변경 시 초기화 |
+| `dadnosleep-members-cache-v1` | 회원 명단 마지막 스냅샷 (원격 유실·HMR 복구) | 수동 삭제 전까지 |
+| `dadnosleep-points-cleared-v1` | `1` = 포인트만 초기화 플래그 (로컬) | 초기화 해제·재집계 시 삭제 |
 | `dadnosleep-suggestions` | 건의 목록 | 최초 저장 +30일 |
 | `dadnosleep-suggestions-saved-at` | 건의 최초 저장 시각 | — |
 | `dadnosleep-reviews-v1` | 후기 fallback / 마이그레이션 원본 | 수동 삭제 전까지 |
@@ -739,7 +779,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 | 경로 | 기능 |
 |------|------|
-| `/admin` | 대시보드, 링크, **후기만/전체** 포인트 초기화 (테스트) |
+| `/admin` | 대시보드, 링크, **포인트만/후기만/초대만/전체** 테스트 초기화 |
 | `/admin/members` | 회원 명단·탈퇴(포인트 삭제 포함) |
 | `/admin/points` | 기간별 포인트 집계 (후기·지인 초대 시각 기준) |
 
@@ -875,7 +915,8 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `auth.css` · `discord.css` | 로그인·프로필 메뉴 |
 | `admin-page.css` | 관리자 `@import` 진입점 |
 | `admin/layout.css` | 셸·사이드바·푸터 관리자 링크 |
-| `admin/shared.css` | 알림·테이블 공통 |
+| `admin/shared.css` | 테이블·폼 공통 |
+| `admin/alerts.css` | 관리자 성공·오류·경고 배너 (`AdminFeedbackBanner`) |
 | `admin/members.css` | 회원 명단 폼·행 버튼 |
 | `admin/dashboard.css` | 테스트 초기화 패널 |
 | `admin/points.css` | 기간별 포인트 `@import` 진입점 |
@@ -953,6 +994,13 @@ git push origin feat/short-description
 | `refactor` | 동작 동일 리팩터 |
 | `style` | CSS만 |
 | `chore` | 빌드·deps |
+
+### 코드 수정 시 참고
+
+- **저장소 수정**은 `utils/*/store/` 하위 파일을 고치고, barrel(`communityStore.ts` 등)은 export만 추가합니다.
+- **편성표 UI**는 `components/schedule/table|cell|modals/`를 우선 수정합니다.
+- React 19 ESLint: `useEffect` 안에서 조건 없이 `setState` 호출 금지 → 파생 state·`key` remount·`useLatestRef` 패턴 사용.
+- `context/` · `legacy/`는 Fast Refresh 규칙 예외(`eslint.config.js`에 명시).
 
 ---
 
