@@ -1,12 +1,15 @@
-function env(primary, fallback) {
-  const v = process.env[primary] || (fallback ? process.env[fallback] : undefined);
-  if (!v) throw new Error(`${primary} is not configured`);
-  return v;
+function env(primary, ...fallbacks) {
+  const keys = [primary, ...fallbacks];
+  for (const key of keys) {
+    const raw = process.env[key];
+    if (raw?.trim()) return raw.trim();
+  }
+  throw new Error(`${primary} is not configured (checked: ${keys.join(', ')})`);
 }
 
 async function exchangeDiscordCode(code) {
   const clientId     = env('DISCORD_CLIENT_ID', 'VITE_DISCORD_CLIENT_ID');
-  const clientSecret = env('DISCORD_CLIENT_SECRET');
+  const clientSecret = env('DISCORD_CLIENT_SECRET', 'VITE_DISCORD_CLIENT_SECRET');
   const redirectUri  = env('DISCORD_REDIRECT_URI', 'VITE_DISCORD_REDIRECT_URI');
 
   const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
