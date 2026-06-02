@@ -10,7 +10,6 @@ import {
   updateMemberFields,
   type MemberEntry,
 } from '../../utils/membersStore';
-import { looksLikeInvalidJsonBinAccessKey } from '../../utils/jsonbinEnv';
 import { validateNickname } from '../../utils/nickname';
 import { validateDiscordUsername } from '../../utils/memberIdentity';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -158,13 +157,6 @@ export function AdminMembersPage() {
         <p className="admin-alert admin-alert-warn">
           VITE_JSONBIN_ACCESS_KEY와 VITE_JSONBIN_BIN_ID(또는 VITE_JSONBIN_BIN_MEMBERS)를
           Vercel 환경변수에 설정한 뒤 <strong>재배포</strong>해주세요. (Vite는 빌드 시점에 env를 박아 넣습니다)
-        </p>
-      )}
-
-      {hasMembersRemote() && looksLikeInvalidJsonBinAccessKey() && (
-        <p className="admin-alert admin-alert-warn">
-          Access Key가 bcrypt 형태($2a$…)로 보입니다. JSONBin 대시보드 → API Keys에서
-          <strong> X-Access-Key</strong>를 복사해 VITE_JSONBIN_ACCESS_KEY에 넣어주세요.
         </p>
       )}
 
