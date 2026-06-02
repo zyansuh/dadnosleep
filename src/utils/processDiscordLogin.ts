@@ -1,7 +1,8 @@
 import { isAdminDiscordUsername } from '../constants/adminUsers';
 import type { DiscordLoginProfile, LoginProcessResult } from '../types/member';
 import { resolveNickname } from './nickname';
-import { findMemberByDiscordId, loadMembersBin, syncMemberOnLogin } from './membersStore';
+import { findMember } from './memberIdentity';
+import { loadMembersBin, syncMemberOnLogin } from './membersStore';
 
 export async function processDiscordLogin(
   profile: DiscordLoginProfile,
@@ -15,7 +16,7 @@ export async function processDiscordLogin(
   }
 
   const bin = await loadMembersBin();
-  const existing = findMemberByDiscordId(bin.members, profile.id);
+  const existing = findMember(bin.members, { discordId: profile.id, username: profile.username });
 
   if (!existing) {
     return {
@@ -26,7 +27,15 @@ export async function processDiscordLogin(
   }
 
   const synced = await syncMemberOnLogin(profile);
-  const member = synced ?? existing;
+  const member = synced ?? existing ?? findMember(bin.members, { username: profile.username });
+
+  if (!member) {
+    return {
+      role:     'guest',
+      nickname: resolveNickname(null, profile.global_name, profile.username),
+      profile,
+    };
+  }
 
   return {
     role:     'member',

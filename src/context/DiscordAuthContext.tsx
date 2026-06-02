@@ -84,7 +84,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     if (!user || role !== 'member') {
       throw new Error('동호회 회원만 닉네임을 변경할 수 있습니다.');
     }
-    await updateMemberNickname(user.discordId, nickname);
+    await updateMemberNickname(user.discordId, user.username, nickname);
     setSessionNickname(nickname);
     refresh();
   }, [user, role, refresh]);

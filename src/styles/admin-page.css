@@ -377,3 +377,33 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.admin-field-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.admin-username {
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-linked-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(100, 255, 180, 0.12);
+  color: #8effc8;
+  white-space: nowrap;
+}
+
+.admin-pending-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(255, 213, 122, 0.12);
+  color: var(--gold);
+  white-space: nowrap;
+}
