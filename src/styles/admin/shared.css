@@ -62,7 +62,8 @@
   white-space: nowrap;
 }
 
-.admin-row-remove {
+.admin-row-remove,
+.admin-row-withdraw {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -76,11 +77,13 @@
   cursor: pointer;
 }
 
-.admin-row-remove:hover:not(:disabled) {
+.admin-row-remove:hover:not(:disabled),
+.admin-row-withdraw:hover:not(:disabled) {
   background: rgba(255, 80, 80, 0.2);
 }
 
-.admin-row-remove:disabled {
+.admin-row-remove:disabled,
+.admin-row-withdraw:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

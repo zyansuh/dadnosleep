@@ -6,13 +6,15 @@ interface Props {
   confirmLabel?: string;
   cancelLabel?:  string;
   danger?:     boolean;
+  /** false면 확인 후 모달을 닫지 않음 (비동기 처리용) */
+  closeOnConfirm?: boolean;
   onConfirm:   () => void;
   onClose:     () => void;
 }
 
 export function ConfirmModal({
   title, message, confirmLabel = '확인', cancelLabel = '취소',
-  danger = false, onConfirm, onClose,
+  danger = false, closeOnConfirm = true, onConfirm, onClose,
 }: Props) {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -28,7 +30,10 @@ export function ConfirmModal({
             type="button"
             className={danger ? 'btn-danger-confirm' : 'btn-coral-form'}
             style={{ flex: 1 }}
-            onClick={() => { onConfirm(); onClose(); }}
+            onClick={() => {
+              onConfirm();
+              if (closeOnConfirm) onClose();
+            }}
           >
             {confirmLabel}
           </button>

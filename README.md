@@ -45,8 +45,9 @@
 | **추천 API** | TMDB·YouTube 인기작, OTT 통합·랜덤 목록 드로어 |
 | **커뮤니티** | 후기(1,500P)·지인 초대(2,000P), 포인트 랭킹, JSONBin 동기화 |
 | **인증** | Discord OAuth2, guest / member / admin 3등급 |
-| **관리** | `/admin` — 회원 명단, 기간별 포인트, 테스트용 데이터 초기화 |
-| **반응형** | 1024 / 768 / 640 / 420px 브레이크포인트 — 홈·커뮤니티·관리자·모달 전 화면 대응 |
+| **관리** | `/admin` — 회원 명단·탈퇴(포인트 포함 삭제), 기간별 포인트, 테스트 초기화 |
+| **반응형** | 1024 / 768 / 640 / 420px — 홈·커뮤니티·관리자·모달 전 화면 대응 |
+| **UI 색상** | 모바일·데스크톱 동일 `--bg-card` 단색 카드 (블러/반투명 보정 없음) |
 
 ### 운영 시간대 (편성표 UI 기준)
 
@@ -154,8 +155,9 @@ sequenceDiagram
 |------|------|
 | 편성표 수정·초기화·셀 편집 | 메인 (`admin` 로그인 시) |
 | 후기 타인 글 수정·삭제 | 커뮤니티 |
-| 회원 명단 CRUD | `/admin/members` (대상 회원 Discord 로그인 불필요) |
-| 기간별 포인트 | `/admin/points` — 오늘/7일/이번 달/직접 지정 |
+| 회원 명단 | `/admin/members` — 추가·닉 수정·필터(전체/로그인함/로그인 전) |
+| 회원 탈퇴 | `/admin/members` — 명단 삭제 + 해당인 **후기·지인초대·포인트 전부 삭제** |
+| 기간별 포인트 | `/admin/points` — 합산/후기/초대 탭, 지인초대 신고 내역 표 |
 | 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 |
 | 푸터 「관리자」 | 비밀번호 또는 Discord admin → `/admin` |
 
@@ -269,9 +271,10 @@ dadnosleep/
 │   │   ├── useClock.ts · useApiCards.ts · useSuggestionForm.ts · useClickOutside.ts
 │   │
 │   ├── utils/
-│   │   ├── community/                # communityStore, pointCalc, pointPeriod, reviewDisplay
+│   │   ├── community/                # communityStore, pointCalc, pointPeriod, friendInvite, reviewDisplay
 │   │   ├── schedule/                 # scheduleStorage, scheduleCell, cellDisplay
-│   │   ├── members/                  # membersStore, memberIdentity, memberDisplay
+│   │   ├── members/                  # membersStore, withdrawMember, memberIdentity, memberListMessages
+│   │   │                             # memberDisplay, purgeCommunityDataForMember(community)
 │   │   ├── jsonbin/                  # jsonbinEnv, jsonbinRecord
 │   │   ├── auth/                     # discordOAuth, discordSession, adminSession, processDiscordLogin
 │   │   ├── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
@@ -569,6 +572,14 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 2. `VITE_ADMIN_PASSWORD` 입력 (5회 실패 시 30초 잠금)
 3. `/admin` 이동 — 탭 닫으면 세션 만료
 
+### 12-6. 회원 명단·탈퇴 (관리자)
+
+1. `/admin/members` (또는 대시보드 **회원 명단 · 탈퇴 처리**)
+2. **회원 추가** — Discord 이름·닉네임 입력 (로그인 불필요)
+3. **로그인함** 탭 — 이미 로그인한 회원 확인
+4. 나간 회원 → **탈퇴** → 확인 (명단 + 후기 + 지인초대 + 포인트 삭제)
+5. **기간별 포인트**(`/admin/points`)에서 랭킹·신고 내역 반영 확인
+
 ---
 
 ## 13. 데이터 저장 구조
@@ -653,20 +664,41 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | 경로 | 기능 |
 |------|------|
 | `/admin` | 대시보드, 링크, **후기만/전체** 포인트 초기화 (테스트) |
-| `/admin/members` | 회원 명단 — 로그인 전 사전 등록 |
+| `/admin/members` | 회원 명단·탈퇴(포인트 삭제 포함) |
 | `/admin/points` | 기간별 포인트 집계 (후기·지인 초대 시각 기준) |
 
 ### 회원 명단 (`/admin/members`)
 
+운영자용 화면입니다. 개발 용어(JSONBin·env 등)는 화면에 노출하지 않으며, 저장이 안 될 때만 「운영 담당자에게 문의」 안내가 표시됩니다.
+
 | 작업 | 방법 |
 |------|------|
-| **추가** | @사용자명 또는 표시 이름 (한글·이모지 가능), 닉네임 선택 |
-| **닉네임 수정** | 닉네임 셀 클릭 또는 「수정」→ 저장 |
-| **제거** | 「제거」→ 확인 모달 |
+| **추가** | Discord @이름 또는 표시 이름(필수) + 사이트 닉네임(선택) → 「회원 추가」 |
+| **닉네임 수정** | 닉네임 클릭 또는 「수정」→ 저장 |
+| **탈퇴** | 「탈퇴」→ 확인 → 명단 삭제 + 포인트 데이터 초기화 |
+| **목록 필터** | **전체** · **로그인함** (한 번이라도 로그인) · **로그인 전** (사전 등록만) |
 
-추가할 회원이 **아직 Discord 로그인을 하지 않아도** 명단에 올릴 수 있습니다. 첫 로그인 시 자동으로 member가 됩니다.
+**사전 등록:** 대상 회원이 아직 Discord 로그인을 하지 않아도 명단에 올릴 수 있습니다. 첫 로그인 시 **member** 등급이 적용됩니다.
 
-제거 후 재로그인하면 **guest**이며 VIP 행이 잠깁니다.
+**탈퇴 처리 (`withdrawMember` + `purgeCommunityDataForMember`):**
+
+1. **로그인함** 탭에서 나간 회원 선택 → **탈퇴**
+2. JSONBin `members[]`에서 해당 행 삭제
+3. 아래 닉네임과 일치하는 커뮤니티 데이터 **전부 삭제** 후 포인트 재계산:
+   - 등록 식별 이름(`username`)
+   - Discord 표시 이름(`globalName`)
+   - 사이트 닉네임(`nickname`)
+   - 후기(`reviews[].nickname`)
+   - 지인 초대 — 신고자·초대받은 지인 닉네임(`friendInvites`)
+4. 재로그인 시 **guest**, VIP 편성 행 잠금
+
+| 구분 | 탈퇴 후 |
+|------|---------|
+| 회원 명단 | ❌ 삭제 |
+| 후기·지인 초대·랭킹 포인트 | ❌ 삭제 (해당 닉네임 매칭분) |
+| 다른 회원 데이터 | ✅ 유지 |
+
+**UI:** 데스크톱은 표, 모바일(720px↓)은 카드 목록. 입력 라벨·빈 목록 문구는 `clamp`로 화면 너비에 맞게 한 줄 표시.
 
 ### 기간별 포인트 (`/admin/points`)
 
@@ -749,7 +781,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 | 파일 | 역할 |
 |------|------|
-| `variables.css` | 색상·폰트·`--bg-gradient` |
+| `variables.css` | 색상·폰트·`--bg`·`--bg-gradient`·`--bg-card` |
 | `header.css` | 헤더·커뮤니티/건의 버튼 |
 | `hero.css` | 히어로·CTA |
 | `schedule.css` | 편성표·VIP 잠금 |
@@ -767,6 +799,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `admin/points/layout.css` · `period-toolbar.css` | 헤더·기간 필터 |
 | `admin/points/view-tabs.css` | 합산/후기/초대 탭 |
 | `admin/points/summary.css` · `ranking.css` | 요약 카드·랭킹 표 |
+| `admin/points/invite-log.css` | 지인 초대 신고 내역 (관리자) |
 | `toast.css` | 오프라인 토스트 |
 | `layout.css` | 정보·CTA·푸터·FAB |
 | `responsive.css` | 홈·API·편성표·커뮤니티·모달·드로어 (1024 / 768 / 640 / 420px) |
@@ -783,17 +816,35 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | **관리자** | 사이드바 → 가로 스크롤 탭, 표 → **카드 목록** | 요약 카드 1열, 초기화 버튼 full width |
 | **기간별 포인트** | 합산/후기/초대 탭 세로, 랭킹 **모바일 카드** | 요약 통계 1열 |
 
-**모바일 공통:** `backdrop-filter` 비활성화(색 왜곡 방지), 터치 기기 호버 효과 완화, 짧은 뷰포트(`max-height: 500px`)에서 모달 높이 조정.
+### 모바일·데스크톱 색상 통일
+
+예전에는 모바일(768px↓)에서 `backdrop-filter`를 끄고 카드 배경을 다른 불투명도(`rgba(30,25,50,0.95)`)로 덮어 **데스크톱과 색이 달라 보이는 문제**가 있었습니다. 현재는 아래처럼 통일합니다.
+
+| 항목 | 값·동작 |
+|------|---------|
+| 페이지 배경 | `html` / `body` — `--bg` + `--bg-gradient`, `background-attachment: fixed` |
+| 카드·헤더·편성표·API·모달 본문 | `--bg-card: #1e1835` **단색** (반투명+blur 없음) |
+| 모달 딤 | `rgba(0,0,0,0.72)` (blur 없음) |
+| 메인 타이틀 | 기본 `var(--gold)`; 그라디언트 텍스트는 `@supports` 지원 시에만 |
+
+적용 파일: `variables.css`, `header.css`, `schedule.css`, `api.css`, `community.css`, `layout.css`, `modal.css`, `toast.css` — `responsive.css`에는 **모바일 전용 배경색 오버라이드 없음**.
+
+기타: 터치 기기 호버 완화, 짧은 뷰포트(`max-height: 500px`) 모달 높이 조정.
 
 ### 주요 CSS 변수
 
 ```css
 :root {
-  --bg:       #0f0a1f;
-  --coral:    #ff6b8a;
-  --gold:     #ffd57a;
-  --text-sub: #e0e0ff;
-  --text-dim: #a8a8c0;
+  --bg:        #0f0a1f;
+  --bg2:       #1a1530;
+  --bg-gradient: linear-gradient(180deg, #1a1530 0%, #0f0a1f 50%, #1a1530 100%);
+  --bg-card:   #1e1835;   /* 헤더·편성표·카드 — 모바일/PC 동일 */
+  --bg-card2:  #252042;
+  --coral:     #ff6b8a;
+  --gold:      #ffd57a;
+  --text-sub:  #e0e0ff;
+  --text-dim:  #a8a8c0;
+  --border:    rgba(255, 255, 255, 0.08);
 }
 ```
 

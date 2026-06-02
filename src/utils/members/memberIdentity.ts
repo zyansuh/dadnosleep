@@ -1,3 +1,4 @@
+import type { FriendInvite } from '../../types/community';
 import type { MemberEntry } from '../../types/member';
 
 /** 명단·로그인 매칭용 (대소문자 무시) */
@@ -110,4 +111,31 @@ export function isWhitelistedMember(
   profile: { id: string; username: string; global_name?: string | null },
 ): boolean {
   return findMemberIndexForProfile(members, profile) >= 0;
+}
+
+/** 후기·초대 신고 매칭용 — @username, 표시 이름, 사이트 닉네임 */
+export function getMemberCommunityKeys(m: MemberEntry): Set<string> {
+  const keys = new Set<string>();
+  const add = (v: string | undefined | null) => {
+    const t = v?.trim();
+    if (t) keys.add(normalizeMemberKey(t));
+  };
+  add(m.username);
+  add(m.globalName);
+  add(m.nickname);
+  return keys;
+}
+
+export function nicknameMatchesMemberKeys(keys: Set<string>, nickname: string): boolean {
+  const t = nickname?.trim();
+  if (!t) return false;
+  return keys.has(normalizeMemberKey(t));
+}
+
+export function inviteMatchesMemberKeys(keys: Set<string>, inv: FriendInvite): boolean {
+  if (nicknameMatchesMemberKeys(keys, inv.nickname)) return true;
+  if (inv.inviteeNickname?.trim() && nicknameMatchesMemberKeys(keys, inv.inviteeNickname)) {
+    return true;
+  }
+  return false;
 }

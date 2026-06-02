@@ -87,6 +87,23 @@
 
   .admin-member-add-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .admin-member-label-fluid {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .admin-field-hint--oneline {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: ellipsis;
+  }
+
+  .admin-empty-oneline {
+    white-space: normal;
   }
 
   .admin-member-add-btn {

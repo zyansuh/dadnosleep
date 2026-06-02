@@ -8,3 +8,7 @@ export function formatJoinedAt(iso: string): string {
 export function displayMemberNickname(m: MemberEntry): string {
   return m.nickname?.trim() || m.globalName?.trim() || m.username || '—';
 }
+
+export function isMemberLinked(m: MemberEntry): boolean {
+  return Boolean(m.discordId?.trim());
+}

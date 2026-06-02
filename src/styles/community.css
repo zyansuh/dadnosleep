@@ -1,6 +1,6 @@
 /* ── 홈 포인트 랭킹 섹션 ─────────────────────────────── */
 .home-ranking-section {
-  background: rgba(30,25,50,0.6);
+  background: var(--bg-card);
   border: 1px solid rgba(180,100,255,0.2);
   border-radius: 20px;
   padding: 28px 32px;
@@ -314,7 +314,7 @@
 
 /* ── 포인트 랭킹 패널 ───────────────────────────────── */
 .pr-panel {
-  background: rgba(30,25,50,0.7);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;

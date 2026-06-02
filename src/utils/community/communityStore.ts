@@ -1,6 +1,12 @@
 import type { Review, PointRecord, FriendInvite } from '../../types/community';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
 import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
+import type { MemberEntry } from '../../types/member';
+import {
+  getMemberCommunityKeys,
+  inviteMatchesMemberKeys,
+  nicknameMatchesMemberKeys,
+} from '../members/memberIdentity';
 import { recalcPoints } from './pointCalc';
 import { normalizeFriendInvites } from './friendInvite';
 
@@ -249,6 +255,38 @@ async function adminWriteCommunityRecord(
       message: e instanceof Error ? e.message : '저장에 실패했습니다.',
     };
   }
+}
+
+export interface PurgeMemberCommunityResult {
+  removedReviews:  number;
+  removedInvites:  number;
+}
+
+/**
+ * 탈퇴 회원의 후기·지인 초대·포인트 기록 삭제 (닉네임·@username·표시이름 기준 매칭).
+ */
+export async function purgeCommunityDataForMember(
+  member: MemberEntry,
+): Promise<PurgeMemberCommunityResult> {
+  const keys = getMemberCommunityKeys(member);
+  const data = await loadCommunityData();
+
+  const reviews = data.reviews.filter(
+    r => !nicknameMatchesMemberKeys(keys, r.nickname),
+  );
+  const friendInvites = data.friendInvites.filter(
+    inv => !inviteMatchesMemberKeys(keys, inv),
+  );
+
+  const removedReviews = data.reviews.length - reviews.length;
+  const removedInvites = data.friendInvites.length - friendInvites.length;
+
+  const result = await adminWriteCommunityRecord(reviews, friendInvites);
+  if (!result.ok) {
+    throw new Error(result.message);
+  }
+
+  return { removedReviews, removedInvites };
 }
 
 /**

@@ -31,13 +31,19 @@
 .site-title {
   font-size: 72px;
   font-weight: 900;
-  color: #ffd57a; /* 그라디언트 미지원·모바일 fallback */
-  background: linear-gradient(135deg, #ffd57a 0%, #ff9a5a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--gold);
   line-height: 1.1;
   letter-spacing: -2px;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .site-title {
+    background: linear-gradient(135deg, #ffd57a 0%, #ff9a5a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 }
 
 /* ── 서브 타이틀 */

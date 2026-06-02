@@ -1,6 +1,8 @@
-import { Check, Trash2, X } from 'lucide-react';
+import { Check, UserMinus, X } from 'lucide-react';
+import type { MemberListFilter } from './MemberListToolbar';
 import { getMemberRowKey, type MemberEntry } from '../../utils/members/membersStore';
 import { formatJoinedAt, displayMemberNickname } from '../../utils/members/memberDisplay';
+import { memberListEmptyMessage } from '../../utils/members/memberListMessages';
 
 interface Props {
   members:        MemberEntry[];
@@ -12,20 +14,22 @@ interface Props {
   onStartEdit:    (m: MemberEntry) => void;
   onCancelEdit:   () => void;
   onSaveEdit:     (m: MemberEntry) => void;
-  onRemove:       (m: MemberEntry) => void;
+  listFilter:     MemberListFilter;
+  onWithdraw:     (m: MemberEntry) => void;
 }
 
 export function MemberMobileList({
   members, loading, saving, editingKey, editNickname,
-  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onRemove,
+  listFilter,
+  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
 }: Props) {
   if (loading) {
     return <p className="admin-table-empty admin-member-mobile-empty">불러오는 중…</p>;
   }
   if (members.length === 0) {
     return (
-      <p className="admin-table-empty admin-member-mobile-empty">
-        등록된 회원이 없습니다. 위에서 추가한 뒤 저장하면 로그인 시 member 등급이 부여됩니다.
+      <p className="admin-table-empty admin-member-mobile-empty admin-empty-oneline">
+        {memberListEmptyMessage(listFilter)}
       </p>
     );
   }
@@ -40,9 +44,9 @@ export function MemberMobileList({
             <div className="admin-member-mobile-card-hd">
               <strong className="admin-username">@{m.username || '—'}</strong>
               {m.discordId ? (
-                <span className="admin-linked-badge">연동됨</span>
+                <span className="admin-linked-badge">로그인 완료</span>
               ) : (
-                <span className="admin-pending-badge">대기</span>
+                <span className="admin-pending-badge">로그인 전</span>
               )}
             </div>
             <dl className="admin-member-mobile-meta">
@@ -89,11 +93,11 @@ export function MemberMobileList({
               )}
               <button
                 type="button"
-                className="admin-row-remove"
+                className="admin-row-withdraw"
                 disabled={saving}
-                onClick={() => onRemove(m)}
+                onClick={() => onWithdraw(m)}
               >
-                <Trash2 size={15} /> 제거
+                <UserMinus size={15} /> 탈퇴
               </button>
             </div>
           </li>

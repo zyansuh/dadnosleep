@@ -1,7 +1,9 @@
-import { Check, Trash2, X } from 'lucide-react';
+import { Check, UserMinus, X } from 'lucide-react';
+import type { MemberListFilter } from './MemberListToolbar';
 import { getMemberRowKey, type MemberEntry } from '../../utils/members/membersStore';
 import { formatJoinedAt, displayMemberNickname } from '../../utils/members/memberDisplay';
 import { MemberMobileList } from './MemberMobileList';
+import { memberListEmptyMessage } from '../../utils/members/memberListMessages';
 
 interface Props {
   members:        MemberEntry[];
@@ -13,16 +15,19 @@ interface Props {
   onStartEdit:    (m: MemberEntry) => void;
   onCancelEdit:   () => void;
   onSaveEdit:     (m: MemberEntry) => void;
-  onRemove:       (m: MemberEntry) => void;
+  listFilter:     MemberListFilter;
+  onWithdraw:     (m: MemberEntry) => void;
 }
 
 export function MemberTable({
   members, loading, saving, editingKey, editNickname,
-  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onRemove,
+  listFilter,
+  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
 }: Props) {
   const listProps = {
     members, loading, saving, editingKey, editNickname,
-    onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onRemove,
+    listFilter,
+    onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
   };
 
   return (
@@ -31,24 +36,23 @@ export function MemberTable({
       <table className="admin-table admin-table--desktop">
         <thead>
           <tr>
-            <th>등록 식별 이름</th>
-            <th>사이트 닉네임</th>
-            <th>연동</th>
+            <th>Discord 이름</th>
+            <th>닉네임</th>
+            <th>로그인</th>
             <th>가입일</th>
             <th>수정</th>
-            <th>제거</th>
+            <th>탈퇴</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={6} className="admin-table-empty">불러오는 중…</td>
+              <td colSpan={6} className="admin-table-empty admin-empty-oneline">불러오는 중…</td>
             </tr>
           ) : members.length === 0 ? (
             <tr>
-              <td colSpan={6} className="admin-table-empty">
-                등록된 회원이 없습니다. 위에서 <strong>@사용자명 또는 표시 이름</strong>을 추가한 뒤 저장하면,
-                해당 계정으로 로그인할 때 member 등급이 부여됩니다. (JSONBin에 동기화됩니다)
+              <td colSpan={6} className="admin-table-empty admin-empty-oneline">
+                {memberListEmptyMessage(listFilter)}
               </td>
             </tr>
           ) : (
@@ -86,9 +90,9 @@ export function MemberTable({
                   </td>
                   <td>
                     {m.discordId ? (
-                      <span className="admin-linked-badge" title={m.discordId}>로그인 연동됨</span>
+                      <span className="admin-linked-badge" title={m.discordId}>완료</span>
                     ) : (
-                      <span className="admin-pending-badge">로그인 대기</span>
+                      <span className="admin-pending-badge">대기</span>
                     )}
                   </td>
                   <td>{formatJoinedAt(m.joinedAt)}</td>
@@ -120,11 +124,12 @@ export function MemberTable({
                   <td className="admin-table-actions">
                     <button
                       type="button"
-                      className="admin-row-remove"
+                      className="admin-row-withdraw"
                       disabled={saving}
-                      onClick={() => onRemove(m)}
+                      onClick={() => onWithdraw(m)}
+                      title="동호회 탈퇴 처리"
                     >
-                      <Trash2 size={15} /> 제거
+                      <UserMinus size={15} /> 탈퇴
                     </button>
                   </td>
                 </tr>

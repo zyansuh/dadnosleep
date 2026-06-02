@@ -1,11 +1,9 @@
 /* ── 편성표 카드 */
 .sched-card {
-  background: rgba(30,25,50,0.7);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 24px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   flex: 1;
   display: flex;
   flex-direction: column;

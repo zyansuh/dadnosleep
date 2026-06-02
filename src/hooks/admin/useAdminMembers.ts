@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createMemberEntry,
+  filterMembersByLink,
   getMemberRowKey,
   hasMembersRemote,
   isUsernameTaken,
   loadMembersBin,
   saveMembersBin,
   updateMemberFields,
+  withdrawMember,
   type MemberEntry,
 } from '../../utils/members/membersStore';
+import type { MemberListFilter } from '../../components/admin/MemberListToolbar';
 import { validateNickname } from '../../utils/nickname';
 import { validateMemberIdentity } from '../../utils/members/memberIdentity';
 import { displayMemberNickname } from '../../utils/members/memberDisplay';
@@ -23,7 +26,8 @@ export function useAdminMembers() {
   const [success, setSuccess]           = useState<string | null>(null);
   const [editingKey, setEditingKey]     = useState<string | null>(null);
   const [editNickname, setEditNickname] = useState('');
-  const [removeTarget, setRemoveTarget] = useState<MemberEntry | null>(null);
+  const [withdrawTarget, setWithdrawTarget] = useState<MemberEntry | null>(null);
+  const [listFilter, setListFilter]         = useState<MemberListFilter>('linked');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,6 +49,17 @@ export function useAdminMembers() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filterCounts = useMemo(() => ({
+    all:     members.length,
+    linked:  members.filter(m => Boolean(m.discordId?.trim())).length,
+    pending: members.filter(m => !m.discordId?.trim()).length,
+  }), [members]);
+
+  const filteredMembers = useMemo(
+    () => filterMembersByLink(members, listFilter),
+    [members, listFilter],
+  );
 
   const persist = useCallback(async (next: MemberEntry[]) => {
     if (!hasMembersRemote()) {
@@ -131,16 +146,44 @@ export function useAdminMembers() {
     }
   }, [editNickname, cancelEdit]);
 
-  const confirmRemove = useCallback(async () => {
-    if (!removeTarget) return;
-    const key = getMemberRowKey(removeTarget);
-    const next = members.filter(m => getMemberRowKey(m) !== key);
-    const ok = await persist(next);
-    if (ok) setRemoveTarget(null);
-  }, [removeTarget, members, persist]);
+  const confirmWithdraw = useCallback(async () => {
+    if (!withdrawTarget) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const data = await withdrawMember(withdrawTarget);
+      setMembers(
+        [...data.members].sort(
+          (a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime(),
+        ),
+      );
+      const parts = [
+        `@${withdrawTarget.username} (${displayMemberNickname(withdrawTarget)}) 님을 탈퇴 처리했습니다.`,
+      ];
+      if (data.removedReviews > 0 || data.removedInvites > 0) {
+        const detail: string[] = [];
+        if (data.removedReviews > 0) detail.push(`후기 ${data.removedReviews}건`);
+        if (data.removedInvites > 0) detail.push(`지인 초대 ${data.removedInvites}건`);
+        parts.push(`포인트 관련 데이터 삭제: ${detail.join(', ')}`);
+      } else {
+        parts.push('삭제할 후기·지인 초대 기록이 없었습니다.');
+      }
+      setSuccess(parts.join(' '));
+      setWithdrawTarget(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '탈퇴 처리에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  }, [withdrawTarget]);
 
   return {
     members,
+    filteredMembers,
+    listFilter,
+    setListFilter,
+    filterCounts,
     loading,
     saving,
     newUsername,
@@ -152,14 +195,14 @@ export function useAdminMembers() {
     editingKey,
     editNickname,
     setEditNickname,
-    removeTarget,
-    setRemoveTarget,
+    withdrawTarget,
+    setWithdrawTarget,
     hasRemote: hasMembersRemote,
     handleAdd,
     startEdit,
     cancelEdit,
     saveEdit,
-    confirmRemove,
+    confirmWithdraw,
     displayMemberNickname,
   };
 }

@@ -205,6 +205,7 @@
 
 .admin-member-mobile-actions .admin-row-edit,
 .admin-member-mobile-actions .admin-row-remove,
+.admin-member-mobile-actions .admin-row-withdraw,
 .admin-member-mobile-actions .admin-row-save,
 .admin-member-mobile-actions .admin-row-cancel {
   flex: 1;

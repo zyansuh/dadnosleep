@@ -17,28 +17,31 @@ export function MemberAddForm({
   return (
     <div className="admin-member-add admin-member-add-form">
       <div className="admin-member-add-grid">
-        <div>
-          <label className="fl" htmlFor="new-username">Discord @사용자명 또는 표시 이름 (필수)</label>
+        <div className="admin-member-field admin-member-field--primary">
+          <label className="fl admin-member-label-fluid" htmlFor="new-username">
+            Discord @사용자명 또는 표시 이름 <span className="req">(필수)</span>
+          </label>
           <input
             id="new-username"
-            className="inp"
+            className="inp admin-member-inp"
             placeholder="예: cool_dad 또는 프로필에 보이는 이름"
             value={newUsername}
             onChange={e => onUsernameChange(e.target.value)}
             disabled={saving || !hasRemote}
             autoComplete="off"
           />
-          <p className="admin-field-hint">
-            프로필 → 사용자명(@) 또는 서버에 보이는 표시 이름을 그대로 입력하세요. @, #, : 는 제외됩니다.
-            대상 회원의 Discord 로그인은 필요 없습니다.
+          <p className="admin-field-hint admin-field-hint--oneline">
+            @이름·표시 이름 그대로 입력 · 로그인은 나중에 해도 됩니다
           </p>
         </div>
-        <div>
-          <label className="fl" htmlFor="new-nickname">사이트 닉네임 (선택)</label>
+        <div className="admin-member-field admin-member-field--secondary">
+          <label className="fl admin-member-label-fluid" htmlFor="new-nickname">
+            사이트 닉네임 <span className="admin-optional">(선택)</span>
+          </label>
           <input
             id="new-nickname"
-            className="inp"
-            placeholder="비우면 사용자명 사용"
+            className="inp admin-member-inp"
+            placeholder="비우면 Discord 이름 사용"
             value={newNickname}
             onChange={e => onNicknameChange(e.target.value)}
             disabled={saving || !hasRemote}

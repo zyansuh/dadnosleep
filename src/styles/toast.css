@@ -7,7 +7,7 @@
   max-width: min(360px, calc(100vw - 32px));
   padding: 12px 20px;
   border-radius: 12px;
-  background: rgba(30, 25, 50, 0.95);
+  background: var(--bg-card);
   border: 1px solid rgba(255, 200, 100, 0.35);
   color: var(--gold);
   font-size: 14px;

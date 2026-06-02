@@ -25,24 +25,6 @@
 }
 
 @media (max-width: 768px) {
-  /* iOS/Android: backdrop-filter가 배경색을 왜곡하는 경우 방지 */
-  .header,
-  .sched-card,
-  .modal,
-  .modal-overlay {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .header,
-  .sched-card {
-    background: rgba(30, 25, 50, 0.95);
-  }
-
-  .modal {
-    background: rgba(30, 25, 50, 0.98);
-  }
-
   .app       { padding: 12px; }
   .hamburger { display: flex; }
   .header-nav-desktop { display: none !important; }

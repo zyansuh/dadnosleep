@@ -16,7 +16,7 @@ export function AdminDashboardPage() {
           <Link to="/#schedule-section">📅 편성표 섹션</Link>
         </li>
         <li>
-          <Link to="/admin/members">👥 회원 명단 관리</Link>
+          <Link to="/admin/members">👥 회원 명단 · 탈퇴 처리</Link>
         </li>
         <li>
           <Link to="/admin/points">🏆 기간별 포인트</Link>
