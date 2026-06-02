@@ -16,12 +16,13 @@ interface Props {
   onSaveEdit:     (m: MemberEntry) => void;
   listFilter:     MemberListFilter;
   onWithdraw:     (m: MemberEntry) => void;
+  onToggleVip:    (m: MemberEntry) => void;
 }
 
 export function MemberMobileList({
   members, loading, saving, editingKey, editNickname,
   listFilter,
-  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
+  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw, onToggleVip,
 }: Props) {
   if (loading) {
     return <p className="admin-table-empty admin-member-mobile-empty">불러오는 중…</p>;
@@ -72,6 +73,14 @@ export function MemberMobileList({
               <dd>{formatJoinedAt(m.joinedAt)}</dd>
             </dl>
             <div className="admin-member-mobile-actions">
+              <button
+                type="button"
+                className={`admin-vip-toggle${m.isVip ? ' is-vip' : ''}`}
+                disabled={saving}
+                onClick={() => void onToggleVip(m)}
+              >
+                {m.isVip ? '👑 VIP' : 'VIP 지정'}
+              </button>
               {editing ? (
                 <>
                   <button

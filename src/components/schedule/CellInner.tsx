@@ -20,7 +20,7 @@ export function CellInner({ cell, isLive, memberLockState, onLoginClick }: Props
     return (
       <div className="cell-member-locked">
         <span className="cell-member-lock-icon">🔒</span>
-        <span className="cell-member-lock-label">회원 전용</span>
+        <span className="cell-member-lock-label">VIP 전용</span>
         {memberLockState === 'login' ? (
           <>
             <span className="cell-member-lock-hint">로그인 후 시청</span>
@@ -36,8 +36,8 @@ export function CellInner({ cell, isLive, memberLockState, onLoginClick }: Props
           </>
         ) : (
           <p className="cell-member-lock-msg">
-            현재 동호회 회원만 이용 가능한 콘텐츠입니다.
-            가입 문의는 관리자에게 연락해주세요.
+            VIP로 지정된 동호회 회원만 볼 수 있는 편성입니다.
+            VIP 지정은 관리자에게 문의해 주세요.
           </p>
         )}
       </div>

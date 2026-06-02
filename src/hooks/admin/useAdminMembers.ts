@@ -7,6 +7,7 @@ import {
   isUsernameTaken,
   loadMembersBin,
   saveMembersBin,
+  setMemberVip,
   updateMemberFields,
   withdrawMember,
   type MemberEntry,
@@ -15,6 +16,7 @@ import type { MemberListFilter } from '../../components/admin/MemberListToolbar'
 import { validateNickname } from '../../utils/nickname';
 import { validateMemberIdentity } from '../../utils/members/memberIdentity';
 import { displayMemberNickname } from '../../utils/members/memberDisplay';
+import { getDiscordSession, setSessionVip } from '../../utils/auth/discordSession';
 
 export function useAdminMembers() {
   const [members, setMembers]           = useState<MemberEntry[]>([]);
@@ -22,6 +24,7 @@ export function useAdminMembers() {
   const [saving, setSaving]             = useState(false);
   const [newUsername, setNewUsername]   = useState('');
   const [newNickname, setNewNickname]   = useState('');
+  const [newIsVip, setNewIsVip]         = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [success, setSuccess]           = useState<string | null>(null);
   const [editingKey, setEditingKey]     = useState<string | null>(null);
@@ -54,6 +57,7 @@ export function useAdminMembers() {
     all:     members.length,
     linked:  members.filter(m => Boolean(m.discordId?.trim())).length,
     pending: members.filter(m => !m.discordId?.trim()).length,
+    vip:     members.filter(m => m.isVip).length,
   }), [members]);
 
   const filteredMembers = useMemo(
@@ -101,13 +105,42 @@ export function useAdminMembers() {
     const entry = createMemberEntry({
       username,
       nickname: newNickname.trim() || undefined,
+      isVip:    newIsVip,
     });
     const ok = await persist([...members, entry]);
     if (ok) {
       setNewUsername('');
       setNewNickname('');
+      setNewIsVip(false);
     }
-  }, [members, newUsername, newNickname, persist]);
+  }, [members, newUsername, newNickname, newIsVip, persist]);
+
+  const toggleVip = useCallback(async (m: MemberEntry) => {
+    const next = !m.isVip;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const data = await setMemberVip(m, next);
+      const sorted = [...data.members].sort(
+        (a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime(),
+      );
+      setMembers(sorted);
+      const sess = getDiscordSession();
+      if (sess?.discordId && m.discordId && sess.discordId === m.discordId) {
+        setSessionVip(next);
+      } else if (sess?.username && m.username && sess.username === m.username) {
+        setSessionVip(next);
+      }
+      setSuccess(
+        `@${m.username} (${displayMemberNickname(m)}) 님을 ${next ? 'VIP로 지정' : 'VIP 해제'}했습니다.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'VIP 설정에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  }, []);
 
   const startEdit = useCallback((m: MemberEntry) => {
     setEditingKey(getMemberRowKey(m));
@@ -190,6 +223,8 @@ export function useAdminMembers() {
     setNewUsername,
     newNickname,
     setNewNickname,
+    newIsVip,
+    setNewIsVip,
     error,
     success,
     editingKey,
@@ -199,6 +234,7 @@ export function useAdminMembers() {
     setWithdrawTarget,
     hasRemote: hasMembersRemote,
     handleAdd,
+    toggleVip,
     startEdit,
     cancelEdit,
     saveEdit,

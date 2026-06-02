@@ -8,6 +8,7 @@ import { ReviewModal } from './ReviewModal';
 import { FriendInviteModal } from './FriendInviteModal';
 import { PointRanking } from './PointRanking';
 import { useDiscordAuth } from '../../context/DiscordAuthContext';
+import { useMemberVipKeys } from '../../hooks/members/useMemberVipKeys';
 
 interface Props {
   reviews:         Review[];
@@ -27,6 +28,7 @@ export function CommunityPage({
   onAddReview, onAddFriendInvite, onUpdateReview, onDeleteReview, onRefresh, onBack,
 }: Props) {
   const discord = useDiscordAuth();
+  const vipKeys = useMemberVipKeys();
   const [reviewModalOpen, setReviewModalOpen]   = useState(false);
   const [inviteModalOpen, setInviteModalOpen]   = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,7 +45,10 @@ export function CommunityPage({
   };
 
   const handleReviewSubmit = async (draft: Omit<Review, 'id' | 'createdAt'>) => {
-    await onAddReview(draft);
+    await onAddReview({
+      ...draft,
+      isVip: discord.isVip && discord.isMember,
+    });
     await onRefresh();
   };
 
@@ -108,7 +113,7 @@ export function CommunityPage({
 
       <div className="comm-body">
         <aside className="comm-sidebar">
-          <PointRanking points={points} />
+          <PointRanking points={points} vipKeys={vipKeys} />
         </aside>
 
         <main className="comm-main">
@@ -155,6 +160,7 @@ export function CommunityPage({
                   key={rv.id}
                   review={rv}
                   index={i}
+                  vipKeys={vipKeys}
                   isAdmin={isAdmin}
                   onUpdate={onUpdateReview}
                   onDelete={onDeleteReview}

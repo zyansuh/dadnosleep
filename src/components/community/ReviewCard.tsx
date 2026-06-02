@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { Review } from '../../types/community';
 import { isMyReview } from '../../utils/nickname';
+import { reviewShowsVipCrown } from '../../utils/members/memberVip';
+import { VipCrown } from '../VipCrown';
 import { REVIEW_CARD_COLORS, reviewTimeAgo, starText } from '../../utils/community/reviewDisplay';
 import { ConfirmModal } from '../ConfirmModal';
 import { ReviewEditModal } from './ReviewEditModal';
@@ -9,18 +11,20 @@ import { ReviewEditModal } from './ReviewEditModal';
 interface Props {
   review:       Review;
   index:        number;
+  vipKeys:      Set<string>;
   isAdmin:      boolean;
   onUpdate:     (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
   onDelete:     (id: string) => Promise<void>;
 }
 
-export function ReviewCard({ review, index, isAdmin, onUpdate, onDelete }: Props) {
+export function ReviewCard({ review, index, vipKeys, isAdmin, onUpdate, onDelete }: Props) {
   const [expanded,     setExpanded]     = useState(false);
   const [editOpen,     setEditOpen]     = useState(false);
   const [deleteOpen,   setDeleteOpen]   = useState(false);
   const bg = REVIEW_CARD_COLORS[index % REVIEW_CARD_COLORS.length];
   const short = review.content.length > 80;
   const mine = isMyReview(review.nickname);
+  const showVip = reviewShowsVipCrown(review, vipKeys);
   const canManage = mine || isAdmin;
 
   return (
@@ -53,7 +57,11 @@ export function ReviewCard({ review, index, isAdmin, onUpdate, onDelete }: Props
         </p>
 
         <div className="rv-card-bottom">
-          <span className="rv-nick">👤 {review.nickname}{mine && <span className="rv-mine-badge">나</span>}</span>
+          <span className="rv-nick">
+            👤 {review.nickname}
+            {showVip && <VipCrown className="rv-vip-crown" />}
+            {mine && <span className="rv-mine-badge">나</span>}
+          </span>
           <span className="rv-time">{reviewTimeAgo(review.createdAt)}</span>
         </div>
       </div>

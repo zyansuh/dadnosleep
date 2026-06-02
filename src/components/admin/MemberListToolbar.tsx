@@ -4,7 +4,7 @@ export type { MemberListFilter };
 
 interface Props {
   filter:     MemberListFilter;
-  counts:       { all: number; linked: number; pending: number };
+  counts:       { all: number; linked: number; pending: number; vip: number };
   onChange:     (f: MemberListFilter) => void;
 }
 
@@ -12,12 +12,13 @@ const LABELS: Record<MemberListFilter, string> = {
   all:     '전체',
   linked:  '로그인함',
   pending: '로그인 전',
+  vip:     'VIP',
 };
 
 export function MemberListToolbar({ filter, counts, onChange }: Props) {
   return (
     <div className="admin-member-toolbar" role="tablist" aria-label="회원 목록 필터">
-      {(['all', 'linked', 'pending'] as const).map(key => (
+      {(['all', 'linked', 'pending', 'vip'] as const).map(key => (
         <button
           key={key}
           type="button"

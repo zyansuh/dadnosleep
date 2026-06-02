@@ -506,6 +506,24 @@
   font-weight: 700;
 }
 
+.vip-crown {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.95em;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.rv-nick,
+.pr-nick,
+.hrk-nick,
+.hd-user {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
 .rv-card-top {
   display: flex;
   align-items: flex-start;

@@ -1,15 +1,18 @@
 import { Users } from 'lucide-react';
 import type { PointRecord } from '../../types/community';
 import { formatPointBreakdown } from '../../utils/community/pointCalc';
+import { nicknameHasVipBadge } from '../../utils/members/memberVip';
+import { VipCrown } from '../VipCrown';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 interface Props {
-  points:       PointRecord[];
+  points:        PointRecord[];
+  vipKeys?:      Set<string>;
   onGoCommunity: () => void;
 }
 
-export function HomeRanking({ points, onGoCommunity }: Props) {
+export function HomeRanking({ points, vipKeys, onGoCommunity }: Props) {
   return (
     <section className="home-ranking-section">
       <div className="home-ranking-header">
@@ -30,7 +33,12 @@ export function HomeRanking({ points, onGoCommunity }: Props) {
           {points.slice(0, 5).map((p, i) => (
             <div key={p.nickname} className={`home-rank-card ${i < 3 ? 'rank-top' : ''}`}>
               <span className="hrk-medal">{MEDALS[i] ?? `${i + 1}`}</span>
-              <span className="hrk-nick">{p.nickname}</span>
+              <span className="hrk-nick">
+                {p.nickname}
+                {vipKeys && nicknameHasVipBadge(p.nickname, vipKeys) && (
+                  <VipCrown className="hrk-vip-crown" />
+                )}
+              </span>
               <span className="hrk-pts">{p.points.toLocaleString()}P</span>
               <span className="hrk-cnt">{formatPointBreakdown(p)}</span>
             </div>

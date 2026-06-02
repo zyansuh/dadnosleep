@@ -13,7 +13,7 @@ export function AdminMembersPage() {
       <h2 className="admin-panel-title">회원 명단 관리</h2>
       <p className="admin-page-desc admin-page-desc--compact">
         Discord <strong>@이름</strong> 또는 <strong>표시 이름</strong>으로 회원을 등록합니다.
-        아직 로그인하지 않아도 명단에 올려 둘 수 있으며, 첫 로그인 때 회원 등급이 적용됩니다.
+        <strong>VIP</strong> 회원만 회원 전용 편성을 볼 수 있고, 후기·랭킹에 왕관이 표시됩니다.
       </p>
 
       <div className="admin-withdraw-callout">
@@ -33,10 +33,12 @@ export function AdminMembersPage() {
       <MemberAddForm
         newUsername={m.newUsername}
         newNickname={m.newNickname}
+        newIsVip={m.newIsVip}
         saving={m.saving}
         hasRemote={m.hasRemote()}
         onUsernameChange={m.setNewUsername}
         onNicknameChange={m.setNewNickname}
+        onIsVipChange={m.setNewIsVip}
         onAdd={() => void m.handleAdd()}
       />
 
@@ -61,6 +63,7 @@ export function AdminMembersPage() {
         onCancelEdit={m.cancelEdit}
         onSaveEdit={m.saveEdit}
         onWithdraw={m.setWithdrawTarget}
+        onToggleVip={m.toggleVip}
       />
 
       {m.withdrawTarget && (

@@ -6,6 +6,7 @@ import {
   normalizeDiscordUsername,
 } from './memberIdentity';
 import { purgeCommunityDataForMember } from '../community/communityStore';
+import { normalizeMemberIsVip } from './memberVip';
 import { hasMembersBinConfigured } from '../jsonbin/jsonbinEnv';
 import { loadMembersFromBin, saveMembersRecord } from '../jsonbin/jsonbinRecord';
 
@@ -31,6 +32,7 @@ function normalizeEntry(raw: unknown): MemberEntry | null {
         avatar:     '',
         role:       'member',
         joinedAt:   todayJoinedAt(),
+        isVip:      true,
       };
     }
     return {
@@ -41,6 +43,7 @@ function normalizeEntry(raw: unknown): MemberEntry | null {
       avatar:     '',
       role:       'member',
       joinedAt:   todayJoinedAt(),
+      isVip:      true,
     };
   }
   if (!raw || typeof raw !== 'object') return null;
@@ -70,6 +73,7 @@ function normalizeEntry(raw: unknown): MemberEntry | null {
     avatar,
     role: 'member',
     joinedAt,
+    isVip: normalizeMemberIsVip(o),
   };
 }
 
@@ -188,11 +192,27 @@ export async function syncMemberOnLogin(profile: {
   return updated;
 }
 
+export async function setMemberVip(
+  entry: MemberEntry,
+  isVip: boolean,
+): Promise<MembersBinRecord> {
+  const data = await loadMembersBin({ forAdmin: true });
+  const idx = findMemberIndex(data.members, {
+    discordId: entry.discordId || undefined,
+    username:  entry.username,
+  });
+  if (idx < 0) throw new Error('회원을 찾을 수 없습니다.');
+  data.members[idx] = { ...data.members[idx], isVip };
+  await saveMembersBin(data);
+  return data;
+}
+
 export function createMemberEntry(input: {
   username:   string;
   nickname?:  string;
   globalName?: string;
   discordId?: string;
+  isVip?:     boolean;
 }): MemberEntry {
   const username = input.username.trim();
   const globalName = input.globalName?.trim() ?? '';
@@ -207,6 +227,7 @@ export function createMemberEntry(input: {
     avatar:     '',
     role:       'member',
     joinedAt:   todayJoinedAt(),
+    isVip:      input.isVip === true,
   };
 }
 
@@ -238,10 +259,11 @@ export async function withdrawMember(entry: MemberEntry): Promise<WithdrawMember
 
 export function filterMembersByLink(
   members: MemberEntry[],
-  mode: 'all' | 'linked' | 'pending',
+  mode: 'all' | 'linked' | 'pending' | 'vip',
 ): MemberEntry[] {
   if (mode === 'linked') return members.filter(m => Boolean(m.discordId?.trim()));
   if (mode === 'pending') return members.filter(m => !m.discordId?.trim());
+  if (mode === 'vip') return members.filter(m => m.isVip);
   return members;
 }
 

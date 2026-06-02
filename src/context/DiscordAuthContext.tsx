@@ -13,7 +13,7 @@ import {
 } from '../utils/auth/discordSession';
 import { isAdminSession } from '../utils/auth/adminSession';
 import type { UserRole } from '../types/role';
-import { canAccessMemberContent } from '../types/role';
+import { canAccessVipSchedule } from '../types/role';
 import { updateMemberNickname } from '../utils/members/membersStore';
 import { buildDiscordAuthorizeUrl } from '../utils/auth/discordOAuth';
 
@@ -25,7 +25,9 @@ interface DiscordAuthContextValue {
   /** 편성표 수정하기·셀 편집·초기화 (Discord admin 또는 비로그인 푸터 관리자만, member 제외) */
   canEditSchedule:        boolean;
   isMember:               boolean;
+  isVip:                  boolean;
   canAccessMemberContent: boolean;
+  canAccessVipSchedule:   boolean;
   isGuestLoggedIn:        boolean;
   canChangeNickname:      boolean;
   displayName:            string | null;
@@ -80,7 +82,8 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = role === 'admin' || passwordAdmin;
   /** 동호회 member는 푸터 비밀번호로 isAdmin이 켜져도 편성표 수정 불가 */
   const canEditSchedule = role === 'admin' || (passwordAdmin && role !== 'member');
-  const memberAccess = canAccessMemberContent(role) || passwordAdmin;
+  const isVip = user?.isVip ?? false;
+  const vipAccess = canAccessVipSchedule(role, isVip, { passwordAdmin });
   const canChangeNickname = role === 'member' && !!user;
 
   const value = useMemo<DiscordAuthContextValue>(() => ({
@@ -90,7 +93,9 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     canEditSchedule,
     isMember:               role === 'member' || role === 'admin',
-    canAccessMemberContent: memberAccess,
+    isVip:                  role === 'admin' || isVip,
+    canAccessMemberContent: vipAccess,
+    canAccessVipSchedule:   vipAccess,
     isGuestLoggedIn:        isDiscordLoggedIn() && role === 'guest',
     canChangeNickname,
     displayName:            user ? getDisplayName(user) : null,
@@ -99,7 +104,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     logout,
     refresh,
     updateNickname,
-  }), [user, role, isAdmin, canEditSchedule, memberAccess, canChangeNickname, login, logout, refresh, updateNickname]);
+  }), [user, role, isAdmin, canEditSchedule, isVip, vipAccess, canChangeNickname, login, logout, refresh, updateNickname]);
 
   return (
     <DiscordAuthContext.Provider value={value}>

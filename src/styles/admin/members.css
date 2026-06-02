@@ -266,3 +266,41 @@
   color: var(--gold);
   white-space: nowrap;
 }
+
+.admin-member-vip-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 14px;
+  font-size: 13px;
+  color: var(--text-sub);
+  cursor: pointer;
+}
+
+.admin-member-vip-check input {
+  accent-color: var(--gold);
+}
+
+.admin-vip-toggle {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-vip-toggle.is-vip {
+  border-color: rgba(255, 213, 122, 0.45);
+  background: rgba(255, 213, 122, 0.12);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.admin-vip-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

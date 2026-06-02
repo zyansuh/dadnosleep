@@ -8,6 +8,7 @@ const SS_GLOBAL_NAME = 'globalName';
 const SS_NICKNAME    = 'nickname';
 const SS_AVATAR      = 'avatar';
 const SS_ROLE        = 'role';
+const SS_IS_VIP      = 'isVip';
 const SS_ADMIN       = 'isAdmin';
 
 export interface DiscordSessionUser {
@@ -17,6 +18,7 @@ export interface DiscordSessionUser {
   nickname:    string | null;
   avatar:      string | null;
   role:        UserRole;
+  isVip:       boolean;
 }
 
 export function discordAvatarUrl(userId: string, avatar: string | null): string {
@@ -42,6 +44,7 @@ export function getDiscordSession(): DiscordSessionUser | null {
     const nickname   = sessionStorage.getItem(SS_NICKNAME);
     const avatar     = sessionStorage.getItem(SS_AVATAR);
     const role       = parseRole(sessionStorage.getItem(SS_ROLE));
+    const isVip      = sessionStorage.getItem(SS_IS_VIP) === 'true';
     return {
       discordId,
       username,
@@ -49,6 +52,7 @@ export function getDiscordSession(): DiscordSessionUser | null {
       nickname:   nickname && nickname !== '' ? nickname : null,
       avatar:     avatar && avatar !== '' ? avatar : null,
       role,
+      isVip:      role === 'member' ? isVip : role === 'admin',
     };
   } catch {
     return null;
@@ -74,6 +78,7 @@ export function saveDiscordSession(
   },
   role: UserRole,
   nickname: string,
+  isVip = false,
 ): void {
   try {
     sessionStorage.setItem(SS_LOGGED_IN, 'true');
@@ -83,7 +88,14 @@ export function saveDiscordSession(
     sessionStorage.setItem(SS_NICKNAME, nickname);
     sessionStorage.setItem(SS_AVATAR, user.avatar ?? '');
     sessionStorage.setItem(SS_ROLE, role);
+    sessionStorage.setItem(SS_IS_VIP, isVip ? 'true' : 'false');
     sessionStorage.setItem(SS_ADMIN, role === 'admin' ? 'true' : 'false');
+  } catch { /* 무시 */ }
+}
+
+export function setSessionVip(isVip: boolean): void {
+  try {
+    sessionStorage.setItem(SS_IS_VIP, isVip ? 'true' : 'false');
   } catch { /* 무시 */ }
 }
 

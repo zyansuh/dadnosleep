@@ -81,12 +81,14 @@ export function HeroSection({
 
         {!canAccessMemberContent && (
           <p className="hero-member-hint">
-            {isGuestLoggedIn ? (
-              <>🔒 동호회 회원만 회원 전용 편성을 볼 수 있습니다. 가입 문의는 관리자에게 연락해주세요.</>
+            {isLoggedIn && !isGuestLoggedIn ? (
+              <>🔒 VIP 회원만 회원 전용 편성을 볼 수 있습니다. VIP 지정은 관리자에게 문의해 주세요.</>
+            ) : isGuestLoggedIn ? (
+              <>🔒 동호회 명단에 등록된 회원만 이용할 수 있습니다. 가입 문의는 관리자에게 연락해 주세요.</>
             ) : (
               <>
                 🔒 <button type="button" className="link-btn" onClick={onLoginClick}>로그인</button>
-                하시면 회원 전용 편성을 확인할 수 있어요.
+                하시면 동호회 회원·VIP 전용 편성을 확인할 수 있어요.
               </>
             )}
           </p>

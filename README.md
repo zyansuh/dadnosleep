@@ -155,7 +155,7 @@ sequenceDiagram
 |------|------|
 | 편성표 수정·초기화·셀 편집 | 메인 (`admin` 로그인 시) |
 | 후기 타인 글 수정·삭제 | 커뮤니티 |
-| 회원 명단 | `/admin/members` — 추가·닉 수정·필터(전체/로그인함/로그인 전) |
+| 회원 명단 | `/admin/members` — 추가·닉 수정·**VIP 지정/해제**·필터(전체/로그인함/로그인 전/VIP) |
 | 회원 탈퇴 | `/admin/members` — 명단 삭제 + 해당인 **후기·지인초대·포인트 전부 삭제** |
 | 기간별 포인트 | `/admin/points` — 합산/후기/초대 탭, 지인초대 신고 내역 표 |
 | 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 |
@@ -171,7 +171,8 @@ sequenceDiagram
 |------|------|:--------:|:--------------:|:--------:|
 | **guest** | 비로그인 | ❌ | ❌ | ❌ |
 | **guest** | Discord 로그인했으나 **명단에 Discord ID 없음** | ❌ | ❌ | ❌ |
-| **member** | JSONBin `members[]`에 **discordId** 등록 | ✅ | ❌ | ❌ |
+| **member** | JSONBin `members[]`에 **discordId** 등록 (동호회 회원) | ❌* | ❌ | ❌ |
+| **member (VIP)** | 위 + `isVip: true` (관리자 지정) | ✅ | ❌ | ❌ |
 | **admin** | Discord **username**이 `ADMIN_USERS`에 포함 | ✅ | ✅ | ✅ |
 
 관리자 username 목록 (`src/constants/adminUsers.ts`):
@@ -180,7 +181,8 @@ sequenceDiagram
 export const ADMIN_USERS = ['1000hyehyang1', 'sweet__rain'];
 ```
 
-> admin은 username 기준입니다. 회원 whitelist는 **Discord ID(숫자 snowflake)** 기준입니다.
+> admin은 username 기준입니다. 회원 whitelist는 **Discord ID(숫자 snowflake)** 기준입니다.  
+> \* 명단에만 있고 VIP가 아닌 회원은 로그인·커뮤니티는 가능하나 **회원 전용 편성 행**은 잠깁니다. 기존 명단에 `isVip` 필드가 없으면 **VIP로 간주**합니다.
 
 ### 표시 이름 우선순위
 
@@ -199,6 +201,7 @@ nickname (사이트·JSONBin) → globalName (Discord) → username
 | `nickname` | `혜향` | 사이트 표시명 |
 | `avatar` | hash | Discord 아바타 hash |
 | `role` | `guest` \| `member` \| `admin` | 등급 |
+| `isVip` | `true` \| `false` | VIP 편성·왕관 표시 (member·admin) |
 | `isAdmin` | `true` \| `false` | `/admin`·관리 UI용 |
 
 푸터 비밀번호 인증 시 `isAdmin`만 `true`로 올라갈 수 있으며, `role`은 guest일 수 있습니다. (편성 관리는 `isAdmin` 기준)
@@ -208,8 +211,11 @@ nickname (사이트·JSONBin) → globalName (Discord) → username
 | 상태 | 화면 |
 |------|------|
 | 비로그인 guest | 🔒 + 「로그인」 버튼 |
-| 로그인 guest (명단 없음) | 「현재 동호회 회원만 이용 가능한 콘텐츠입니다. 가입 문의는 관리자에게 연락해주세요.」 |
-| member / admin | 프로그램 제목·링크 표시 |
+| 로그인 guest (명단 없음) | 동호회 가입 문의 안내 |
+| member (비-VIP) | 「VIP로 지정된 동호회 회원만…」 |
+| member (VIP) / admin | 프로그램 제목·링크 표시 |
+
+후기·포인트 랭킹·프로필: VIP 회원 닉네임 옆 **👑** (후기 작성 시 `isVip` 저장).
 
 ---
 

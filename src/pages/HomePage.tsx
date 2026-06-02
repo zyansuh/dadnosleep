@@ -13,6 +13,7 @@ import { ApiSection }         from '../components/ApiSection';
 import { InfoSection }        from '../components/InfoSection';
 import { CommunityPage }      from '../components/community/CommunityPage';
 import { HomeRanking }        from '../components/community/HomeRanking';
+import { useMemberVipKeys }   from '../hooks/members/useMemberVipKeys';
 import { SiteFooter }         from '../components/SiteFooter';
 import { AppHeader }          from '../components/layout/AppHeader';
 import { MobileNav }          from '../components/layout/MobileNav';
@@ -33,6 +34,7 @@ export function HomePage() {
   const api       = useApiCards();
   const suggest   = useSuggestionForm();
   const community = useCommunity();
+  const vipKeys     = useMemberVipKeys();
 
   const nav = (p: Page) => { setPage(p); setMenuOpen(false); window.scrollTo(0, 0); };
 
@@ -134,7 +136,11 @@ export function HomePage() {
 
           <InfoSection />
 
-          <HomeRanking points={community.points} onGoCommunity={() => nav('community')} />
+          <HomeRanking
+            points={community.points}
+            vipKeys={vipKeys}
+            onGoCommunity={() => nav('community')}
+          />
 
           <section className="cta-banner">
             <div className="cta-deco cta-l"><span className="deco-pop">🍿</span></div>

@@ -52,8 +52,8 @@ export function AuthCallbackPage() {
           avatar:       data.avatar,
         };
 
-        const { role, nickname } = await processDiscordLogin(profile);
-        saveDiscordSession(profile, role, nickname);
+        const { role, nickname, isVip } = await processDiscordLogin(profile);
+        saveDiscordSession(profile, role, nickname, isVip);
         refresh();
         navigate('/', { replace: true });
       } catch (e) {

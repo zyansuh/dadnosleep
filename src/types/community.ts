@@ -5,6 +5,8 @@ export interface Review {
   rating:       number;  // 1~5
   content:      string;
   createdAt:    string;  // ISO
+  /** 작성 시 VIP 회원이면 true (왕관 표시) */
+  isVip?:       boolean;
 }
 
 /** 지인 초대 신고 1건 */

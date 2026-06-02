@@ -3,16 +3,18 @@ import { Plus } from 'lucide-react';
 interface Props {
   newUsername:    string;
   newNickname:    string;
+  newIsVip:       boolean;
   saving:         boolean;
   hasRemote:      boolean;
   onUsernameChange: (v: string) => void;
   onNicknameChange: (v: string) => void;
+  onIsVipChange:  (v: boolean) => void;
   onAdd:          () => void;
 }
 
 export function MemberAddForm({
-  newUsername, newNickname, saving, hasRemote,
-  onUsernameChange, onNicknameChange, onAdd,
+  newUsername, newNickname, newIsVip, saving, hasRemote,
+  onUsernameChange, onNicknameChange, onIsVipChange, onAdd,
 }: Props) {
   return (
     <div className="admin-member-add admin-member-add-form">
@@ -48,6 +50,15 @@ export function MemberAddForm({
           />
         </div>
       </div>
+      <label className="admin-member-vip-check">
+        <input
+          type="checkbox"
+          checked={newIsVip}
+          onChange={e => onIsVipChange(e.target.checked)}
+          disabled={saving || !hasRemote}
+        />
+        <span>VIP 지정 (회원 전용 편성·왕관 표시)</span>
+      </label>
       <button
         type="button"
         className="btn-modal-save admin-member-add-btn"

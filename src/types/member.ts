@@ -8,6 +8,8 @@ export interface MemberEntry {
   avatar:     string;
   role:       'member';
   joinedAt:   string;
+  /** VIP — 회원 전용 편성 열람·후기/랭킹 왕관 표시 */
+  isVip:      boolean;
 }
 
 export interface MembersBinRecord {
@@ -24,5 +26,6 @@ export interface DiscordLoginProfile {
 export interface LoginProcessResult {
   role:     UserRole;
   nickname: string;
+  isVip:    boolean;
   profile:  DiscordLoginProfile;
 }

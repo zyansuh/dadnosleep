@@ -3,10 +3,11 @@ import { ChevronDown, LogOut, Pencil } from 'lucide-react';
 import { useDiscordAuth } from '../context/DiscordAuthContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { NicknameChangeModal } from './NicknameChangeModal';
+import { VipCrown } from './VipCrown';
 
 export function ProfileMenu() {
   const {
-    displayName, avatarUrl, logout, updateNickname, canChangeNickname, user,
+    displayName, avatarUrl, logout, updateNickname, canChangeNickname, user, isVip,
   } = useDiscordAuth();
 
   const [open, setOpen]           = useState(false);
@@ -28,7 +29,10 @@ export function ProfileMenu() {
           aria-haspopup="menu"
         >
           {avatarUrl && <img src={avatarUrl} alt="" className="hd-discord-avatar" />}
-          <span className="hd-user">{displayName}</span>
+          <span className="hd-user">
+            {displayName}
+            {isVip && <VipCrown className="hd-vip-crown" />}
+          </span>
           <ChevronDown size={14} className={`profile-menu-chevron${open ? ' open' : ''}`} />
         </button>
 

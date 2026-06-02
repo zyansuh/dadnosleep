@@ -11,6 +11,7 @@ export async function processDiscordLogin(
     return {
       role:     'admin',
       nickname: resolveNickname(null, profile.global_name, profile.username),
+      isVip:    true,
       profile,
     };
   }
@@ -23,6 +24,7 @@ export async function processDiscordLogin(
     return {
       role:     'guest',
       nickname: resolveNickname(null, profile.global_name, profile.username),
+      isVip:    false,
       profile,
     };
   }
@@ -38,6 +40,7 @@ export async function processDiscordLogin(
     return {
       role:     'guest',
       nickname: resolveNickname(null, profile.global_name, profile.username),
+      isVip:    false,
       profile,
     };
   }
@@ -45,6 +48,7 @@ export async function processDiscordLogin(
   return {
     role:     'member',
     nickname: resolveNickname(member.nickname, member.globalName, member.username),
+    isVip:    member.isVip,
     profile,
   };
 }

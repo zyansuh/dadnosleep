@@ -17,17 +17,18 @@ interface Props {
   onSaveEdit:     (m: MemberEntry) => void;
   listFilter:     MemberListFilter;
   onWithdraw:     (m: MemberEntry) => void;
+  onToggleVip:    (m: MemberEntry) => void;
 }
 
 export function MemberTable({
   members, loading, saving, editingKey, editNickname,
   listFilter,
-  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
+  onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw, onToggleVip,
 }: Props) {
   const listProps = {
     members, loading, saving, editingKey, editNickname,
     listFilter,
-    onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw,
+    onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onWithdraw, onToggleVip,
   };
 
   return (
@@ -39,6 +40,7 @@ export function MemberTable({
             <th>Discord 이름</th>
             <th>닉네임</th>
             <th>로그인</th>
+            <th>VIP</th>
             <th>가입일</th>
             <th>수정</th>
             <th>탈퇴</th>
@@ -47,11 +49,11 @@ export function MemberTable({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={6} className="admin-table-empty admin-empty-oneline">불러오는 중…</td>
+              <td colSpan={7} className="admin-table-empty admin-empty-oneline">불러오는 중…</td>
             </tr>
           ) : members.length === 0 ? (
             <tr>
-              <td colSpan={6} className="admin-table-empty admin-empty-oneline">
+              <td colSpan={7} className="admin-table-empty admin-empty-oneline">
                 {memberListEmptyMessage(listFilter)}
               </td>
             </tr>
@@ -94,6 +96,17 @@ export function MemberTable({
                     ) : (
                       <span className="admin-pending-badge">대기</span>
                     )}
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`admin-vip-toggle${m.isVip ? ' is-vip' : ''}`}
+                      disabled={saving}
+                      onClick={() => void onToggleVip(m)}
+                      title={m.isVip ? 'VIP 해제' : 'VIP 지정'}
+                    >
+                      {m.isVip ? '👑 VIP' : '일반'}
+                    </button>
                   </td>
                   <td>{formatJoinedAt(m.joinedAt)}</td>
                   <td className="admin-table-actions">

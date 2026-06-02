@@ -9,10 +9,14 @@
 .hd-user {
   font-size: 12px;
   color: var(--text-dim);
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hd-vip-crown {
+  flex-shrink: 0;
 }
 
 .hd-admin-badge {
