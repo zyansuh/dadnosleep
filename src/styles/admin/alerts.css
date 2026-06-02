@@ -1,0 +1,35 @@
+/* 관리자 — 알림(alert) */
+
+.admin-feedback-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-alert {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.admin-feedback-banner .admin-alert {
+  margin-bottom: 0;
+}
+
+.admin-alert-error {
+  background: rgba(255, 100, 100, 0.12);
+  color: #ff9a9a;
+}
+
+.admin-alert-ok {
+  background: rgba(100, 255, 180, 0.1);
+  color: #8effc8;
+}
+
+.admin-alert-warn {
+  background: rgba(255, 213, 122, 0.12);
+  color: var(--gold);
+}

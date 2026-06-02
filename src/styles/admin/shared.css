@@ -1,25 +1,3 @@
-.admin-alert {
-  font-size: 13px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-}
-
-.admin-alert-error {
-  background: rgba(255, 100, 100, 0.12);
-  color: #ff9a9a;
-}
-
-.admin-alert-ok {
-  background: rgba(100, 255, 180, 0.1);
-  color: #8effc8;
-}
-
-.admin-alert-warn {
-  background: rgba(255, 213, 122, 0.12);
-  color: var(--gold);
-}
-
 .admin-table-wrap {
   overflow-x: auto;
   border-radius: 12px;

@@ -1,6 +1,7 @@
 /* 관리자 스타일 — 도메인별 분리 */
 @import './admin/layout.css';
 @import './admin/shared.css';
+@import './admin/alerts.css';
 @import './admin/members.css';
 @import './admin/dashboard.css';
 @import './admin/test-tools.css';
