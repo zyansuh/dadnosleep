@@ -256,6 +256,7 @@ dadnosleep/
 │   ├── App.tsx · main.tsx            # 라우터 · ToastProvider
 │   │
 │   ├── pages/
+│   │   ├── home/                     # HomeMainView, HomeCommunityView, HomeCtaBanner …
 │   │   ├── HomePage.tsx
 │   │   ├── AuthCallbackPage.tsx
 │   │   └── admin/
@@ -265,13 +266,20 @@ dadnosleep/
 │   │
 │   ├── components/                   # UI만 (상태·저장 로직 없음)
 │   │   ├── layout/                   # AppHeader, MobileNav, HomeOverlays
-│   │   ├── home/                     # HeroSection, ApiSection, InfoSection
+│   │   ├── home/
+│   │   │   ├── media/                # ApiCard, MediaDrawer
+│   │   │   ├── hero/                 # HeroIntro, HeroSchedulePanel
+│   │   │   ├── HeroSection, ApiSection, InfoSection
 │   │   ├── auth/                     # ProfileMenu, DiscordLoginButton, PrivateRoute …
 │   │   ├── modals/                   # ConfirmModal
 │   │   ├── ui/                       # Field, VipCrown
 │   │   ├── suggestion/               # SuggestionBoard, SuggestionModal
 │   │   ├── footer/                   # SiteFooter
-│   │   ├── schedule/                 # ScheduleTable, EditCellModal, CellInner …
+│   │   ├── schedule/
+│   │   │   ├── table/                # ScheduleTable, Desktop, Mobile
+│   │   │   ├── cell/                 # CellInner, scheduleSlot
+│   │   │   ├── modals/               # EditCellModal, ScheduleEditModal
+│   │   │   └── ScheduleTable.tsx 등  # re-export
 │   │   ├── community/                # CommunityPage, Review*, PointRanking …
 │   │   ├── admin/
 │   │   │   ├── feedback/             # AdminAlert, AdminFeedbackBanner
@@ -282,8 +290,8 @@ dadnosleep/
 │   │   └── HeroSection.tsx 등        # 호환용 re-export → 하위 폴더
 │   │
 │   ├── hooks/
-│   │   ├── shared/                   # useClock, useApiCards, useSuggestionForm, useClickOutside
-│   │   ├── schedule/                 # useSchedule, useScheduleEditForm
+│   │   ├── shared/                   # useClock, useApiCards, useLatestRef, useClickOutside
+│   │   ├── schedule/                 # useScheduleCore, useScheduleRandom, useScheduleUi
 │   │   ├── community/                # useCommunity, useReviewForm
 │   │   ├── members/                  # useMemberVipKeys
 │   │   ├── admin/
@@ -294,11 +302,21 @@ dadnosleep/
 │   │   └── useClock.ts 등            # re-export → hooks/shared
 │   │
 │   ├── utils/                        # 순수 함수·API·저장소
-│   │   ├── community/                # communityStore, pointCalc, pointPeriod, friendInvite
-│   │   ├── schedule/                 # scheduleStorage, scheduleCell, cellDisplay
-│   │   ├── members/                  # membersStore, memberIdentity, memberVip, memberDisplay
+│   │   ├── community/
+│   │   │   ├── store/                # local, merge, load, persist, adminReset, purgeMember …
+│   │   │   ├── communityStore.ts     # re-export (기존 import 경로 유지)
+│   │   │   └── pointCalc, pointPeriod, friendInvite
+│   │   ├── members/
+│   │   │   ├── store/                # cache, normalize, load, save, mutations, withdraw …
+│   │   │   ├── membersStore.ts       # re-export
+│   │   │   └── memberIdentity, memberVip, memberDisplay
+│   │   ├── schedule/
+│   │   │   ├── store/                # read, write, weekKey (scheduleStorage re-export)
+│   │   │   └── scheduleCell, cellDisplay
 │   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
-│   │   ├── jsonbin/                  # jsonbinEnv, jsonbinRecord
+│   │   ├── jsonbin/
+│   │   │   ├── fetch.ts · put.ts · communityPut.ts · membersBin.ts · extractMembers.ts
+│   │   │   ├── jsonbinEnv.ts · jsonbinRecord.ts (re-export)
 │   │   ├── auth/                     # discordOAuth, discordSession, processDiscordLogin
 │   │   └── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
 │   │
@@ -338,15 +356,21 @@ dadnosleep/
 
 관리자 **회원 명단** 훅 예: `useMembersListQuery`(조회) · `useMembersFilters`(필터) · `useMembersMutations`(추가·VIP·탈퇴) · `useMembersEdit`(닉 수정) → `useAdminMembers.ts`에서 조합.
 
+**커뮤니티 저장소** (`utils/community/store/`): `local.ts`(localStorage) · `merge.ts` · `remoteFetch`/`remoteSave` · `load.ts`/`persist.ts` · `adminReset.ts` · `purgeMember.ts`. 진입점은 `communityStore.ts` re-export.
+
+**회원 명단 저장소** (`utils/members/store/`): `cache.ts` · `normalize.ts` · `load.ts`/`save.ts` · `mutations.ts` · `withdraw.ts`. 진입점은 `membersStore.ts` re-export.
+
+**편성표 훅** (`hooks/schedule/`): `useScheduleCore`(셀·저장) · `useScheduleRandom`(랜덤 추천) · `useScheduleUi`(편집·초기화 모달) → `useSchedule.ts`에서 조합.
+
+**JSONBin** (`utils/jsonbin/`): `fetch` · `put` · `communityPut` · `membersBin` · `extractMembers` — `jsonbinRecord.ts`는 re-export.
+
 ### 더 나눌 수 있는 후보 (점진적)
 
 | 영역 | 제안 |
 |------|------|
-| `utils/members/membersStore.ts` | `load.ts` / `save.ts` / `cache.ts` / `normalize.ts` |
-| `utils/community/communityStore.ts` | `read.ts` / `write.ts` / `adminReset.ts` |
-| `components/schedule/` | `table/` · `modals/` · `cell/` |
-| `pages/HomePage.tsx` | `home/` 섹션별 하위 컴포넌트 |
-| 루트 `ApiCard`, `MediaDrawer` | `components/home/` 또는 `components/media/` |
+| `components/community/CommunityPage.tsx` | 후기 목록·폼·랭킹 탭 분리 |
+| `hooks/community/useCommunity.ts` | load / persist / storage 이벤트 분리 |
+| `components/layout/HomeOverlays.tsx` | 모달·드로어 그룹별 파일 |
 
 ### import 규칙 (예시)
 
