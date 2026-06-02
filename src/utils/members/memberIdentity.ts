@@ -20,6 +20,7 @@ export function validateMemberIdentity(value: string): string | null {
   const u = value.trim();
   if (u.length < 2) return '식별 이름은 2자 이상이어야 합니다.';
   if (u.length > 32) return '식별 이름은 32자 이하여야 합니다.';
+  // eslint-disable-next-line no-control-regex -- 제어 문자 차단(표시 이름·@username 공통)
   if (/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(u)) {
     return '사용할 수 없는 제어 문자가 포함되어 있습니다.';
   }

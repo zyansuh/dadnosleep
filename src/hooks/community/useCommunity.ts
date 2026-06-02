@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useLatestRef } from '../shared/useLatestRef';
 import type { Review, PointRecord, FriendInvite } from '../../types/community';
 import {
   loadCommunityData,
@@ -30,10 +31,8 @@ export function useCommunity(): UseCommunityReturn {
   const [points, setPoints]   = useState<PointRecord[]>([]);
   const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
   const [loading, setLoading] = useState(true);
-  const reviewsRef = useRef<Review[]>([]);
-  const invitesRef = useRef<FriendInvite[]>([]);
-  reviewsRef.current = reviews;
-  invitesRef.current = friendInvites;
+  const reviewsRef = useLatestRef(reviews);
+  const invitesRef = useLatestRef(friendInvites);
 
   const applyData = useCallback((data: {
     reviews: Review[];

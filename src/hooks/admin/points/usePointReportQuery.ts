@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useLatestRef } from '../../shared/useLatestRef';
 import type { Review, FriendInvite } from '../../../types/community';
 import type { MemberEntry } from '../../../types/member';
 import { loadCommunityData } from '../../../utils/community/communityStore';
@@ -15,8 +16,7 @@ export function usePointReportQuery(feedback: FeedbackApi) {
   const [friendInvites, setFriendInvites] = useState<FriendInvite[]>([]);
   const [members, setMembers]               = useState<MemberEntry[]>([]);
   const [loading, setLoading]               = useState(true);
-  const feedbackRef = useRef(feedback);
-  feedbackRef.current = feedback;
+  const feedbackRef = useLatestRef(feedback);
 
   const reload = useCallback(async () => {
     setLoading(true);

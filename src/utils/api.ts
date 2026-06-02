@@ -1,6 +1,6 @@
-// @ts-ignore
+// @ts-expect-error tmdb.js는 JS 모듈
 import { fetchOTT as _fetchOTT, fetchKoreanOTT as _fetchKoreanOTT } from './tmdb';
-// @ts-ignore
+// @ts-expect-error youtube.js는 JS 모듈
 import { fetchYouTube as _fetchYouTube } from './youtube';
 import type { OttItem, RecommendItem } from '../types';
 import { ottToRecommend } from './recommend';

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useLatestRef } from '../../shared/useLatestRef';
 import { loadMembersBin } from '../../../utils/members/membersStore';
 import type { MemberEntry } from '../../../types/member';
 import { toUserFacingError } from '../../../utils/messages/userMessages';
@@ -13,8 +14,7 @@ interface FeedbackApi {
 export function useMembersListQuery(feedback: FeedbackApi) {
   const [members, setMembers] = useState<MemberEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const feedbackRef = useRef(feedback);
-  feedbackRef.current = feedback;
+  const feedbackRef = useLatestRef(feedback);
 
   const reload = useCallback(async () => {
     setLoading(true);

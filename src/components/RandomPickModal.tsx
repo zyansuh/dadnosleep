@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Check, CheckSquare, Square } from 'lucide-react';
 import type { RecommendItem } from '../types';
 
@@ -11,10 +11,6 @@ interface Props {
 
 export function RandomPickModal({ items, loading, onApply, onClose }: Props) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set(items.map(i => i.id)));
-
-  useEffect(() => {
-    setSelected(new Set(items.map(i => i.id)));
-  }, [items]);
 
   const selectedList = useMemo(
     () => items.filter(i => selected.has(i.id)),
