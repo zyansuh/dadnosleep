@@ -158,7 +158,7 @@ sequenceDiagram
 | 회원 명단 | `/admin/members` — 추가·닉 수정·**VIP 지정/해제**·필터(전체/로그인함/로그인 전/VIP) |
 | 회원 탈퇴 | `/admin/members` — 명단 삭제 + 해당인 **후기·지인초대·포인트 전부 삭제** |
 | 기간별 포인트 | `/admin/points` — 합산/후기/초대 탭, 지인초대 신고 내역 표 |
-| 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 (회원 명단은 유지) |
+| 테스트 초기화 | `/admin` — **포인트만** / 후기만 / 지인초대만 / 전체 (회원 명단 유지) |
 | 푸터 「관리자」 | 비밀번호 또는 Discord admin → `/admin` |
 
 ---
@@ -265,21 +265,33 @@ dadnosleep/
 │   │
 │   ├── components/                   # UI만 (상태·저장 로직 없음)
 │   │   ├── layout/                   # AppHeader, MobileNav, HomeOverlays
-│   │   ├── schedule/                 # ScheduleTable, EditCellModal, CellInner, scheduleSlot
-│   │   ├── community/                # CommunityPage, Review*, FriendInviteModal, PointRanking
+│   │   ├── home/                     # HeroSection, ApiSection, InfoSection
+│   │   ├── auth/                     # ProfileMenu, DiscordLoginButton, PrivateRoute …
+│   │   ├── modals/                   # ConfirmModal
+│   │   ├── ui/                       # Field, VipCrown
+│   │   ├── suggestion/               # SuggestionBoard, SuggestionModal
+│   │   ├── footer/                   # SiteFooter
+│   │   ├── schedule/                 # ScheduleTable, EditCellModal, CellInner …
+│   │   ├── community/                # CommunityPage, Review*, PointRanking …
 │   │   ├── admin/
-│   │   │   ├── members/              # MemberAddForm, MemberTable, MemberListToolbar …
-│   │   │   ├── test/                 # AdminTestToolsPanel, AdminTestResetBlock/Modals
+│   │   │   ├── feedback/             # AdminAlert, AdminFeedbackBanner
+│   │   │   ├── members/              # MemberAddForm, MemberTable …
+│   │   │   ├── test/                 # AdminTestToolsPanel, AdminTestReset*
 │   │   │   ├── points/               # PointPeriod*, FriendInviteLog
 │   │   │   └── AdminLayout.tsx
-│   │   └── …                         # HeroSection, ApiSection, ConfirmModal 등
+│   │   └── HeroSection.tsx 등        # 호환용 re-export → 하위 폴더
 │   │
-│   ├── hooks/                        # 상태·비동기·폼 로직만
+│   ├── hooks/
+│   │   ├── shared/                   # useClock, useApiCards, useSuggestionForm, useClickOutside
 │   │   ├── schedule/                 # useSchedule, useScheduleEditForm
 │   │   ├── community/                # useCommunity, useReviewForm
-│   │   ├── admin/                    # useAdminMembers, useAdminPointReport, useAdminTestReset
 │   │   ├── members/                  # useMemberVipKeys
-│   │   └── useClock.ts · useApiCards.ts · useSuggestionForm.ts · useClickOutside.ts
+│   │   ├── admin/
+│   │   │   ├── members/              # useMembersListQuery, useMembersMutations, useAdminMembers …
+│   │   │   ├── points/               # usePointReportQuery, usePointReportDerived …
+│   │   │   ├── useAdminFeedback.ts · useAdminTestReset.ts
+│   │   │   └── useAdminMembers.ts    # re-export
+│   │   └── useClock.ts 등            # re-export → hooks/shared
 │   │
 │   ├── utils/                        # 순수 함수·API·저장소
 │   │   ├── community/                # communityStore, pointCalc, pointPeriod, friendInvite
@@ -294,11 +306,11 @@ dadnosleep/
 │   │   ├── schedule.ts · points.ts · adminPointPresets.ts · adminTestReset.ts · emptyCell.ts
 │   │
 │   ├── context/                      # DiscordAuth, AdminGate, Toast
-│   ├── types/                        # Cell, community, member, role
+│   ├── types/                        # Cell, community, member, role, adminAlert
 │   │
 │   ├── styles/                       # CSS만 — App.css → @import (컴포넌트에 import 금지)
 │   │   ├── variables.css · header.css · hero.css · schedule.css · community.css
-│   │   ├── admin/                    # layout, shared, members, test-tools, points/, dashboard
+│   │   ├── admin/                    # layout, shared, alerts, members, test-tools, points/, dashboard
 │   │   ├── responsive.css · responsive-admin.css
 │   │   └── admin/responsive-test-tools.css
 │   │
@@ -321,6 +333,20 @@ dadnosleep/
 | **styles** | 클래스·미디어쿼리 | TS/JS import |
 
 관리자 **테스트 초기화** 예: `constants/adminTestReset.ts`(문구) → `hooks/admin/useAdminTestReset.ts`(실행) → `components/admin/test/*`(UI) → `styles/admin/test-tools.css`.
+
+관리자 **알림(alert)** 예: `hooks/admin/useAdminFeedback.ts`(상태) → `components/admin/feedback/AdminAlert.tsx`(표시) → `styles/admin/alerts.css`.
+
+관리자 **회원 명단** 훅 예: `useMembersListQuery`(조회) · `useMembersFilters`(필터) · `useMembersMutations`(추가·VIP·탈퇴) · `useMembersEdit`(닉 수정) → `useAdminMembers.ts`에서 조합.
+
+### 더 나눌 수 있는 후보 (점진적)
+
+| 영역 | 제안 |
+|------|------|
+| `utils/members/membersStore.ts` | `load.ts` / `save.ts` / `cache.ts` / `normalize.ts` |
+| `utils/community/communityStore.ts` | `read.ts` / `write.ts` / `adminReset.ts` |
+| `components/schedule/` | `table/` · `modals/` · `cell/` |
+| `pages/HomePage.tsx` | `home/` 섹션별 하위 컴포넌트 |
+| 루트 `ApiCard`, `MediaDrawer` | `components/home/` 또는 `components/media/` |
 
 ### import 규칙 (예시)
 
@@ -751,11 +777,18 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 | 버튼 | 동작 |
 |------|------|
-| **후기만 초기화** | `reviews` 삭제 · `friendInvites` **유지** |
-| **지인 초대만 초기화** | `friendInvites` 삭제 · `reviews` **유지** |
+| **포인트만 초기화** | 후기·지인 초대 **유지** · 랭킹 포인트만 0 (`pointsCleared` 플래그, 새 후기/초대 시 재집계) |
+| **후기만 초기화** | 후기 삭제 · 지인 초대 **유지** |
+| **지인 초대만 초기화** | 지인 초대 삭제 · 후기 **유지** |
 | **전체 초기화** | 후기 + 지인 초대 + 랭킹 전부 삭제 |
 
-`members` 필드는 세 경우 모두 유지됩니다.
+회원 명단은 네 경우 모두 유지됩니다.
+
+### 회원 명단이 안 보이거나 사라질 때
+
+- 후기·포인트를 저장할 때 **같은 JSONBin Bin**을 쓰면, 예전에는 `members` 필드가 빠지며 명단이 지워질 수 있었습니다. 지금은 `putCommunityBinRecord`가 **항상 기존 members를 유지**합니다.
+- 개발 중(HMR) 새로고침 시에도 **브라우저 localStorage 캐시**(`dadnosleep-members-cache-v1`)로 마지막 명단을 복원합니다.
+- 관리자 페이지를 열면 원격에 명단이 없고 캐시만 있을 때 **자동으로 Bin에 다시 씁니다**.
 
 ### 관리자 username 변경
 
