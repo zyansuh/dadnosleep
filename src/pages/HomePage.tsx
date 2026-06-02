@@ -1,50 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-import { useClock }          from '../hooks/useClock';
-import { useSchedule }       from '../hooks/schedule/useSchedule';
-import { useApiCards }       from '../hooks/useApiCards';
+import { useClock } from '../hooks/useClock';
+import { useSchedule } from '../hooks/schedule/useSchedule';
+import { useApiCards } from '../hooks/useApiCards';
 import { useSuggestionForm } from '../hooks/useSuggestionForm';
-import { useCommunity }      from '../hooks/community/useCommunity';
-import { useDiscordAuth }    from '../context/DiscordAuthContext';
-import { useAdminGate }      from '../context/AdminGateContext';
+import { useCommunity } from '../hooks/community/useCommunity';
+import { useDiscordAuth } from '../context/DiscordAuthContext';
+import { useAdminGate } from '../context/AdminGateContext';
+import { useMemberVipKeys } from '../hooks/members/useMemberVipKeys';
 
-import { HeroSection }        from '../components/HeroSection';
-import { ApiSection }         from '../components/ApiSection';
-import { InfoSection }        from '../components/InfoSection';
-import { CommunityPage }      from '../components/community/CommunityPage';
-import { HomeRanking }        from '../components/community/HomeRanking';
-import { useMemberVipKeys }   from '../hooks/members/useMemberVipKeys';
-import { SiteFooter }         from '../components/SiteFooter';
-import { AppHeader }          from '../components/layout/AppHeader';
-import { MobileNav }          from '../components/layout/MobileNav';
-import { HomeOverlays }       from '../components/layout/HomeOverlays';
+import { HomeCommunityView } from './home/HomeCommunityView';
+import { AppHeader } from '../components/layout/AppHeader';
+import { MobileNav } from '../components/layout/MobileNav';
+import { HomeOverlays } from '../components/layout/HomeOverlays';
 
-type Page = 'home' | 'community';
+import type { HomePageTab } from './home/types';
+import { useHomePageEffects } from './home/useHomePageEffects';
+import { HomeMainView } from './home/HomeMainView';
 
 export function HomePage() {
-  const [page,          setPage]          = useState<Page>('home');
-  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [page, setPage] = useState<HomePageTab>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [schedEditOpen, setSchedEditOpen] = useState(false);
-  const [boardOpen,     setBoardOpen]     = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
 
-  const discord   = useDiscordAuth();
+  const discord = useDiscordAuth();
   const { goToAdmin } = useAdminGate();
-  const clock     = useClock();
-  const sched     = useSchedule();
-  const api       = useApiCards();
-  const suggest   = useSuggestionForm();
+  const clock = useClock();
+  const sched = useSchedule();
+  const api = useApiCards();
+  const suggest = useSuggestionForm();
   const community = useCommunity();
-  const vipKeys     = useMemberVipKeys();
+  const vipKeys = useMemberVipKeys();
 
-  const nav = (p: Page) => { setPage(p); setMenuOpen(false); window.scrollTo(0, 0); };
+  const nav = (p: HomePageTab) => {
+    setPage(p);
+    setMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
 
-  useEffect(() => {
-    if (!discord.canEditSchedule && sched.isEditMode) sched.toggleEditMode();
-  }, [discord.canEditSchedule, sched.isEditMode, sched.toggleEditMode]);
-
-  useEffect(() => {
-    if (page === 'community') void community.refreshReviews();
-  }, [page, community.refreshReviews]);
+  useHomePageEffects({
+    page,
+    canEditSchedule: discord.canEditSchedule,
+    isEditMode: sched.isEditMode,
+    toggleEditMode: sched.toggleEditMode,
+    refreshReviews: community.refreshReviews,
+  });
 
   return (
     <div className="app">
@@ -79,7 +80,7 @@ export function HomePage() {
       )}
 
       {page === 'community' ? (
-        <CommunityPage
+        <HomeCommunityView
           reviews={community.reviews}
           points={community.points}
           loading={community.loading}
@@ -94,65 +95,44 @@ export function HomePage() {
           onBack={() => nav('home')}
         />
       ) : (
-        <>
-          <HeroSection
-            sched={sched.sched}
-            memberRow={sched.memberRow}
-            todayIdx={clock.todayIdx}
-            nowMin={clock.nowMin}
-            randing={sched.randing}
-            randError={sched.randError}
-            canEditSchedule={discord.canEditSchedule}
-            isLoggedIn={discord.isLoggedIn}
-            isGuestLoggedIn={discord.isGuestLoggedIn}
-            canAccessMemberContent={discord.canAccessMemberContent}
-            onLoginClick={discord.login}
-            isEditMode={sched.isEditMode}
-            onToggleEditMode={sched.toggleEditMode}
-            onOpenResetConfirm={sched.openResetConfirm}
-            onUpdateCell={sched.updateCell}
-            onUpdateMemberCell={sched.updateMemberCell}
-            onSetCellFixed={sched.setCellFixed}
-            onUnfixCell={sched.unfixCell}
-            onResetCell={sched.resetCell}
-            onOpenRandomPicker={sched.openRandomPicker}
-            onOpenScheduleEdit={() => {
-              if (!discord.canEditSchedule) return;
-              setSchedEditOpen(true);
-            }}
-          />
-
-          <ApiSection
-            activeApi={api.activeApi}
-            ottItems={api.ottItems}
-            ytItems={api.ytItems}
-            ottLoading={api.ottLoading}
-            ottError={api.ottError}
-            randing={sched.randing || api.drawerLoading}
-            handleApiCard={api.handleApiCard}
-            onOpenOttDrawer={api.openOttDrawer}
-            onOpenRandomDrawer={api.openRandomDrawer}
-          />
-
-          <InfoSection />
-
-          <HomeRanking
-            points={community.points}
-            vipKeys={vipKeys}
-            onGoCommunity={() => nav('community')}
-          />
-
-          <section className="cta-banner">
-            <div className="cta-deco cta-l"><span className="deco-pop">🍿</span></div>
-            <div className="cta-inner">
-              <a href="#schedule-section" className="cta-btn">지금 바로 편성표 보러가기 →</a>
-              <p className="cta-sub">매일 밤 8시, 새로운 편성표가 당신을 기다려요!</p>
-            </div>
-            <div className="cta-deco cta-r"><span className="deco-mug">☕</span></div>
-          </section>
-
-          <SiteFooter />
-        </>
+        <HomeMainView
+          sched={sched.sched}
+          memberRow={sched.memberRow}
+          todayIdx={clock.todayIdx}
+          nowMin={clock.nowMin}
+          randing={sched.randing}
+          randError={sched.randError}
+          canEditSchedule={discord.canEditSchedule}
+          isLoggedIn={discord.isLoggedIn}
+          isGuestLoggedIn={discord.isGuestLoggedIn}
+          canAccessMemberContent={discord.canAccessMemberContent}
+          isEditMode={sched.isEditMode}
+          onLoginClick={discord.login}
+          onToggleEditMode={sched.toggleEditMode}
+          onOpenResetConfirm={sched.openResetConfirm}
+          onUpdateCell={sched.updateCell}
+          onUpdateMemberCell={sched.updateMemberCell}
+          onSetCellFixed={sched.setCellFixed}
+          onUnfixCell={sched.unfixCell}
+          onResetCell={sched.resetCell}
+          onOpenRandomPicker={sched.openRandomPicker}
+          onOpenScheduleEdit={() => {
+            if (!discord.canEditSchedule) return;
+            setSchedEditOpen(true);
+          }}
+          activeApi={api.activeApi}
+          ottItems={api.ottItems}
+          ytItems={api.ytItems}
+          ottLoading={api.ottLoading}
+          ottError={api.ottError}
+          apiRanding={api.drawerLoading}
+          handleApiCard={api.handleApiCard}
+          onOpenOttDrawer={api.openOttDrawer}
+          onOpenRandomDrawer={api.openRandomDrawer}
+          points={community.points}
+          vipKeys={vipKeys}
+          onGoCommunity={() => nav('community')}
+        />
       )}
 
       <HomeOverlays
