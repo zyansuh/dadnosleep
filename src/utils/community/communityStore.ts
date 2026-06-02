@@ -2,6 +2,7 @@ import type { Review, PointRecord, FriendInvite } from '../../types/community';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
 import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
 import { recalcPoints } from './pointCalc';
+import { normalizeFriendInvites } from './friendInvite';
 
 export const LS_REVIEWS          = 'dadnosleep-reviews-v1';
 export const LS_POINTS           = 'dadnosleep-points-v1';
@@ -49,9 +50,9 @@ function readLocal(): CommunityData {
   try {
     const reviews = JSON.parse(localStorage.getItem(LS_REVIEWS) ?? '[]') as Review[];
     const points  = JSON.parse(localStorage.getItem(LS_POINTS)  ?? '[]') as PointRecord[];
-    const friendInvites = JSON.parse(
-      localStorage.getItem(LS_FRIEND_INVITES) ?? '[]',
-    ) as FriendInvite[];
+    const friendInvites = normalizeFriendInvites(
+      JSON.parse(localStorage.getItem(LS_FRIEND_INVITES) ?? '[]'),
+    );
     return { reviews, points, friendInvites };
   } catch {
     return { reviews: [], points: [], friendInvites: [] };
@@ -104,9 +105,7 @@ function parseRemoteRecord(record: {
   friendInvites?: unknown;
 }): CommunityData {
   const reviews = Array.isArray(record.reviews) ? record.reviews as Review[] : [];
-  const friendInvites = Array.isArray(record.friendInvites)
-    ? record.friendInvites as FriendInvite[]
-    : [];
+  const friendInvites = normalizeFriendInvites(record.friendInvites);
   return {
     reviews,
     friendInvites,

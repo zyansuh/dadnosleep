@@ -83,7 +83,9 @@ export function HomePage() {
           loading={community.loading}
           isAdmin={discord.isAdmin}
           onAddReview={community.addReview}
-          onAddFriendInvite={async nickname => { await community.addFriendInvite(nickname); }}
+          onAddFriendInvite={async (inviter, invitee) => {
+            await community.addFriendInvite(inviter, invitee);
+          }}
           onUpdateReview={community.updateReview}
           onDeleteReview={community.deleteReview}
           onRefresh={community.refreshReviews}

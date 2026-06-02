@@ -17,7 +17,7 @@ interface UseCommunityReturn {
   friendInvites:   FriendInvite[];
   loading:         boolean;
   addReview:       (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
-  addFriendInvite: (nickname: string) => Promise<FriendInvite>;
+  addFriendInvite: (inviterNickname: string, inviteeNickname: string) => Promise<FriendInvite>;
   updateReview:    (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
   deleteReview:    (id: string) => Promise<void>;
   refreshReviews:  () => Promise<void>;
@@ -115,13 +115,18 @@ export function useCommunity(): UseCommunityReturn {
     return newReview;
   }, [persist]);
 
-  const addFriendInvite = useCallback(async (nickname: string): Promise<FriendInvite> => {
-    const trimmed = nickname.trim();
+  const addFriendInvite = useCallback(async (
+    inviterNickname: string,
+    inviteeNickname: string,
+  ): Promise<FriendInvite> => {
+    const trimmed = inviterNickname.trim();
+    const invitee = inviteeNickname.trim();
     saveMyNickname(trimmed);
     const entry: FriendInvite = {
-      id:        `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      nickname:  trimmed,
-      createdAt: new Date().toISOString(),
+      id:               `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      nickname:         trimmed,
+      inviteeNickname:  invitee,
+      createdAt:        new Date().toISOString(),
     };
     const nextInvites = [entry, ...invitesRef.current];
     await persist(reviewsRef.current, nextInvites);

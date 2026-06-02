@@ -93,10 +93,12 @@ export function useAdminPointReport() {
     [reviews, range],
   );
 
-  const periodInviteCount = useMemo(
-    () => filterInvitesByPeriod(friendInvites, range).length,
+  const periodInvites = useMemo(
+    () => filterInvitesByPeriod(friendInvites, range),
     [friendInvites, range],
   );
+
+  const periodInviteCount = periodInvites.length;
 
   const totalReviewPoints = useMemo(() => sumReviewPoints(totalRows), [totalRows]);
   const totalInvitePoints = useMemo(() => sumInvitePoints(totalRows), [totalRows]);
@@ -120,6 +122,7 @@ export function useAdminPointReport() {
     displayPoints,
     periodReviewCount,
     periodInviteCount,
+    periodInvites,
     totalReviewPoints,
     totalInvitePoints,
     memberCount: members.length,

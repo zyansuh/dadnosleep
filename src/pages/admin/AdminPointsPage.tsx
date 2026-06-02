@@ -3,6 +3,7 @@ import { PointPeriodToolbar } from '../../components/admin/points/PointPeriodToo
 import { PointPeriodViewTabs } from '../../components/admin/points/PointPeriodViewTabs';
 import { PointPeriodSummary } from '../../components/admin/points/PointPeriodSummary';
 import { PointPeriodRanking } from '../../components/admin/points/PointPeriodRanking';
+import { FriendInviteLog } from '../../components/admin/points/FriendInviteLog';
 import { useAdminPointReport } from '../../hooks/admin/useAdminPointReport';
 
 export function AdminPointsPage() {
@@ -61,6 +62,14 @@ export function AdminPointsPage() {
         registeredOnly={r.registeredOnly}
         memberCount={r.memberCount}
       />
+
+      {(r.view === 'invite' || r.view === 'total') && (
+        <FriendInviteLog
+          invites={r.periodInvites}
+          loading={r.loading}
+          rangeLabel={r.range.label}
+        />
+      )}
     </div>
   );
 }

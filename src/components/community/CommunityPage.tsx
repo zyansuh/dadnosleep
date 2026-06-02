@@ -15,7 +15,7 @@ interface Props {
   loading:         boolean;
   isAdmin:         boolean;
   onAddReview:     (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
-  onAddFriendInvite: (nickname: string) => Promise<void>;
+  onAddFriendInvite: (inviterNickname: string, inviteeNickname: string) => Promise<void>;
   onUpdateReview:  (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
   onDeleteReview:  (id: string) => Promise<void>;
   onRefresh:       () => Promise<void>;
@@ -47,8 +47,8 @@ export function CommunityPage({
     await onRefresh();
   };
 
-  const handleInviteSubmit = async (nickname: string) => {
-    await onAddFriendInvite(nickname);
+  const handleInviteSubmit = async (inviterNickname: string, inviteeNickname: string) => {
+    await onAddFriendInvite(inviterNickname, inviteeNickname);
     await onRefresh();
   };
 

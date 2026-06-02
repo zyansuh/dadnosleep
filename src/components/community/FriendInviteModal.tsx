@@ -5,32 +5,42 @@ import { getMyNickname, validateNickname } from '../../utils/nickname';
 
 interface Props {
   defaultNickname?: string | null;
-  onSubmit: (nickname: string) => Promise<void>;
+  onSubmit: (inviterNickname: string, inviteeNickname: string) => Promise<void>;
   onClose:  () => void;
 }
 
 export function FriendInviteModal({ defaultNickname, onSubmit, onClose }: Props) {
-  const [nickname, setNickname] = useState(
+  const [inviter, setInviter] = useState(
     () => defaultNickname?.trim() || getMyNickname() || '',
   );
-  const [error, setError]     = useState('');
+  const [invitee, setInvitee] = useState('');
+  const [inviterErr, setInviterErr] = useState('');
+  const [inviteeErr, setInviteeErr] = useState('');
   const [done, setDone]       = useState(false);
   const [saving, setSaving]   = useState(false);
   const [saveErr, setSaveErr] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateNickname(nickname);
-    if (err) {
-      setError(err);
+    const errInviter = validateNickname(inviter);
+    const errInvitee = validateNickname(invitee);
+    setInviterErr(errInviter ?? '');
+    setInviteeErr(errInvitee ?? '');
+    if (errInviter || errInvitee) return;
+
+    const a = inviter.trim().toLowerCase();
+    const b = invitee.trim().toLowerCase();
+    if (a === b) {
+      setInviteeErr('초대한 지인 닉네임은 내 닉네임과 달라야 합니다.');
       return;
     }
+
     if (saving) return;
 
     setSaving(true);
     setSaveErr('');
     try {
-      await onSubmit(nickname.trim());
+      await onSubmit(inviter.trim(), invitee.trim());
       setDone(true);
     } catch {
       setSaveErr('저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -58,19 +68,31 @@ export function FriendInviteModal({ defaultNickname, onSubmit, onClose }: Props)
         {!done ? (
           <form className="modal-form" onSubmit={handleSubmit}>
             <p className="friend-invite-desc">
-              동호회에 지인을 초대하셨다면 아래에서 신고해 주세요. 포인트 랭킹에 반영됩니다.
+              동호회에 지인을 초대하셨다면 <strong>내 닉네임</strong>과 <strong>초대한 지인 닉네임</strong>을
+              입력해 주세요. 포인트는 내 닉네임 기준으로 랭킹에 반영됩니다.
             </p>
             <div className="ff">
               <label className="fl">내 닉네임 <span className="req">*</span></label>
               <input
-                className={`inp ${error ? 'inp-err' : ''}`}
+                className={`inp ${inviterErr ? 'inp-err' : ''}`}
                 placeholder="후기에 쓴 닉네임과 동일하게"
-                value={nickname}
+                value={inviter}
                 maxLength={20}
-                onChange={e => { setNickname(e.target.value); setError(''); }}
+                onChange={e => { setInviter(e.target.value); setInviterErr(''); }}
                 autoFocus
               />
-              {error && <span className="fe">{error}</span>}
+              {inviterErr && <span className="fe">{inviterErr}</span>}
+            </div>
+            <div className="ff">
+              <label className="fl">초대한 지인 닉네임 <span className="req">*</span></label>
+              <input
+                className={`inp ${inviteeErr ? 'inp-err' : ''}`}
+                placeholder="초대받은 분의 닉네임"
+                value={invitee}
+                maxLength={20}
+                onChange={e => { setInvitee(e.target.value); setInviteeErr(''); }}
+              />
+              {inviteeErr && <span className="fe">{inviteeErr}</span>}
             </div>
 
             {saveErr && <p className="fe" style={{ textAlign: 'center' }}>{saveErr}</p>}
@@ -87,6 +109,7 @@ export function FriendInviteModal({ defaultNickname, onSubmit, onClose }: Props)
             <div className="success-emoji">🎉</div>
             <h3>지인 초대가 등록됐어요!</h3>
             <p>
+              <strong>{inviter.trim()}</strong> → <strong>{invitee.trim()}</strong><br />
               <strong style={{ color: '#ffd57a' }}>{POINTS_PER_FRIEND_INVITE.toLocaleString()} 포인트</strong>가
               랭킹에 반영됐습니다.
             </p>
