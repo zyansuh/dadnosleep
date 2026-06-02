@@ -7,6 +7,8 @@ export interface JsonBinFullRecord {
   points?:        PointRecord[];
   friendInvites?: FriendInvite[];
   members?:       MemberEntry[];
+  /** true면 후기·초대는 유지하고 랭킹 포인트만 0으로 둠 (관리자 포인트만 초기화) */
+  pointsCleared?: boolean;
 }
 
 function classifyStatus(status: number): string {
@@ -25,6 +27,35 @@ export async function fetchJsonBinRecord(binId: string): Promise<JsonBinFullReco
   }
   const json = await res.json() as { record?: JsonBinFullRecord };
   return json.record ?? {};
+}
+
+/** 공유 Bin 저장 시 기존 members·pointsCleared 유지 (후기 저장이 명단을 지우지 않도록) */
+export async function putCommunityBinRecord(
+  binId: string,
+  patch: {
+    reviews:         Review[];
+    friendInvites:   FriendInvite[];
+    points:          PointRecord[];
+    pointsCleared?: boolean;
+    members?:        MemberEntry[];
+  },
+): Promise<void> {
+  const existing = await fetchJsonBinRecord(binId);
+  const extracted = extractMembersFromRecord(existing);
+  const members = patch.members ?? (extracted.length > 0 ? extracted : existing.members);
+
+  const record: JsonBinFullRecord = {
+    reviews:       patch.reviews,
+    friendInvites: patch.friendInvites,
+    points:        patch.points,
+    pointsCleared: patch.pointsCleared ?? existing.pointsCleared,
+  };
+
+  if (members !== undefined) {
+    record.members = members;
+  }
+
+  await putJsonBinRecord(binId, record);
 }
 
 export async function putJsonBinRecord(binId: string, record: JsonBinFullRecord): Promise<void> {
@@ -51,10 +82,13 @@ export async function saveMembersRecord(members: MemberEntry[]): Promise<void> {
 
   if (usesSharedCommunityBinForMembers()) {
     const existing = await fetchJsonBinRecord(binId);
-    await putJsonBinRecord(binId, {
-      reviews:       Array.isArray(existing.reviews) ? existing.reviews : [],
-      points:        Array.isArray(existing.points) ? existing.points : [],
-      friendInvites: Array.isArray(existing.friendInvites) ? existing.friendInvites : [],
+    await putCommunityBinRecord(binId, {
+      reviews:       Array.isArray(existing.reviews) ? existing.reviews as Review[] : [],
+      points:        Array.isArray(existing.points) ? existing.points as PointRecord[] : [],
+      friendInvites: Array.isArray(existing.friendInvites)
+        ? existing.friendInvites as FriendInvite[]
+        : [],
+      pointsCleared: existing.pointsCleared,
       members,
     });
     return;
