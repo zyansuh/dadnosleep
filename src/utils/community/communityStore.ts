@@ -1,6 +1,6 @@
 import type { Review, PointRecord, FriendInvite } from '../../types/community';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
-import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
+import { fetchJsonBinRecord, putCommunityBinRecord } from '../jsonbin/jsonbinRecord';
 import type { MemberEntry } from '../../types/member';
 import {
   getMemberCommunityKeys,
@@ -14,6 +14,7 @@ export const LS_REVIEWS          = 'dadnosleep-reviews-v1';
 export const LS_POINTS           = 'dadnosleep-points-v1';
 export const LS_FRIEND_INVITES   = 'dadnosleep-friend-invites-v1';
 export const LS_REVIEWS_MIGRATED = 'reviews_migrated';
+export const LS_POINTS_CLEARED   = 'dadnosleep-points-cleared-v1';
 
 export interface CommunityData {
   reviews:       Review[];
@@ -29,7 +30,7 @@ export interface PersistResult {
 type RemoteFailReason = 'unconfigured' | 'network' | 'rate_limit' | 'server_error' | 'client_error';
 
 type RemoteResult<T> =
-  | { ok: true; data: T }
+  | { ok: true; data: T; pointsCleared?: boolean }
   | { ok: false; reason: RemoteFailReason };
 
 const BIN_ID = getCommunityBinId();
@@ -37,6 +38,29 @@ const BIN_ID = getCommunityBinId();
 export const hasRemoteStore = Boolean(BIN_ID && hasJsonBinAccessKey());
 
 export { recalcPoints };
+
+function isPointsClearedLocal(): boolean {
+  try {
+    return localStorage.getItem(LS_POINTS_CLEARED) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setPointsClearedLocal(cleared: boolean): void {
+  try {
+    if (cleared) localStorage.setItem(LS_POINTS_CLEARED, '1');
+    else localStorage.removeItem(LS_POINTS_CLEARED);
+  } catch { /* 무시 */ }
+}
+
+function resolvePoints(
+  reviews: Review[],
+  friendInvites: FriendInvite[],
+  pointsCleared: boolean,
+): PointRecord[] {
+  return pointsCleared ? [] : recalcPoints(reviews, friendInvites);
+}
 
 function isMigrated(): boolean {
   try {
@@ -95,27 +119,37 @@ export function mergeFriendInvites(a: FriendInvite[], b: FriendInvite[]): Friend
   );
 }
 
-function mergeData(local: CommunityData, remote: CommunityData): CommunityData {
+function mergeData(
+  local: CommunityData,
+  remote: CommunityData,
+  remotePointsCleared: boolean,
+): CommunityData {
   const reviews = mergeReviews(local.reviews, remote.reviews);
   const friendInvites = mergeFriendInvites(local.friendInvites, remote.friendInvites);
+  const pointsCleared = isPointsClearedLocal() || remotePointsCleared;
   return {
     reviews,
     friendInvites,
-    points: recalcPoints(reviews, friendInvites),
+    points: resolvePoints(reviews, friendInvites, pointsCleared),
   };
 }
 
 function parseRemoteRecord(record: {
-  reviews?:       unknown;
-  points?:        unknown;
-  friendInvites?: unknown;
-}): CommunityData {
+  reviews?:        unknown;
+  points?:         unknown;
+  friendInvites?:  unknown;
+  pointsCleared?:  unknown;
+}): { data: CommunityData; pointsCleared: boolean } {
+  const pointsCleared = record.pointsCleared === true;
   const reviews = Array.isArray(record.reviews) ? record.reviews as Review[] : [];
   const friendInvites = normalizeFriendInvites(record.friendInvites);
   return {
-    reviews,
-    friendInvites,
-    points: recalcPoints(reviews, friendInvites),
+    pointsCleared,
+    data: {
+      reviews,
+      friendInvites,
+      points: resolvePoints(reviews, friendInvites, pointsCleared),
+    },
   };
 }
 
@@ -123,7 +157,9 @@ async function fetchRemote(): Promise<RemoteResult<CommunityData>> {
   if (!hasRemoteStore) return { ok: false, reason: 'unconfigured' };
   try {
     const record = await fetchJsonBinRecord(BIN_ID);
-    return { ok: true, data: parseRemoteRecord(record) };
+    const parsed = parseRemoteRecord(record);
+    setPointsClearedLocal(parsed.pointsCleared);
+    return { ok: true, data: parsed.data, pointsCleared: parsed.pointsCleared };
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -140,15 +176,14 @@ async function saveRemote(data: CommunityData): Promise<RemoteResult<CommunityDa
     const reviews = mergeReviews(remoteReviews, data.reviews);
     const friendInvites = mergeFriendInvites(remoteInvites, data.friendInvites);
     const points = recalcPoints(reviews, friendInvites);
-    const hadMembers = Array.isArray(existing.members);
-    const members = hadMembers ? existing.members! : [];
 
-    await putJsonBinRecord(BIN_ID, {
+    await putCommunityBinRecord(BIN_ID, {
       reviews,
       friendInvites,
       points,
-      ...(hadMembers ? { members } : {}),
+      pointsCleared: false,
     });
+    setPointsClearedLocal(false);
     return { ok: true, data: { reviews, friendInvites, points } };
   } catch {
     return { ok: false, reason: 'network' };
@@ -182,7 +217,7 @@ export async function migrateLegacyReviewsIfNeeded(): Promise<void> {
 
   const remote = await fetchRemote();
   const merged = remote.ok
-    ? mergeData(legacyData, remote.data)
+    ? mergeData(legacyData, remote.data, remote.pointsCleared === true)
     : legacyData;
 
   const saved = await saveRemote(merged);
@@ -201,17 +236,21 @@ export async function loadCommunityData(): Promise<CommunityData> {
   const remote = await fetchRemote();
 
   if (!remote.ok) {
-    const points = recalcPoints(local.reviews, local.friendInvites);
-    return { ...local, points };
+    const cleared = isPointsClearedLocal();
+    return {
+      ...local,
+      points: resolvePoints(local.reviews, local.friendInvites, cleared),
+    };
   }
 
-  const merged = mergeData(local, remote.data);
+  const merged = mergeData(local, remote.data, remote.pointsCleared === true);
   writeLocal(merged);
   return merged;
 }
 
 /** 저장 — 원격 실패 시 localStorage만 사용 (offline: true) */
 export async function persistCommunityData(data: CommunityData): Promise<PersistResult> {
+  setPointsClearedLocal(false);
   const withPoints: CommunityData = {
     ...data,
     points: recalcPoints(data.reviews, data.friendInvites),
@@ -227,12 +266,20 @@ export async function persistCommunityData(data: CommunityData): Promise<Persist
   return { data: saved.data, offline: false };
 }
 
+interface AdminWriteOptions {
+  /** 후기·초대 유지, 랭킹 포인트만 0 */
+  pointsCleared?: boolean;
+}
+
 async function adminWriteCommunityRecord(
   reviews: Review[],
   friendInvites: FriendInvite[],
+  opts?: AdminWriteOptions,
 ): Promise<{ ok: boolean; message: string }> {
-  const points = recalcPoints(reviews, friendInvites);
+  const pointsCleared = opts?.pointsCleared === true;
+  const points = resolvePoints(reviews, friendInvites, pointsCleared);
   const data: CommunityData = { reviews, friendInvites, points };
+  setPointsClearedLocal(pointsCleared);
   writeLocal(data);
 
   if (!hasRemoteStore) {
@@ -240,13 +287,11 @@ async function adminWriteCommunityRecord(
   }
 
   try {
-    const existing = await fetchJsonBinRecord(BIN_ID);
-    const hadMembers = Array.isArray(existing.members);
-    await putJsonBinRecord(BIN_ID, {
+    await putCommunityBinRecord(BIN_ID, {
       reviews,
       friendInvites,
       points,
-      ...(hadMembers ? { members: existing.members! } : {}),
+      pointsCleared,
     });
     return { ok: true, message: '' };
   } catch (e) {
@@ -290,6 +335,33 @@ export async function purgeCommunityDataForMember(
 }
 
 /**
+ * 테스트용 — 후기·지인 초대는 그대로 두고 포인트 랭킹만 0으로 초기화.
+ */
+export async function adminResetPointsOnly(): Promise<{ ok: boolean; message: string }> {
+  const local = readLocal();
+
+  if (!hasRemoteStore) {
+    return adminWriteCommunityRecord(local.reviews, local.friendInvites, { pointsCleared: true });
+  }
+
+  try {
+    const existing = await fetchJsonBinRecord(BIN_ID);
+    const remoteReviews = Array.isArray(existing.reviews) ? existing.reviews as Review[] : [];
+    const remoteInvites = Array.isArray(existing.friendInvites)
+      ? existing.friendInvites as FriendInvite[]
+      : [];
+    const reviews = mergeReviews(local.reviews, remoteReviews);
+    const friendInvites = mergeFriendInvites(local.friendInvites, remoteInvites);
+    return adminWriteCommunityRecord(reviews, friendInvites, { pointsCleared: true });
+  } catch (e) {
+    return {
+      ok:      false,
+      message: e instanceof Error ? e.message : '초기화에 실패했습니다.',
+    };
+  }
+}
+
+/**
  * 테스트용 — 후기만 삭제. 지인 초대 기록은 유지하고 포인트는 초대분만 남깁니다.
  */
 export async function adminResetReviewsOnly(): Promise<{ ok: boolean; message: string }> {
@@ -297,7 +369,7 @@ export async function adminResetReviewsOnly(): Promise<{ ok: boolean; message: s
   const friendInvites = local.friendInvites;
 
   if (!hasRemoteStore) {
-    return adminWriteCommunityRecord([], friendInvites);
+    return adminWriteCommunityRecord([], friendInvites, { pointsCleared: false });
   }
 
   try {
@@ -306,7 +378,7 @@ export async function adminResetReviewsOnly(): Promise<{ ok: boolean; message: s
       ? existing.friendInvites as FriendInvite[]
       : [];
     const mergedInvites = mergeFriendInvites(local.friendInvites, remoteInvites);
-    return adminWriteCommunityRecord([], mergedInvites);
+    return adminWriteCommunityRecord([], mergedInvites, { pointsCleared: false });
   } catch (e) {
     return {
       ok:      false,
@@ -323,14 +395,14 @@ export async function adminResetInvitesOnly(): Promise<{ ok: boolean; message: s
   const reviews = local.reviews;
 
   if (!hasRemoteStore) {
-    return adminWriteCommunityRecord(reviews, []);
+    return adminWriteCommunityRecord(reviews, [], { pointsCleared: false });
   }
 
   try {
     const existing = await fetchJsonBinRecord(BIN_ID);
     const remoteReviews = Array.isArray(existing.reviews) ? existing.reviews as Review[] : [];
     const mergedReviews = mergeReviews(local.reviews, remoteReviews);
-    return adminWriteCommunityRecord(mergedReviews, []);
+    return adminWriteCommunityRecord(mergedReviews, [], { pointsCleared: false });
   } catch (e) {
     return {
       ok:      false,
@@ -343,5 +415,5 @@ export async function adminResetInvitesOnly(): Promise<{ ok: boolean; message: s
  * 테스트용 — 후기·지인초대·포인트 전부 삭제 (병합 없음).
  */
 export async function adminResetAllCommunityData(): Promise<{ ok: boolean; message: string }> {
-  return adminWriteCommunityRecord([], []);
+  return adminWriteCommunityRecord([], [], { pointsCleared: false });
 }
