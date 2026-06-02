@@ -2,6 +2,7 @@
   /* 배경 */
   --bg:        #0f0a1f;
   --bg2:       #1a1530;
+  --bg-gradient: linear-gradient(180deg, #1a1530 0%, #0f0a1f 50%, #1a1530 100%);
   --bg-card:   rgba(30, 25, 50, 0.7);
   --bg-card2:  rgba(40, 32, 65, 0.6);
   --border:    rgba(255,255,255,0.08);
@@ -33,7 +34,22 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+html {
+  background-color: var(--bg);
+  background-image: var(--bg-gradient);
+  color-scheme: dark;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: transparent;
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: var(--font-body); border: none; }
 img { display: block; }

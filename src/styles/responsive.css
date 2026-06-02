@@ -6,6 +6,14 @@
 }
 
 @media (max-width: 768px) {
+  /* iOS/Android: backdrop-filter가 배경색을 왜곡하는 경우 방지 */
+  .header,
+  .sched-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(30, 25, 50, 0.95);
+  }
+
   .app       { padding: 12px; }
   .hamburger { display: flex; }
   .op-pill   { display: none; }
@@ -33,6 +41,10 @@
 }
 
 @media (max-width: 640px) {
+  .hd-user    { display: none; }
+  .btn-auth span { display: none; }
+  .hd-auth    { gap: 4px; }
+
   .app        { padding: 10px; }
   .site-title { font-size: 38px; }
   .site-sub   { font-size: 16px; }

@@ -1,0 +1,71 @@
+/* Discord 로그인 버튼 */
+.btn-discord-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 20px;
+  background: #5865f2;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, opacity 0.18s;
+  white-space: nowrap;
+}
+
+.btn-discord-login:hover {
+  background: #4752c4;
+}
+
+.btn-discord-login--full {
+  width: 100%;
+}
+
+.discord-logo {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* 헤더 Discord 사용자 */
+.hd-discord-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hd-discord-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mob-nav-discord {
+  padding: 8px 16px 4px;
+}
+
+/* OAuth 콜백 */
+.auth-callback-page {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  color: var(--text-sub);
+}
+
+.auth-callback-error {
+  color: var(--coral);
+  text-align: center;
+  max-width: 360px;
+}

@@ -7,23 +7,29 @@ import { ReviewModal } from './ReviewModal';
 import { PointRanking } from './PointRanking';
 
 interface Props {
-  reviews:   Review[];
-  points:    PointRecord[];
-  onAddReview: (draft: Omit<Review, 'id' | 'createdAt'>) => void;
-  onBack:    () => void;
+  reviews:        Review[];
+  points:         PointRecord[];
+  loading:        boolean;
+  isAdmin:        boolean;
+  onAddReview:    (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
+  onUpdateReview: (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
+  onDeleteReview: (id: string) => Promise<void>;
+  onRefresh:      () => Promise<void>;
+  onBack:         () => void;
 }
 
-export function CommunityPage({ reviews, points, onAddReview, onBack }: Props) {
+export function CommunityPage({
+  reviews, points, loading, isAdmin, onAddReview, onUpdateReview, onDeleteReview, onRefresh, onBack,
+}: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
-  const handleSubmit = (draft: Omit<Review, 'id' | 'createdAt'>) => {
-    onAddReview(draft);
-    setModalOpen(false);
+  const handleSubmit = async (draft: Omit<Review, 'id' | 'createdAt'>) => {
+    await onAddReview(draft);
+    await onRefresh();
   };
 
   return (
     <div className="comm-page">
-      {/* 페이지 헤더 */}
       <div className="comm-page-header">
         <button className="btn-back" onClick={onBack}>
           <ArrowLeft size={18} /> 돌아가기
@@ -31,7 +37,6 @@ export function CommunityPage({ reviews, points, onAddReview, onBack }: Props) {
         <h2 className="comm-page-title">💬 커뮤니티</h2>
       </div>
 
-      {/* 프로모 OTT 카드 */}
       <div className="rv-promo-card">
         <div className="rv-promo-left">
           <span className="rv-promo-badge">🎁 포인트 증정</span>
@@ -50,15 +55,11 @@ export function CommunityPage({ reviews, points, onAddReview, onBack }: Props) {
         </div>
       </div>
 
-      {/* 본문: 랭킹(좌) + 후기 목록(우) */}
       <div className="comm-body">
-
-        {/* 포인트 랭킹 */}
         <aside className="comm-sidebar">
           <PointRanking points={points} />
         </aside>
 
-        {/* 후기 목록 */}
         <main className="comm-main">
           <div className="comm-list-header">
             <h3>📋 전체 후기 <span className="comm-count">{reviews.length}건</span></h3>
@@ -67,7 +68,11 @@ export function CommunityPage({ reviews, points, onAddReview, onBack }: Props) {
             </button>
           </div>
 
-          {reviews.length === 0 ? (
+          {loading ? (
+            <div className="comm-empty">
+              <p>후기를 불러오는 중…</p>
+            </div>
+          ) : reviews.length === 0 ? (
             <div className="comm-empty">
               <p>🎬</p>
               <p>아직 후기가 없어요.</p>
@@ -76,14 +81,20 @@ export function CommunityPage({ reviews, points, onAddReview, onBack }: Props) {
           ) : (
             <div className="rv-grid">
               {reviews.map((rv, i) => (
-                <ReviewCard key={rv.id} review={rv} index={i} />
+                <ReviewCard
+                  key={rv.id}
+                  review={rv}
+                  index={i}
+                  isAdmin={isAdmin}
+                  onUpdate={onUpdateReview}
+                  onDelete={onDeleteReview}
+                />
               ))}
             </div>
           )}
         </main>
       </div>
 
-      {/* 후기 작성 모달 */}
       {modalOpen && (
         <ReviewModal
           onSubmit={handleSubmit}

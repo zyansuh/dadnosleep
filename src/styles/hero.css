@@ -31,10 +31,11 @@
 .site-title {
   font-size: 72px;
   font-weight: 900;
+  color: #ffd57a; /* 그라디언트 미지원·모바일 fallback */
   background: linear-gradient(135deg, #ffd57a 0%, #ff9a5a 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1.1;
   letter-spacing: -2px;
 }

@@ -7,21 +7,3 @@
   font-style: normal;
   font-display: swap;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(180deg, #1a1530 0%, #0f0a1f 50%, #1a1530 100%);
-  background-attachment: fixed;
-  color: #fff;
-  min-height: 100vh;
-}
-
-a   { text-decoration: none; color: inherit; }
-button { cursor: pointer; font-family: inherit; border: none; }
-img { display: block; }
-
-::-webkit-scrollbar        { width: 5px; height: 5px; }
-::-webkit-scrollbar-track  { background: #0f0a1f; }
-::-webkit-scrollbar-thumb  { background: #3d2a6a; border-radius: 3px; }

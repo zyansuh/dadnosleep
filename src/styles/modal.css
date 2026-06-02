@@ -168,8 +168,41 @@
   color: #ff8fa3;
 }
 
-.sem-locked-title { font-size: 14px; font-weight: 600; color: #fff; }
-.sem-locked-badge { font-size: 11px; color: var(--coral); margin-left: auto; }
+.sem-locked-title { font-size: 14px; font-weight: 600; color: #fff; flex: 1; min-width: 0; }
+.sem-locked-badge { font-size: 11px; color: var(--coral); white-space: nowrap; }
+
+.sem-unfix-btn,
+.sem-set-fixed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.sem-unfix-btn {
+  background: rgba(110,231,183,0.12);
+  border: 1px solid rgba(110,231,183,0.35);
+  color: #6ee7b7;
+  margin-left: auto;
+}
+
+.sem-unfix-btn:hover { background: rgba(110,231,183,0.22); }
+
+.sem-set-fixed-btn {
+  align-self: flex-start;
+  background: rgba(255,107,138,0.12);
+  border: 1px solid rgba(255,107,138,0.35);
+  color: #ff8fa3;
+}
+
+.sem-set-fixed-btn:hover { background: rgba(255,107,138,0.22); }
 
 .sem-footer {
   padding: 14px 22px 22px;

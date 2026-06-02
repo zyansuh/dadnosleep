@@ -1,0 +1,222 @@
+/* ── 인증 헤더 */
+.hd-auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hd-user {
+  font-size: 12px;
+  color: var(--text-dim);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hd-admin-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 213, 122, 0.2);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.hd-member-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(88, 101, 242, 0.25);
+  color: #a5b4fc;
+  font-weight: 700;
+}
+
+/* 프로필 드롭다운 */
+.profile-menu-wrap {
+  position: relative;
+}
+
+.profile-menu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  max-width: 180px;
+}
+
+.profile-menu-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-menu-chevron {
+  flex-shrink: 0;
+  color: var(--text-dim);
+  transition: transform 0.15s;
+}
+
+.profile-menu-chevron.open {
+  transform: rotate(180deg);
+}
+
+.profile-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: #1e1835;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  z-index: 200;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-sub);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.profile-menu-item-danger:hover {
+  background: rgba(255, 80, 80, 0.15);
+  color: #ff9a9a;
+}
+
+.nickname-modal { max-width: 400px; }
+
+.nickname-modal-current {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 14px;
+  padding: 0 22px;
+}
+
+.nickname-modal-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 6px 22px 0;
+}
+
+.nickname-modal-error {
+  font-size: 12px;
+  color: #ff9a9a;
+  margin: 8px 22px 0;
+}
+
+.nickname-modal form .fl,
+.nickname-modal form .inp {
+  margin-left: 22px;
+  margin-right: 22px;
+}
+
+.nickname-modal .form-actions {
+  padding: 16px 22px 22px;
+}
+
+.btn-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.btn-auth-login {
+  background: linear-gradient(135deg, var(--coral), var(--coral2));
+  border: none;
+  color: #fff;
+}
+
+.btn-auth-login:hover { opacity: 0.9; }
+
+.btn-auth-logout {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-sub);
+}
+
+.btn-auth-logout:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ── 인증 모달 */
+.auth-modal { max-width: 400px; }
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 22px 12px;
+}
+
+.auth-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: rgba(255, 107, 138, 0.15);
+  border-color: rgba(255, 107, 138, 0.4);
+  color: #ff8fa3;
+}
+
+.hero-member-hint {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 12px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-weight: 600;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.link-btn:hover { color: #fff; }

@@ -1,69 +1,117 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Review, PointRecord } from '../types/community';
+import {
+  loadCommunityData,
+  persistCommunityData,
+  recalcPoints,
+  LS_REVIEWS,
+} from '../utils/communityStore';
+import { saveMyNickname } from '../utils/nickname';
+import { useToast } from '../context/ToastContext';
 
-// ── 영구 저장 키 (만료 없음) ───────────────────────────────
-const LS_REVIEWS = 'dadnosleep-reviews-v1';
-const LS_POINTS  = 'dadnosleep-points-v1';
 const REVIEW_POINTS = 1500;
 
-function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save(key: string, data: unknown): void {
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* 무시 */ }
-}
-
 interface UseCommunityReturn {
-  reviews:   Review[];
-  points:    PointRecord[];
-  addReview: (draft: Omit<Review, 'id' | 'createdAt'>) => void;
-  totalReviews: number;
+  reviews:        Review[];
+  points:         PointRecord[];
+  loading:        boolean;
+  addReview:      (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
+  updateReview:   (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
+  deleteReview:   (id: string) => Promise<void>;
+  refreshReviews: () => Promise<void>;
+  totalReviews:   number;
 }
 
 export function useCommunity(): UseCommunityReturn {
-  const [reviews, setReviews] = useState<Review[]>(() => load<Review[]>(LS_REVIEWS, []));
-  const [points,  setPoints]  = useState<PointRecord[]>(() => load<PointRecord[]>(LS_POINTS, []));
+  const { showToast } = useToast();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [points,  setPoints]  = useState<PointRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const reviewsRef = useRef<Review[]>([]);
+  reviewsRef.current = reviews;
 
-  const addReview = useCallback((draft: Omit<Review, 'id' | 'createdAt'>) => {
-    // 1. 후기 저장
+  const applyData = useCallback((data: { reviews: Review[]; points: PointRecord[] }) => {
+    setReviews(data.reviews);
+    setPoints(data.points);
+  }, []);
+
+  const persist = useCallback(async (nextReviews: Review[]) => {
+    const nextPoints = recalcPoints(nextReviews, REVIEW_POINTS);
+    setReviews(nextReviews);
+    setPoints(nextPoints);
+    const result = await persistCommunityData({ reviews: nextReviews, points: nextPoints });
+    applyData(result.data);
+    if (result.offline) showToast('오프라인 모드로 저장됩니다');
+  }, [applyData, showToast]);
+
+  const refreshReviews = useCallback(async () => {
+    const data = await loadCommunityData();
+    applyData(data);
+  }, [applyData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const data = await loadCommunityData();
+      if (!cancelled) {
+        applyData(data);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [applyData]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === LS_REVIEWS) void refreshReviews();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refreshReviews();
+    };
+    window.addEventListener('storage', onStorage);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [refreshReviews]);
+
+  const addReview = useCallback(async (draft: Omit<Review, 'id' | 'createdAt'>): Promise<Review> => {
+    saveMyNickname(draft.nickname);
     const newReview: Review = {
       ...draft,
       id:        `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       createdAt: new Date().toISOString(),
     };
+    const nextReviews = [newReview, ...reviewsRef.current];
+    await persist(nextReviews);
+    return newReview;
+  }, [persist]);
 
-    setReviews(prev => {
-      const next = [newReview, ...prev];
-      save(LS_REVIEWS, next);
-      return next;
-    });
+  const updateReview = useCallback(async (
+    id: string,
+    patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>,
+  ) => {
+    const nextReviews = reviewsRef.current.map(r =>
+      r.id === id ? { ...r, ...patch } : r
+    );
+    await persist(nextReviews);
+  }, [persist]);
 
-    // 2. 1500P 지급
-    setPoints(prev => {
-      const idx = prev.findIndex(p => p.nickname === draft.nickname);
-      let next: PointRecord[];
+  const deleteReview = useCallback(async (id: string) => {
+    const nextReviews = reviewsRef.current.filter(r => r.id !== id);
+    await persist(nextReviews);
+  }, [persist]);
 
-      if (idx >= 0) {
-        next = prev.map((p, i) =>
-          i === idx
-            ? { ...p, points: p.points + REVIEW_POINTS, reviewCount: p.reviewCount + 1 }
-            : p
-        );
-      } else {
-        next = [...prev, { nickname: draft.nickname, points: REVIEW_POINTS, reviewCount: 1 }];
-      }
-
-      next.sort((a, b) => b.points - a.points);
-      save(LS_POINTS, next);
-      return next;
-    });
-  }, []);
-
-  return { reviews, points, addReview, totalReviews: reviews.length };
+  return {
+    reviews,
+    points,
+    loading,
+    addReview,
+    updateReview,
+    deleteReview,
+    refreshReviews,
+    totalReviews: reviews.length,
+  };
 }

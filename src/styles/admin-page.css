@@ -1,0 +1,379 @@
+/* 푸터 관리자 링크 */
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-admin-link {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.22);
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-admin-link:hover {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* 관리자 비밀번호 모달 */
+.pw-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pw-input-wrap .inp {
+  padding-right: 42px;
+  width: 100%;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+}
+
+.pw-toggle:hover { color: #fff; }
+
+.admin-pw-modal { max-width: 400px; }
+
+/* 관리자 페이지 */
+.admin-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.admin-shell-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .admin-shell-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-sidebar {
+  background: rgba(30, 25, 50, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.admin-sidebar-user {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  word-break: break-all;
+}
+
+.admin-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-sub);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.admin-nav-link.active {
+  background: rgba(88, 101, 242, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+.admin-panel-title {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.admin-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.admin-page-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.admin-page-hd h1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  color: #fff;
+  flex: 1;
+  justify-content: center;
+}
+
+.admin-page-body {
+  background: rgba(30, 25, 50, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.admin-page-desc {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+
+.admin-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.admin-links a {
+  display: block;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-sub);
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.admin-links a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.admin-note {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.admin-member-add {
+  margin-bottom: 20px;
+}
+
+.admin-member-add-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.admin-member-add-row .inp {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-member-add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-member-add-btn {
+  width: 100%;
+  max-width: 200px;
+}
+
+.inp-inline {
+  width: 100%;
+  min-width: 100px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.admin-nickname-cell {
+  min-width: 120px;
+}
+
+.admin-nickname-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-sub);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline dotted rgba(255, 255, 255, 0.25);
+}
+
+.admin-nickname-btn:hover {
+  color: #fff;
+}
+
+.admin-row-edit {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-sub);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-row-edit:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.admin-row-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  margin-right: 4px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(88, 101, 242, 0.35);
+  color: #fff;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-row-cancel {
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.admin-alert {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-alert-error {
+  background: rgba(255, 100, 100, 0.12);
+  color: #ff9a9a;
+}
+
+.admin-alert-ok {
+  background: rgba(100, 255, 180, 0.1);
+  color: #8effc8;
+}
+
+.admin-alert-warn {
+  background: rgba(255, 213, 122, 0.12);
+  color: var(--gold);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-table th {
+  color: var(--text-dim);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.admin-table-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 24px !important;
+}
+
+.admin-code {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.admin-table-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-row-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 100, 100, 0.35);
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff9a9a;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-row-remove:hover:not(:disabled) {
+  background: rgba(255, 80, 80, 0.2);
+}
+
+.admin-row-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

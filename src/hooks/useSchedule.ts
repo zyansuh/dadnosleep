@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import type { Cell } from '../types';
-import { BASE_SCHED } from '../constants/schedule';
-import { fetchKoreanOTT } from '../utils/api';
+import type { Cell, RecommendItem } from '../types';
+import { BASE_SCHED, BASE_MEMBER_ROW } from '../constants/schedule';
+import { EMPTY_CELL } from '../constants/emptyCell';
+import { fetchRandomRecommendPool } from '../utils/recommend';
 
 const LS_KEY = 'dadnosleep-sched';
 
-/** ISO 주차 문자열 반환: "2026-W22" 형태 */
 function getISOWeekKey(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -15,76 +15,154 @@ function getISOWeekKey(date: Date): string {
 }
 
 interface StoredSched {
-  week: string;   // "YYYY-Www"
-  data: Cell[][];
+  week:       string;
+  data:       Cell[][];
+  memberRow?: Cell[];
 }
 
-/** localStorage에서 주차 검증 후 편성표 불러오기. 새 주면 기본값 반환 */
-function loadSched(): Cell[][] {
+function loadStored(): { sched: Cell[][]; memberRow: Cell[] } {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return BASE_SCHED;
+    if (!raw) return { sched: BASE_SCHED, memberRow: BASE_MEMBER_ROW };
     const stored: StoredSched = JSON.parse(raw);
     const currentWeek = getISOWeekKey(new Date());
-    // 저장된 주차와 다르면(= 일요일 기준 새 주) 초기화
     if (stored.week !== currentWeek) {
       localStorage.removeItem(LS_KEY);
-      return BASE_SCHED;
+      return { sched: BASE_SCHED, memberRow: BASE_MEMBER_ROW };
     }
-    const { data } = stored;
-    if (data.length === BASE_SCHED.length && data[0]?.length === BASE_SCHED[0].length) {
-      return data;
-    }
-  } catch {
-    // 파싱 실패 시 기본값
-  }
-  return BASE_SCHED;
+    const schedOk = stored.data?.length === BASE_SCHED.length
+      && stored.data[0]?.length === BASE_SCHED[0].length;
+    const memberRow = stored.memberRow?.length === 7
+      ? stored.memberRow
+      : BASE_MEMBER_ROW;
+    if (schedOk) return { sched: stored.data, memberRow };
+  } catch { /* 기본값 */ }
+  return { sched: BASE_SCHED, memberRow: BASE_MEMBER_ROW };
+}
+
+function touchUpdatedAt(cell: Cell): Cell {
+  return { ...cell, updatedAt: new Date().toISOString() };
+}
+
+function patchCellContent(cell: Cell, title: string, link?: string): Cell {
+  return touchUpdatedAt({
+    ...cell,
+    title,
+    link: link?.trim() || undefined,
+    type: cell.type === 'empty' ? 'ott' : cell.type,
+  });
+}
+
+function toFixedCell(cell: Cell, title: string, link?: string): Cell {
+  return {
+    ...cell,
+    title,
+    link: link?.trim() || undefined,
+    type:  'fixed',
+    badge: '★ 고정 편성',
+    bt:    'pink',
+  };
+}
+
+function toUnfixedCell(cell: Cell): Cell {
+  return {
+    ...cell,
+    type:  'ott',
+    badge: 'OTT',
+    bt:    'blue',
+    sub:   cell.sub || 'OTT 추천',
+  };
+}
+
+function recommendToCell(cell: Cell, item: RecommendItem): Cell {
+  return touchUpdatedAt({
+    ...cell,
+    type:  'random',
+    title: item.title.slice(0, 11),
+    sub:   item.platform,
+    badge: '편성 추천',
+    bt:    'pink',
+    link:  item.link,
+  });
 }
 
 interface UseScheduleReturn {
-  sched:           Cell[][];
-  randing:         boolean;
-  randError:       string;
-  isEditMode:      boolean;
-  handleRandomize: () => Promise<void>;
-  updateCell:      (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
-  updateMany:      (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => void;
-  resetCell:       (dayIdx: number, timeIdx: number) => void;
-  toggleEditMode:  () => void;
+  sched:                  Cell[][];
+  memberRow:              Cell[];
+  randing:                boolean;
+  randError:              string;
+  isEditMode:             boolean;
+  randomPool:             RecommendItem[];
+  randomPickerOpen:       boolean;
+  resetConfirmOpen:       boolean;
+  openRandomPicker:       () => Promise<void>;
+  closeRandomPicker:      () => void;
+  applyRandomSelection:   (selected: RecommendItem[]) => void;
+  openResetConfirm:       () => void;
+  closeResetConfirm:      () => void;
+  resetNonFixed:          () => void;
+  updateCell:             (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
+  updateMemberCell:       (dayIdx: number, title: string, link?: string) => void;
+  updateMany:             (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => void;
+  setCellFixed:           (dayIdx: number, timeIdx: number, title?: string, link?: string) => void;
+  unfixCell:              (dayIdx: number, timeIdx: number) => void;
+  resetCell:              (dayIdx: number, timeIdx: number) => void;
+  toggleEditMode:         () => void;
 }
 
 export function useSchedule(): UseScheduleReturn {
-  const [sched,      setSched]      = useState<Cell[][]>(loadSched);
-  const [randing,    setRanding]    = useState(false);
-  const [randError,  setRandError]  = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
+  const initial = loadStored();
+  const [sched,            setSched]            = useState<Cell[][]>(initial.sched);
+  const [memberRow,        setMemberRow]        = useState<Cell[]>(initial.memberRow);
+  const [randing,          setRanding]          = useState(false);
+  const [randError,        setRandError]        = useState('');
+  const [isEditMode,       setIsEditMode]       = useState(false);
+  const [randomPool,       setRandomPool]       = useState<RecommendItem[]>([]);
+  const [randomPickerOpen, setRandomPickerOpen] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
-  const persist = useCallback((next: Cell[][]) => {
+  const persist = useCallback((next: Cell[][], member: Cell[]) => {
     try {
-      const payload: StoredSched = {
+      localStorage.setItem(LS_KEY, JSON.stringify({
         week: getISOWeekKey(new Date()),
         data: next,
-      };
-      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        memberRow: member,
+      }));
     } catch { /* 무시 */ }
   }, []);
 
-  /** 단일 셀 → 고정 편성으로 업데이트 */
   const updateCell = useCallback((dayIdx: number, timeIdx: number, title: string, link?: string) => {
     setSched(prev => {
       const next = prev.map((day, di) =>
         day.map((cell, ti) =>
-          di === dayIdx && ti === timeIdx
-            ? { ...cell, title, link: link?.trim() || undefined, type: 'fixed' as const, badge: '★ 고정 편성', bt: 'pink' as const }
-            : cell
+          di === dayIdx && ti === timeIdx ? patchCellContent(cell, title, link) : cell
         )
       );
-      persist(next);
+      persist(next, memberRow);
+      return next;
+    });
+  }, [persist, memberRow]);
+
+  const updateMemberCell = useCallback((dayIdx: number, title: string, link?: string) => {
+    setMemberRow(prev => {
+      const next = prev.map((cell, i) =>
+        i === dayIdx
+          ? touchUpdatedAt({
+            ...cell,
+            title,
+            link: link?.trim() || undefined,
+            type: 'member' as const,
+          })
+          : cell
+      );
+      setSched(s => {
+        persist(s, next);
+        return s;
+      });
       return next;
     });
   }, [persist]);
 
-  /** 복수 셀 일괄 업데이트 */
   const updateMany = useCallback(
     (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => {
       setSched(prev => {
@@ -92,20 +170,42 @@ export function useSchedule(): UseScheduleReturn {
         for (const e of edits) {
           next = next.map((day, di) =>
             day.map((cell, ti) =>
-              di === e.dayIdx && ti === e.timeIdx
-                ? { ...cell, title: e.title, link: e.link, type: 'fixed' as const, badge: '★ 고정 편성', bt: 'pink' as const }
-                : cell
+              di === e.dayIdx && ti === e.timeIdx ? patchCellContent(cell, e.title, e.link) : cell
             )
           );
         }
-        persist(next);
+        persist(next, memberRow);
         return next;
       });
     },
-    [persist]
+    [persist, memberRow]
   );
 
-  /** 셀 기본값으로 초기화 */
+  const setCellFixed = useCallback((dayIdx: number, timeIdx: number, title?: string, link?: string) => {
+    setSched(prev => {
+      const next = prev.map((day, di) =>
+        day.map((cell, ti) => {
+          if (di !== dayIdx || ti !== timeIdx) return cell;
+          return toFixedCell(cell, title?.trim() || cell.title, link);
+        })
+      );
+      persist(next, memberRow);
+      return next;
+    });
+  }, [persist, memberRow]);
+
+  const unfixCell = useCallback((dayIdx: number, timeIdx: number) => {
+    setSched(prev => {
+      const next = prev.map((day, di) =>
+        day.map((cell, ti) =>
+          di === dayIdx && ti === timeIdx ? toUnfixedCell(cell) : cell
+        )
+      );
+      persist(next, memberRow);
+      return next;
+    });
+  }, [persist, memberRow]);
+
   const resetCell = useCallback((dayIdx: number, timeIdx: number) => {
     setSched(prev => {
       const next = prev.map((day, di) =>
@@ -113,54 +213,68 @@ export function useSchedule(): UseScheduleReturn {
           di === dayIdx && ti === timeIdx ? BASE_SCHED[di][ti] : cell
         )
       );
-      persist(next);
+      persist(next, memberRow);
       return next;
     });
-  }, [persist]);
+  }, [persist, memberRow]);
 
-  const toggleEditMode = useCallback(() => setIsEditMode(v => !v), []);
+  const resetNonFixed = useCallback(() => {
+    setSched(prev => {
+      const next = prev.map(day =>
+        day.map(cell => (cell.type === 'fixed' ? cell : { ...EMPTY_CELL }))
+      );
+      persist(next, memberRow);
+      return next;
+    });
+  }, [persist, memberRow]);
 
-  /** 랜덤 편성 생성 (한국어 콘텐츠) */
-  const handleRandomize = async () => {
+  const openRandomPicker = useCallback(async () => {
     setRanding(true);
     setRandError('');
     try {
-      const [dramas, movies] = await Promise.all([
-        fetchKoreanOTT('tv'),
-        fetchKoreanOTT('movie'),
-      ]);
-
-      const pool = [...dramas, ...movies];
-
+      const pool = await fetchRandomRecommendPool(24);
       if (pool.length === 0) {
-        setRandError('콘텐츠를 불러오지 못했습니다. Vercel 환경변수(VITE_TMDB_READ_TOKEN)를 확인하고 재배포해주세요.');
+        setRandError('콘텐츠를 불러오지 못했습니다. Vercel 환경변수(VITE_TMDB_READ_TOKEN)를 확인해주세요.');
         return;
       }
-      pool.sort(() => Math.random() - 0.5);
-      let pi = 0;
-      setSched(prev => {
-        const next = prev.map(day =>
-          day.map(cell => {
-            if (cell.type === 'fixed') return cell;
-            const item = pool[pi++];
-            if (!item) return cell;
-            return {
-              ...cell,
-              title: ((item.title || item.name || cell.title) as string).slice(0, 11),
-              sub:   'TMDB 한국 추천',
-              link:  `https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`,
-            };
-          })
-        );
-        persist(next);
-        return next;
-      });
+      setRandomPool(pool);
+      setRandomPickerOpen(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error('[랜덤 편성]', msg);
-      setRandError(`오류: ${msg} — Vercel 재배포 후 다시 시도해주세요.`);
-    } finally { setRanding(false); }
-  };
+      setRandError(`오류: ${msg}`);
+    } finally {
+      setRanding(false);
+    }
+  }, []);
 
-  return { sched, randing, randError, isEditMode, handleRandomize, updateCell, updateMany, resetCell, toggleEditMode };
+  const applyRandomSelection = useCallback((selected: RecommendItem[]) => {
+    if (!selected.length) return;
+    let pi = 0;
+    setSched(prev => {
+      const next = prev.map(day =>
+        day.map(cell => {
+          if (cell.type === 'fixed' || cell.type === 'member') return cell;
+          const item = selected[pi++];
+          if (!item) return cell;
+          return recommendToCell(cell, item);
+        })
+      );
+      persist(next, memberRow);
+      return next;
+    });
+    setRandomPickerOpen(false);
+  }, [persist, memberRow]);
+
+  const toggleEditMode = useCallback(() => setIsEditMode(v => !v), []);
+
+  return {
+    sched, memberRow, randing, randError, isEditMode,
+    randomPool, randomPickerOpen, resetConfirmOpen,
+    openRandomPicker, closeRandomPicker: () => setRandomPickerOpen(false),
+    applyRandomSelection,
+    openResetConfirm: () => setResetConfirmOpen(true),
+    closeResetConfirm: () => setResetConfirmOpen(false),
+    resetNonFixed,
+    updateCell, updateMemberCell, updateMany, setCellFixed, unfixCell, resetCell, toggleEditMode,
+  };
 }

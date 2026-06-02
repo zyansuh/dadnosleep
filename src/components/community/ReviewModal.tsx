@@ -3,16 +3,18 @@ import { X, Send, Star } from 'lucide-react';
 import type { Review } from '../../types/community';
 
 interface Props {
-  onSubmit: (draft: Omit<Review, 'id' | 'createdAt'>) => void;
+  onSubmit: (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<void>;
   onClose:  () => void;
 }
 
 const INITIAL = { nickname: '', programTitle: '', rating: 5, content: '' };
 
 export function ReviewModal({ onSubmit, onClose }: Props) {
-  const [form,   setForm]   = useState(INITIAL);
-  const [errors, setErrors] = useState<Partial<typeof INITIAL>>({});
-  const [done,   setDone]   = useState(false);
+  const [form,     setForm]     = useState(INITIAL);
+  const [errors,   setErrors]   = useState<Partial<typeof INITIAL>>({});
+  const [done,     setDone]     = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [saveErr,  setSaveErr]  = useState('');
 
   const validate = () => {
     const e: Partial<typeof INITIAL> = {};
@@ -23,15 +25,29 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
     return !Object.keys(e).length;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    onSubmit({ nickname: form.nickname.trim(), programTitle: form.programTitle.trim(), rating: form.rating, content: form.content.trim() });
-    setDone(true);
+    if (!validate() || saving) return;
+
+    setSaving(true);
+    setSaveErr('');
+    try {
+      await onSubmit({
+        nickname:     form.nickname.trim(),
+        programTitle: form.programTitle.trim(),
+        rating:       form.rating,
+        content:      form.content.trim(),
+      });
+      setDone(true);
+    } catch {
+      setSaveErr('저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && !saving && onClose()}>
       <div className="modal">
         <div className="modal-hd">
           <div className="modal-title-row">
@@ -41,12 +57,11 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               <p>작성 완료 시 <strong style={{ color: '#ffd57a' }}>1,500P</strong> 즉시 지급!</p>
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}><X size={18} /></button>
+          <button className="modal-close" onClick={onClose} disabled={saving}><X size={18} /></button>
         </div>
 
         {!done ? (
           <form className="modal-form" onSubmit={handleSubmit}>
-            {/* 닉네임 */}
             <div className="ff">
               <label className="fl">닉네임 <span className="req">*</span></label>
               <input className={`inp ${errors.nickname ? 'inp-err' : ''}`}
@@ -55,7 +70,6 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               {errors.nickname && <span className="fe">{errors.nickname}</span>}
             </div>
 
-            {/* 프로그램명 */}
             <div className="ff">
               <label className="fl">어떤 프로그램을 봤나요? <span className="req">*</span></label>
               <input className={`inp ${errors.programTitle ? 'inp-err' : ''}`}
@@ -64,7 +78,6 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               {errors.programTitle && <span className="fe">{errors.programTitle}</span>}
             </div>
 
-            {/* 별점 */}
             <div className="ff">
               <label className="fl">별점</label>
               <div className="rv-star-row">
@@ -79,7 +92,6 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               </div>
             </div>
 
-            {/* 내용 */}
             <div className="ff">
               <label className="fl">후기 내용 <span className="req">*</span></label>
               <textarea className={`inp inp-ta ${errors.content ? 'inp-err' : ''}`} rows={4}
@@ -89,10 +101,12 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               {errors.content && <span className="fe">{errors.content}</span>}
             </div>
 
+            {saveErr && <p className="fe" style={{ textAlign: 'center' }}>{saveErr}</p>}
+
             <div className="form-actions">
-              <button type="button" className="btn-ghost-sm" onClick={onClose}>취소</button>
-              <button type="submit" className="btn-coral-form">
-                <Send size={14} /> 후기 등록하기
+              <button type="button" className="btn-ghost-sm" onClick={onClose} disabled={saving}>취소</button>
+              <button type="submit" className="btn-coral-form" disabled={saving}>
+                <Send size={14} /> {saving ? '저장 중…' : '후기 등록하기'}
               </button>
             </div>
           </form>
@@ -106,7 +120,13 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
               <div className="sum-row"><span className="sk">프로그램</span><span className="sv">{form.programTitle}</span></div>
               <div className="sum-row"><span className="sk">별점</span><span className="sv">{'⭐'.repeat(form.rating)}</span></div>
             </div>
-            <button className="btn-coral-form" style={{ flex: 'none', width: '100%', marginTop: 8 }} onClick={onClose}>확인</button>
+            <button
+              className="btn-coral-form"
+              style={{ flex: 'none', width: '100%', marginTop: 8 }}
+              onClick={onClose}
+            >
+              확인
+            </button>
           </div>
         )}
       </div>

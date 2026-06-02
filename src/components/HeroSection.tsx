@@ -1,24 +1,54 @@
-import { Heart, Calendar, Edit3, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Calendar, Edit3, AlertCircle, RotateCcw } from 'lucide-react';
 import type { Cell } from '../types';
+import { BASE_MEMBER_ROW } from '../constants/schedule';
 import { ScheduleTable } from './ScheduleTable';
+import { EditCellModal } from './EditCellModal';
 
 interface Props {
   sched:               Cell[][];
+  memberRow:           Cell[];
   todayIdx:            number;
   nowMin:              number;
   randing:             boolean;
   randError:           string;
+  isAdmin:                 boolean;
+  isLoggedIn:              boolean;
+  isGuestLoggedIn:         boolean;
+  canAccessMemberContent:  boolean;
+  onLoginClick:            () => void;
+  isEditMode:          boolean;
+  onToggleEditMode:    () => void;
   onOpenScheduleEdit:  () => void;
-  handleRandomize:     () => void;
+  onOpenResetConfirm:  () => void;
+  onUpdateCell:        (dayIdx: number, timeIdx: number, title: string, link?: string) => void;
+  onUpdateMemberCell:  (dayIdx: number, title: string, link?: string) => void;
+  onSetCellFixed:      (dayIdx: number, timeIdx: number, title?: string, link?: string) => void;
+  onUnfixCell:         (dayIdx: number, timeIdx: number) => void;
+  onResetCell:         (dayIdx: number, timeIdx: number) => void;
+  onOpenRandomPicker:  () => void;
 }
 
+type EditTarget =
+  | { kind: 'main'; dayIdx: number; timeIdx: number }
+  | { kind: 'member'; dayIdx: number };
+
 export function HeroSection({
-  sched, todayIdx, nowMin, randing, randError, onOpenScheduleEdit, handleRandomize,
+  sched, memberRow, todayIdx, nowMin, randing, randError,
+  isAdmin, isLoggedIn, isGuestLoggedIn, canAccessMemberContent, onLoginClick,
+  isEditMode, onToggleEditMode, onOpenScheduleEdit, onOpenResetConfirm,
+  onUpdateCell, onUpdateMemberCell, onSetCellFixed, onUnfixCell, onResetCell, onOpenRandomPicker,
 }: Props) {
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+
+  const editingCell = editTarget
+    ? editTarget.kind === 'member'
+      ? memberRow[editTarget.dayIdx]
+      : sched[editTarget.dayIdx]?.[editTarget.timeIdx]
+    : null;
+
   return (
     <section className="hero">
-
-      {/* 좌측 */}
       <div className="hero-left">
         <div className="hero-pill">
           <Heart size={12} fill="currentColor" />
@@ -39,22 +69,29 @@ export function HeroSection({
           <a href="#schedule-section" className="btn-hero-primary">
             <Calendar size={15} /> 오늘 편성표 보기
           </a>
-          <button
-            className="btn-hero-secondary"
-            onClick={handleRandomize}
-            disabled={randing}
-          >
+          <button className="btn-hero-secondary" onClick={onOpenRandomPicker} disabled={randing}>
             ⭐ {randing ? '생성 중…' : '랜덤 편성 생성하기'}
           </button>
-          <button
-            className="btn-hero-secondary btn-hero-edit"
-            onClick={onOpenScheduleEdit}
-          >
-            <Edit3 size={14} /> 편성표 수정하기
-          </button>
+          {isAdmin && (
+            <button className="btn-hero-secondary btn-hero-edit" onClick={onOpenScheduleEdit}>
+              <Edit3 size={14} /> 편성표 수정하기
+            </button>
+          )}
         </div>
 
-        {/* 랜덤 생성 에러 메시지 */}
+        {!canAccessMemberContent && (
+          <p className="hero-member-hint">
+            {isGuestLoggedIn ? (
+              <>🔒 동호회 회원만 회원 전용 편성을 볼 수 있습니다. 가입 문의는 관리자에게 연락해주세요.</>
+            ) : (
+              <>
+                🔒 <button type="button" className="link-btn" onClick={onLoginClick}>로그인</button>
+                하시면 회원 전용 편성을 확인할 수 있어요.
+              </>
+            )}
+          </p>
+        )}
+
         {randError && (
           <div className="rand-error">
             <AlertCircle size={14} />
@@ -63,16 +100,69 @@ export function HeroSection({
         )}
       </div>
 
-      {/* 우측: 편성표 */}
       <div className="hero-right" id="schedule-section">
+        {isAdmin && (
+          <div className="sched-edit-bar">
+            <button
+              type="button"
+              className={`btn-edit-toggle ${isEditMode ? 'active' : ''}`}
+              onClick={onToggleEditMode}
+            >
+              <Edit3 size={14} />
+              {isEditMode ? '편집 모드 끄기' : '셀 편집 모드'}
+            </button>
+            <button type="button" className="btn-sched-reset" onClick={onOpenResetConfirm}>
+              <RotateCcw size={14} /> 초기화
+            </button>
+            {isEditMode && (
+              <span className="edit-mode-hint">셀 클릭 수정 · 🔓 고정 해제</span>
+            )}
+          </div>
+        )}
+
         <ScheduleTable
           sched={sched}
+          memberRow={memberRow}
           todayIdx={todayIdx}
           nowMin={nowMin}
-          isEditMode={false}
-          onEditCell={() => {}}
+          isEditMode={isAdmin && isEditMode}
+          canAccessMemberContent={canAccessMemberContent}
+          isLoggedIn={isLoggedIn}
+          isGuestLoggedIn={isGuestLoggedIn}
+          onLoginClick={onLoginClick}
+          onEditCell={(di, ti) => setEditTarget({ kind: 'main', dayIdx: di, timeIdx: ti })}
+          onEditMember={di => setEditTarget({ kind: 'member', dayIdx: di })}
+          onUnfixCell={onUnfixCell}
         />
       </div>
+
+      {editTarget && editingCell && (
+        <EditCellModal
+          cell={editingCell.type === 'empty'
+            ? { ...editingCell, title: '', type: 'ott', badge: 'OTT', bt: 'blue', sub: 'OTT 추천' }
+            : editingCell}
+          dayIdx={editTarget.dayIdx}
+          timeIdx={editTarget.kind === 'main' ? editTarget.timeIdx : 0}
+          onSave={(di, _ti, title, link) => {
+            if (editTarget.kind === 'member') onUpdateMemberCell(di, title, link);
+            else onUpdateCell(di, editTarget.timeIdx, title, link);
+          }}
+          onSetFixed={(di, _ti, title, link) => {
+            if (editTarget.kind === 'main') onSetCellFixed(di, editTarget.timeIdx, title, link);
+          }}
+          onUnfix={(di, ti) => {
+            if (editTarget.kind === 'main') onUnfixCell(di, ti);
+          }}
+          onReset={(di, ti) => {
+            if (editTarget.kind === 'member') {
+              onUpdateMemberCell(di, BASE_MEMBER_ROW[di].title, BASE_MEMBER_ROW[di].link);
+            } else {
+              onResetCell(di, ti);
+            }
+          }}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
     </section>
   );
 }

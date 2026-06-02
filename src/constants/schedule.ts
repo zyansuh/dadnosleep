@@ -4,6 +4,17 @@ export const DAYS  = ['월', '화', '수', '목', '금', '토', '일'] as const;
 export const TIMES = ['20:00', '22:00', '00:00'] as const;
 export const SLOT_END_TIMES = ['22:00', '00:00', '02:00'] as const;
 
+/** 회원 전용 편성 (요일별 1슬롯) */
+export const BASE_MEMBER_ROW: Cell[] = [
+  { title: '회원 비하인드 토크', sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+  { title: 'VIP 큐레이션',     sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+  { title: '심야 회원 영화',   sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+  { title: '회원 라이브 Q&A', sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple' },
+  { title: '프리미엄 예능',   sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+  { title: '회원 정주행',     sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+  { title: '주말 회원 스페셜', sub: '회원 전용', type: 'member', badge: '👑 회원 전용', bt: 'purple', link: 'https://www.netflix.com/kr/' },
+];
+
 export const BASE_SCHED: Cell[][] = [
   // 월(0)
   [

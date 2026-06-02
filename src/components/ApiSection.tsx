@@ -5,25 +5,25 @@ import { ApiCard } from './ApiCard';
 import { fmtViews } from '../utils/format';
 
 interface Props {
-  activeApi:       ApiType | null;
-  ottItems:        OttItem[];
-  ytItems:         YtItem[];
-  ottLoading:      boolean;
-  ottError:        string;
-  randing:         boolean;
-  handleApiCard:   (type: ApiType) => Promise<void>;
-  handleRandomize: () => void;
+  activeApi:          ApiType | null;
+  ottItems:           OttItem[];
+  ytItems:            YtItem[];
+  ottLoading:         boolean;
+  ottError:           string;
+  randing:            boolean;
+  handleApiCard:      (type: ApiType) => Promise<void>;
+  onOpenOttDrawer:    () => void;
+  onOpenRandomDrawer: () => void;
 }
 
 export function ApiSection({
-  activeApi, ottItems, ytItems, ottLoading, ottError, randing, handleApiCard, handleRandomize,
+  activeApi, ottItems, ytItems, ottLoading, ottError, randing,
+  handleApiCard, onOpenOttDrawer, onOpenRandomDrawer,
 }: Props) {
   return (
     <section className="api-section" id="추천">
       <div className="sec-wrap">
         <div className="api-layout">
-
-          {/* 설명 패널 */}
           <div className="api-desc-panel">
             <div className="api-eyebrow">
               <Sparkles size={14} /> 데이터로 더 똑똑하게
@@ -54,8 +54,8 @@ export function ApiSection({
             title="OTT 통합 인기작"
             desc={<>넷플릭스, 디즈니+, 티빙, wavve<br />통합 인기 랭킹</>}
             btnLabel="인기작 보기 →"
-            active={activeApi === 'ott'}
-            onClick={() => handleApiCard('ott')}
+            active={false}
+            onClick={onOpenOttDrawer}
             cls="card-ott"
           />
 
@@ -65,7 +65,7 @@ export function ApiSection({
             desc={<>취향·장르·시간대 기반<br />스마트 랜덤 추천</>}
             btnLabel={randing ? '생성 중…' : '랜덤 생성하기 →'}
             active={false}
-            onClick={handleRandomize}
+            onClick={onOpenRandomDrawer}
             cls="card-random"
           />
 
@@ -80,12 +80,10 @@ export function ApiSection({
           />
         </div>
 
-        {/* 결과 영역 */}
         {activeApi && (
           <div className="ott-result-box">
             <h4>
               {activeApi === 'netflix' && '넷플릭스 TOP 10'}
-              {activeApi === 'ott'     && 'OTT 통합 인기작'}
               {activeApi === 'youtube' && '유튜브 인기 영상 TOP 12'}
             </h4>
 
@@ -97,7 +95,7 @@ export function ApiSection({
                 {ottItems.map((item, i) => (
                   <a
                     key={item.id}
-                    href={`https://www.themoviedb.org/${item.title ? 'movie' : 'tv'}/${item.id}`}
+                    href={`https://www.themoviedb.org/${item.media_type ?? (item.title ? 'movie' : 'tv')}/${item.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ott-card"

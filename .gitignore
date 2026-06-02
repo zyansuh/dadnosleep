@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+data/
 
 # API 키 설정 파일 (절대 커밋하지 마세요)
 src/config.js
