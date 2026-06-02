@@ -1,29 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Plus, MessageSquare, Users, Shield } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 import { useClock }          from '../hooks/useClock';
-import { useSchedule }       from '../hooks/useSchedule';
+import { useSchedule }       from '../hooks/schedule/useSchedule';
 import { useApiCards }       from '../hooks/useApiCards';
 import { useSuggestionForm } from '../hooks/useSuggestionForm';
-import { useCommunity }      from '../hooks/useCommunity';
+import { useCommunity }      from '../hooks/community/useCommunity';
 import { useDiscordAuth }    from '../context/DiscordAuthContext';
 import { useAdminGate }      from '../context/AdminGateContext';
 
 import { HeroSection }        from '../components/HeroSection';
 import { ApiSection }         from '../components/ApiSection';
 import { InfoSection }        from '../components/InfoSection';
-import { SuggestionModal }    from '../components/SuggestionModal';
-import { ScheduleEditModal }  from '../components/ScheduleEditModal';
-import { SuggestionBoard }    from '../components/SuggestionBoard';
 import { CommunityPage }      from '../components/community/CommunityPage';
 import { HomeRanking }        from '../components/community/HomeRanking';
-import { ConfirmModal }       from '../components/ConfirmModal';
-import { RandomPickModal }    from '../components/RandomPickModal';
-import { MediaDrawer }        from '../components/MediaDrawer';
-import { DiscordLoginButton } from '../components/DiscordLoginButton';
-import { ProfileMenu } from '../components/ProfileMenu';
 import { SiteFooter }         from '../components/SiteFooter';
+import { AppHeader }          from '../components/layout/AppHeader';
+import { MobileNav }          from '../components/layout/MobileNav';
+import { HomeOverlays }       from '../components/layout/HomeOverlays';
 
 type Page = 'home' | 'community';
 
@@ -47,75 +40,40 @@ export function HomePage() {
     if (!discord.canEditSchedule && sched.isEditMode) sched.toggleEditMode();
   }, [discord.canEditSchedule, sched.isEditMode, sched.toggleEditMode]);
 
+  useEffect(() => {
+    if (page === 'community') void community.refreshReviews();
+  }, [page, community.refreshReviews]);
+
   return (
     <div className="app">
-      <header className="header">
-        <Link to="/" className="logo" onClick={() => nav('home')}>
-          <span className="logo-ico">🛌</span>
-          <span>아빠안잔다</span>
-        </Link>
-        <div className="hd-spacer" />
-
-        <div className="hd-auth">
-          {discord.isLoggedIn ? (
-            <>
-              {discord.isAdmin && <span className="hd-admin-badge">관리자</span>}
-              {discord.role === 'member' && <span className="hd-member-badge">회원</span>}
-              <ProfileMenu />
-            </>
-          ) : (
-            <DiscordLoginButton />
-          )}
-        </div>
-
-        <button
-          className={`btn-board ${page === 'community' ? 'btn-board-active' : ''}`}
-          onClick={() => nav('community')}
-          aria-label="커뮤니티"
-        >
-          <Users size={15} />
-          <span>커뮤니티</span>
-          {community.totalReviews > 0 && (
-            <span className="board-badge">{community.totalReviews}</span>
-          )}
-        </button>
-
-        <button className="btn-board" onClick={() => setBoardOpen(true)} aria-label="건의함 열기">
-          <MessageSquare size={15} />
-          <span>건의함</span>
-          {suggest.suggestions.length > 0 && (
-            <span className="board-badge">{suggest.suggestions.length}</span>
-          )}
-        </button>
-
-        <button className="hamburger" onClick={() => setMenuOpen(v => !v)} aria-label="메뉴">
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </header>
+      <AppHeader
+        page={page}
+        menuOpen={menuOpen}
+        totalReviews={community.totalReviews}
+        suggestionCount={suggest.suggestions.length}
+        isLoggedIn={discord.isLoggedIn}
+        isAdmin={discord.isAdmin}
+        isMember={discord.role === 'member'}
+        onNavHome={() => nav('home')}
+        onNavCommunity={() => nav('community')}
+        onOpenBoard={() => setBoardOpen(true)}
+        onToggleMenu={() => setMenuOpen(v => !v)}
+      />
 
       {menuOpen && (
-        <nav className="mobile-nav">
-          <button type="button" className="mob-nav-btn" onClick={() => nav('home')}>🏠 홈 / 편성표</button>
-          <button type="button" className="mob-nav-btn" onClick={() => nav('community')}>
-            💬 커뮤니티 ({community.totalReviews})
-          </button>
-          {!discord.isLoggedIn && (
-            <div className="mob-nav-discord">
-              <DiscordLoginButton fullWidth />
-            </div>
-          )}
-          {discord.isAdmin && (
-            <button type="button" className="mob-nav-btn" onClick={() => { setMenuOpen(false); goToAdmin(); }}>
-              <Shield size={16} /> 관리자 페이지
-            </button>
-          )}
-          <button className="mob-nav-btn" onClick={() => { setMenuOpen(false); setBoardOpen(true); }}>
-            📮 건의함 ({suggest.suggestions.length})
-          </button>
-          <button className="btn-suggest mob-cta" onClick={() => { setMenuOpen(false); suggest.openModal(); }}>
-            ✏️ 프로그램 신청하기
-          </button>
-        </nav>
+        <MobileNav
+          page={page}
+          totalReviews={community.totalReviews}
+          suggestionCount={suggest.suggestions.length}
+          isLoggedIn={discord.isLoggedIn}
+          isAdmin={discord.isAdmin}
+          isMember={discord.role === 'member'}
+          onNavHome={() => nav('home')}
+          onNavCommunity={() => nav('community')}
+          onGoAdmin={() => { setMenuOpen(false); goToAdmin(); }}
+          onOpenBoard={() => { setMenuOpen(false); setBoardOpen(true); }}
+          onOpenSuggest={() => { setMenuOpen(false); suggest.openModal(); }}
+        />
       )}
 
       {page === 'community' ? (
@@ -125,6 +83,7 @@ export function HomePage() {
           loading={community.loading}
           isAdmin={discord.isAdmin}
           onAddReview={community.addReview}
+          onAddFriendInvite={async nickname => { await community.addFriendInvite(nickname); }}
           onUpdateReview={community.updateReview}
           onDeleteReview={community.deleteReview}
           onRefresh={community.refreshReviews}
@@ -188,77 +147,15 @@ export function HomePage() {
         </>
       )}
 
-      <button className="fab" onClick={suggest.openModal} aria-label="프로그램 건의하기">
-        <Plus size={18} /><span>건의</span>
-      </button>
-
-      {suggest.modalOpen && (
-        <SuggestionModal
-          form={suggest.form}
-          setForm={suggest.setForm}
-          errors={suggest.errors}
-          submitted={suggest.submitted}
-          setSubmitted={suggest.setSubmitted}
-          validate={suggest.validate}
-          onClose={suggest.closeModal}
-        />
-      )}
-
-      {schedEditOpen && discord.canEditSchedule && (
-        <ScheduleEditModal
-          sched={sched.sched}
-          memberRow={sched.memberRow}
-          onSaveAll={sched.updateMany}
-          onSaveMemberAll={edits => {
-            for (const e of edits) sched.updateMemberCell(e.dayIdx, e.title, e.link);
-          }}
-          onSetFixed={sched.setCellFixed}
-          onUnfix={sched.unfixCell}
-          onClose={() => setSchedEditOpen(false)}
-        />
-      )}
-
-      {boardOpen && (
-        <SuggestionBoard suggestions={suggest.suggestions} onClose={() => setBoardOpen(false)} />
-      )}
-
-      {sched.resetConfirmOpen && discord.canEditSchedule && (
-        <ConfirmModal
-          title="편성표 초기화"
-          message="고정 편성(나는 솔로, 이혼숙려캠프)만 남기고 나머지 슬롯을 모두 비울까요? 회원 전용 편성은 유지됩니다."
-          confirmLabel="초기화"
-          danger
-          onConfirm={sched.resetNonFixed}
-          onClose={sched.closeResetConfirm}
-        />
-      )}
-
-      {sched.randomPickerOpen && (
-        <RandomPickModal
-          items={sched.randomPool}
-          onApply={sched.applyRandomSelection}
-          onClose={sched.closeRandomPicker}
-        />
-      )}
-
-      <MediaDrawer
-        open={api.drawerMode === 'ott'}
-        title="OTT 통합 인기작"
-        subtitle="Netflix · Disney+ · wavve · Apple TV+"
-        loading={api.drawerLoading}
-        error={api.drawerError}
-        items={api.drawerItems}
-        onClose={api.closeDrawer}
-      />
-
-      <MediaDrawer
-        open={api.drawerMode === 'random'}
-        title="랜덤 편성 추천"
-        subtitle="TMDB 한국어 콘텐츠 · 장르·플랫폼 정보"
-        loading={api.drawerLoading}
-        error={api.drawerError}
-        items={api.drawerItems}
-        onClose={api.closeDrawer}
+      <HomeOverlays
+        sched={sched}
+        suggest={suggest}
+        api={api}
+        schedEditOpen={schedEditOpen}
+        boardOpen={boardOpen}
+        canEditSchedule={discord.canEditSchedule}
+        onCloseSchedEdit={() => setSchedEditOpen(false)}
+        onCloseBoard={() => setBoardOpen(false)}
       />
     </div>
   );

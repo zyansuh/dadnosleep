@@ -5,7 +5,7 @@ import {
   recordFailedAttempt,
   setAdminSession,
   verifyAdminPassword,
-} from '../utils/adminSession';
+} from '../utils/auth/adminSession';
 
 interface Props {
   onSuccess: () => void;

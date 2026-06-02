@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { saveDiscordSession } from '../utils/discordSession';
-import { processDiscordLogin } from '../utils/processDiscordLogin';
+import { saveDiscordSession } from '../utils/auth/discordSession';
+import { processDiscordLogin } from '../utils/auth/processDiscordLogin';
 import { useDiscordAuth } from '../context/DiscordAuthContext';
 
 export function AuthCallbackPage() {

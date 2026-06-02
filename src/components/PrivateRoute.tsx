@@ -1,9 +1,11 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { isAdminSession } from '../utils/adminSession';
+import { useDiscordAuth } from '../context/DiscordAuthContext';
+import { isAdminSession } from '../utils/auth/adminSession';
 
-/** sessionStorage isAdmin 없으면 메인(/)으로 리다이렉트 */
+/** 푸터 관리자 비밀번호 세션 또는 Discord admin 역할 */
 export function PrivateRoute() {
-  if (!isAdminSession()) {
+  const { isAdmin: discordAdmin } = useDiscordAuth();
+  if (!isAdminSession() && !discordAdmin) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;

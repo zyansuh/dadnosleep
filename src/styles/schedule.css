@@ -40,6 +40,135 @@
   padding-top: 12px;
 }
 
+/* 모바일 카드 뷰 (768px 이하에서 표시 — responsive.css) */
+.sched-mobile {
+  display: none;
+  padding-top: 4px;
+}
+
+.sched-mobile-day-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.sched-mobile-day-tabs::-webkit-scrollbar { display: none; }
+
+.sched-mobile-day-tab {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-num);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.sched-mobile-day-tab.active {
+  background: rgba(255, 213, 122, 0.15);
+  border-color: rgba(255, 213, 122, 0.45);
+  color: var(--gold);
+}
+
+.sched-mobile-day-tab.is-today:not(.active) {
+  border-color: rgba(255, 213, 122, 0.25);
+}
+
+.sched-mobile-today-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.sched-mobile-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sched-mobile-slot {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.sched-mobile-slot.is-live {
+  border-color: rgba(255, 107, 138, 0.45);
+  box-shadow: 0 0 0 1px rgba(255, 107, 138, 0.2);
+}
+
+.sched-mobile-slot-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sched-mobile-time {
+  font-family: var(--font-num);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.sched-mobile-live {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--coral);
+  letter-spacing: 0.04em;
+}
+
+.sched-mobile-cell {
+  padding: 4px;
+}
+
+.sched-mobile-cell .cell-inner {
+  min-height: 64px;
+  border-radius: 10px;
+}
+
+.sched-mobile-member {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(180, 130, 255, 0.35);
+}
+
+.sched-mobile-member-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c8a3ff;
+  margin: 0 0 10px;
+}
+
+.sched-mobile-member-hint {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.sched-mobile-end {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 16px 0 4px;
+}
+
 /* ── 편성표 테이블 */
 .sched-tbl {
   width: 100%;

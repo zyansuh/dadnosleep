@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ChevronDown, LogOut, Pencil } from 'lucide-react';
 import { useDiscordAuth } from '../context/DiscordAuthContext';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { NicknameChangeModal } from './NicknameChangeModal';
 
 export function ProfileMenu() {
@@ -12,16 +13,7 @@ export function ProfileMenu() {
   const [modalOpen, setModalOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
+  useClickOutside(wrapRef, () => setOpen(false), open);
 
   if (!user) return null;
 

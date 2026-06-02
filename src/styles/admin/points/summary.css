@@ -1,0 +1,79 @@
+/* 기간별 요약 카드 */
+.ap-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ap-summary-stat {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ap-summary-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+}
+
+.ap-summary-stat strong {
+  font-size: 16px;
+  color: #fff;
+}
+
+.ap-summary-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.ap-summary-pts {
+  font-family: var(--font-num);
+  font-size: 20px !important;
+}
+
+/* 합산 뷰 */
+.ap-summary--total .ap-summary-stat--highlight {
+  border-color: rgba(255, 213, 122, 0.35);
+  background: rgba(255, 213, 122, 0.1);
+}
+
+.ap-summary--total .ap-summary-stat--highlight .ap-summary-pts {
+  color: var(--gold);
+}
+
+.ap-summary-stat--review {
+  border-color: rgba(255, 150, 90, 0.25);
+  background: rgba(255, 120, 80, 0.06);
+}
+
+.ap-summary-stat--invite {
+  border-color: rgba(80, 200, 180, 0.3);
+  background: rgba(42, 157, 143, 0.1);
+}
+
+/* 후기 전용 뷰 */
+.ap-summary--review .ap-summary-stat--highlight {
+  border-color: rgba(255, 150, 90, 0.4);
+  background: linear-gradient(145deg, rgba(255, 140, 80, 0.15), rgba(40, 20, 30, 0.4));
+}
+
+.ap-summary--review .ap-summary-stat--highlight .ap-summary-pts {
+  color: #ffb88a;
+}
+
+/* 지인 초대 전용 뷰 */
+.ap-summary--invite .ap-summary-stat--highlight {
+  border-color: rgba(80, 200, 180, 0.45);
+  background: linear-gradient(145deg, rgba(42, 157, 143, 0.2), rgba(15, 40, 45, 0.5));
+}
+
+.ap-summary--invite .ap-summary-stat--highlight .ap-summary-pts {
+  color: #8ee8d0;
+}

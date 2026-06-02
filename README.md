@@ -43,9 +43,9 @@
 |------|-----------|
 | **편성표** | 7일×3슬롯 + VIP 회원 행, 고정·랜덤·수기 편집, localStorage 주간 저장 |
 | **추천 API** | TMDB·YouTube 인기작, OTT 통합·랜덤 목록 드로어 |
-| **커뮤니티** | 후기·포인트(1,500P/건), JSONBin 동기화 |
+| **커뮤니티** | 후기(1,500P)·지인 초대(2,000P), 포인트 랭킹, JSONBin 동기화 |
 | **인증** | Discord OAuth2, guest / member / admin 3등급 |
-| **관리** | `/admin` 대시보드, 회원 화이트리스트, 편성·후기 관리 |
+| **관리** | `/admin` — 회원 명단, 기간별 포인트, 테스트용 데이터 초기화 |
 
 ### 운영 시간대 (편성표 UI 기준)
 
@@ -62,8 +62,9 @@
 |------|------|------|
 | `/` | 메인 (`HomePage` — 홈·커뮤니티 탭) | 없음 |
 | `/auth/callback` | Discord OAuth code 처리 | 없음 |
-| `/admin` | 관리 대시보드 | `sessionStorage.isAdmin === true` |
-| `/admin/members` | 회원 명단 관리 | 동일 |
+| `/admin` | 관리 대시보드 · 테스트 초기화 | 푸터 비밀번호 **또는** Discord admin |
+| `/admin/members` | 회원 명단 (로그인 전 사전 등록 가능) | 동일 |
+| `/admin/points` | 기간별 포인트 집계 | 동일 |
 
 ### 요청 흐름 (Discord 로그인)
 
@@ -130,7 +131,8 @@ sequenceDiagram
 | 기능 | 설명 |
 |------|------|
 | 후기 작성 | 프로그램명·별점(1~5)·닉네임·내용 |
-| 포인트 | 후기 1건당 **1,500P**, 닉네임별 누적 |
+| 지인 초대 신고 | **지인 초대 완료 신고** 버튼 → 1건당 **2,000P** (`friendInvites`) |
+| 포인트 | 후기 1,500P + 지인 초대 2,000P (자동 합산) |
 | 랭킹 | 메인(`HomeRanking` TOP 5) · 커뮤니티(`PointRanking` TOP 10) |
 | 수정·삭제 | 본인 닉네임(`dadnosleep-my-nickname`) 또는 **admin** |
 | JSONBin | 원격 저장 실패 시 localStorage + 토스트 「오프라인 모드로 저장됩니다」 |
@@ -151,8 +153,10 @@ sequenceDiagram
 |------|------|
 | 편성표 수정·초기화·셀 편집 | 메인 (`admin` 로그인 시) |
 | 후기 타인 글 수정·삭제 | 커뮤니티 |
-| 회원 명단 CRUD | `/admin/members` |
-| 푸터 「관리자」 | 비밀번호 → `/admin` (Discord admin과 별도) |
+| 회원 명단 CRUD | `/admin/members` (대상 회원 Discord 로그인 불필요) |
+| 기간별 포인트 | `/admin/points` — 오늘/7일/이번 달/직접 지정 |
+| 테스트 초기화 | `/admin` — 후기만 / 지인초대만 / 전체 삭제 |
+| 푸터 「관리자」 | 비밀번호 또는 Discord admin → `/admin` |
 
 ---
 
@@ -229,90 +233,74 @@ nickname (사이트·JSONBin) → globalName (Discord) → username
 
 ## 6. 폴더 구조
 
+코드는 **도메인별 폴더**로 나눕니다. CSS는 `src/styles/`, 비즈니스 로직은 `utils/`, UI 상태는 `hooks/`에 둡니다.
+
 ```
 dadnosleep/
-├── api/                              # Vercel Serverless (프로덕션)
-│   ├── discord-callback.js           # Discord code → 사용자 JSON
-│   └── auth/                         # (선택) register · login · me
-│       ├── register.ts
-│       ├── login.ts
-│       └── me.ts
+├── api/                              # Vercel Serverless
+│   ├── discord-callback.js
+│   └── auth/                         # (선택) 이메일 JWT
 │
-├── server/                           # 로컬 dev 전용 (Vite 미들웨어)
-│   ├── discord/
-│   │   ├── oauth.ts                  # 토큰 교환 공통 로직
-│   │   └── viteMiddleware.ts         # POST /api/discord-callback
-│   └── auth/
-│       ├── handlers.ts
-│       ├── jwt.ts · password.ts
-│       ├── usersStore.ts
-│       └── viteMiddleware.ts
+├── server/                           # 로컬 dev API 미들웨어
 │
 ├── src/
-│   ├── App.tsx                       # 라우터 루트
-│   ├── main.tsx                      # Provider: Toast → Auth(legacy) → App
+│   ├── App.tsx · main.tsx            # 라우터 · ToastProvider
 │   │
 │   ├── pages/
-│   │   ├── HomePage.tsx              # 헤더 + 홈/커뮤니티 탭 + 모달들
+│   │   ├── HomePage.tsx
 │   │   ├── AuthCallbackPage.tsx
 │   │   └── admin/
-│   │       ├── AdminDashboardPage.tsx
-│   │       └── AdminMembersPage.tsx
+│   │       ├── AdminDashboardPage.tsx   # 링크 + 테스트 초기화
+│   │       ├── AdminMembersPage.tsx
+│   │       └── AdminPointsPage.tsx      # 기간별 포인트
 │   │
 │   ├── components/
-│   │   ├── HeroSection.tsx · ScheduleTable.tsx · CellInner.tsx
-│   │   ├── ScheduleEditModal.tsx · EditCellModal.tsx · RandomPickModal.tsx
-│   │   ├── ApiSection.tsx · MediaDrawer.tsx · ApiCard.tsx
-│   │   ├── DiscordLoginButton.tsx · ProfileMenu.tsx · NicknameChangeModal.tsx
-│   │   ├── PrivateRoute.tsx · SiteFooter.tsx · AdminPasswordModal.tsx
-│   │   ├── ConfirmModal.tsx · SuggestionModal.tsx · SuggestionBoard.tsx
-│   │   ├── admin/AdminLayout.tsx
-│   │   └── community/
-│   │       ├── CommunityPage.tsx · ReviewCard.tsx · ReviewModal.tsx
-│   │       ├── ReviewEditModal.tsx · HomeRanking.tsx · PointRanking.tsx
-│   │
-│   ├── context/
-│   │   ├── DiscordAuthContext.tsx    # 로그인·role·닉네임 변경
-│   │   ├── AdminGateContext.tsx      # 푸터 관리자 비밀번호 모달
-│   │   ├── ToastContext.tsx
-│   │   └── AuthContext.tsx           # (레거시) 이메일 JWT — UI 미사용
+│   │   ├── layout/                   # AppHeader, MobileNav, HomeOverlays
+│   │   ├── schedule/                 # ScheduleTable, EditCellModal, CellInner, scheduleSlot
+│   │   ├── community/                # CommunityPage, Review*, FriendInviteModal, PointRanking
+│   │   ├── admin/                    # AdminLayout, Member*, PointPeriod*, AdminTestTools
+│   │   └── …                         # HeroSection, ApiSection, ConfirmModal 등
 │   │
 │   ├── hooks/
-│   │   ├── useSchedule.ts            # 편성·랜덤·고정·초기화
-│   │   ├── useCommunity.ts           # 후기·JSONBin
-│   │   ├── useApiCards.ts            # TMDB/YT 카드·드로어
-│   │   ├── useSuggestionForm.ts
-│   │   └── useClock.ts
+│   │   ├── schedule/                 # useSchedule, useScheduleEditForm
+│   │   ├── community/                # useCommunity, useReviewForm
+│   │   ├── admin/                    # useAdminMembers, useAdminPointReport
+│   │   ├── useClock.ts · useApiCards.ts · useSuggestionForm.ts · useClickOutside.ts
 │   │
 │   ├── utils/
-│   │   ├── jsonbinEnv.ts             # Bin ID·Access Key 해석
-│   │   ├── jsonbinRecord.ts          # 통합 record GET/PUT
-│   │   ├── communityStore.ts         # reviews + points
-│   │   ├── membersStore.ts           # members whitelist
-│   │   ├── processDiscordLogin.ts    # 등급 판별·Bin 동기화
-│   │   ├── discordSession.ts · adminSession.ts
-│   │   ├── nickname.ts               # 검증·표시명·후기 본인 식별
-│   │   ├── api.ts · recommend.ts
-│   │   └── scheduleTime.ts · format.ts
+│   │   ├── community/                # communityStore, pointCalc, pointPeriod, reviewDisplay
+│   │   ├── schedule/                 # scheduleStorage, scheduleCell, cellDisplay
+│   │   ├── members/                  # membersStore, memberIdentity, memberDisplay
+│   │   ├── jsonbin/                  # jsonbinEnv, jsonbinRecord
+│   │   ├── auth/                     # discordOAuth, discordSession, adminSession, processDiscordLogin
+│   │   ├── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
 │   │
 │   ├── constants/
-│   │   ├── schedule.ts               # BASE_SCHED, DAYS, TIMES
-│   │   ├── adminUsers.ts
-│   │   ├── emptyCell.ts
-│   │   └── tmdbGenres.ts
+│   │   ├── schedule.ts · points.ts · adminPointPresets.ts · emptyCell.ts
 │   │
-│   ├── types/
-│   │   ├── index.ts                  # Cell, CellType, …
-│   │   ├── community.ts · member.ts · role.ts · auth.ts
+│   ├── context/                      # DiscordAuth, AdminGate, Toast
+│   ├── types/                        # Cell, community, member, role
 │   │
-│   └── styles/                       # variables, header, hero, …
+│   ├── styles/                       # App.css → @import 도메인 CSS
+│   │   ├── variables.css · header.css · hero.css · schedule.css
+│   │   ├── community.css · modal.css · admin/ (layout, shared, members, dashboard, points)
+│   │   └── responsive.css · …
+│   │
+│   └── legacy/                       # 미사용 Ott/Yt JSX, 이메일 AuthContext
 │
-├── public/                           # 폰트, favicon
-├── vercel.json
-├── vite.config.ts                    # loadEnv + dev API 미들웨어
-├── .env.example
+├── public/
+├── vercel.json · vite.config.ts · .env.example
 └── package.json
 ```
+
+### import 규칙 (예시)
+
+| 계층 | 예시 |
+|------|------|
+| 페이지 → 훅 | `import { useCommunity } from '../hooks/community/useCommunity'` |
+| 페이지 → 유틸 | `import { loadMembersBin } from '../utils/members/membersStore'` |
+| 컴포넌트 → 상수 | `import { POINTS_PER_REVIEW } from '../../constants/points'` |
+| 스타일 | `App.css`에서만 `@import` — 컴포넌트 파일에 CSS import 없음 |
 
 ---
 
@@ -562,9 +550,10 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 ### 12-3. 커뮤니티
 
-1. 헤더 **커뮤니티** → 후기 목록
-2. **후기 작성하기** → 1,500P 안내
-3. 본인 글: 연필·휴지통 / admin: 모든 글 관리
+1. 헤더 **커뮤니티** → 후기 목록·포인트 랭킹
+2. **후기 작성하기** → 1,500P
+3. **지인 초대 완료 신고** → 2,000P (닉네임 입력)
+4. 본인 글: 연필·휴지통 / admin: 모든 글 관리
 
 ### 12-4. 닉네임 변경 (member)
 
@@ -598,8 +587,11 @@ VITE_ADMIN_PASSWORD=your_admin_pw
       "createdAt": "2026-06-01T12:00:00.000Z"
     }
   ],
+  "friendInvites": [
+    { "id": "inv-...", "nickname": "시청자", "createdAt": "2026-06-01T14:00:00.000Z" }
+  ],
   "points": [
-    { "nickname": "시청자", "points": 3000, "reviewCount": 2 }
+    { "nickname": "시청자", "points": 5500, "reviewCount": 1, "inviteCount": 2 }
   ],
   "members": [
     {
@@ -624,6 +616,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `dadnosleep-suggestions-saved-at` | 건의 최초 저장 시각 | — |
 | `dadnosleep-reviews-v1` | 후기 fallback / 마이그레이션 원본 | 수동 삭제 전까지 |
 | `dadnosleep-points-v1` | 포인트 fallback | 동일 |
+| `dadnosleep-friend-invites-v1` | 지인 초대 fallback | 동일 |
 | `dadnosleep-my-nickname` | 후기 「나」 뱃지용 | — |
 | `reviews_migrated` | `1` = 레거시 마이그레이션 완료 | — |
 | `admin_fail_count` / `admin_lock_until` | 푸터 비밀번호 잠금 | sessionStorage 쪽은 `adminSession` |
@@ -643,27 +636,59 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 ### `/admin` 접근 조건
 
-`PrivateRoute`는 `sessionStorage.getItem('isAdmin') === 'true'`일 때만 통과합니다.
+`PrivateRoute`는 다음 중 하나면 통과합니다.
 
-- Discord **admin** 로그인 → `role: admin` → `isAdmin: true`
-- 푸터 비밀번호 성공 → `isAdmin: true` (role은 guest일 수 있음)
+- 푸터 **관리자** 비밀번호 → `sessionStorage.isAdmin === 'true'`
+- Discord **admin** 역할 로그인 (`DiscordAuthContext.isAdmin`)
 
 ### 메뉴
 
 | 경로 | 기능 |
 |------|------|
-| `/admin` | 대시보드, 메인 링크 |
-| `/admin/members` | 회원 명단 관리 |
+| `/admin` | 대시보드, 링크, **후기만/전체** 포인트 초기화 (테스트) |
+| `/admin/members` | 회원 명단 — 로그인 전 사전 등록 |
+| `/admin/points` | 기간별 포인트 집계 (후기·지인 초대 시각 기준) |
 
 ### 회원 명단 (`/admin/members`)
 
 | 작업 | 방법 |
 |------|------|
-| **추가** | Discord ID(17~20자리) + username 필수, 닉네임 선택 |
+| **추가** | @사용자명 또는 표시 이름 (한글·이모지 가능), 닉네임 선택 |
 | **닉네임 수정** | 닉네임 셀 클릭 또는 「수정」→ 저장 |
 | **제거** | 「제거」→ 확인 모달 |
 
-제거된 ID로 다시 로그인하면 **guest**가 되며 VIP 행이 잠깁니다. (이미 열린 탭은 **재로그인** 후 반영)
+추가할 회원이 **아직 Discord 로그인을 하지 않아도** 명단에 올릴 수 있습니다. 첫 로그인 시 자동으로 member가 됩니다.
+
+제거 후 재로그인하면 **guest**이며 VIP 행이 잠깁니다.
+
+### 기간별 포인트 (`/admin/points`)
+
+**조회 탭 (3종)**
+
+| 탭 | 설명 |
+|----|------|
+| **합산** | 후기·지인 초대를 **한 표**에서 동시에 표시 (건수 + 후기P + 초대P + 합산P) |
+| **후기** | 후기 작성만 (1,500P/건) |
+| **지인 초대** | 초대 신고만 (2,000P/건) |
+
+- 기간 프리셋: 오늘 · 최근 7일 · 이번 달 · 지난 달 · 전체 · 직접 지정
+- **등록 회원만 보기**: 명단 기준 0P 포함 / 끄면 미등록 닉네임도 표시
+- **새로고침**: JSONBin 최신 데이터 반영
+
+합산 탭 표 예시:
+
+| 닉네임 | 후기 건수 | 후기 P | 초대 건수 | 초대 P | 합산 |
+|--------|-----------|--------|-----------|--------|------|
+
+### 테스트 초기화 (`/admin` 대시보드)
+
+| 버튼 | 동작 |
+|------|------|
+| **후기만 초기화** | `reviews` 삭제 · `friendInvites` **유지** |
+| **지인 초대만 초기화** | `friendInvites` 삭제 · `reviews` **유지** |
+| **전체 초기화** | 후기 + 지인 초대 + 랭킹 전부 삭제 |
+
+`members` 필드는 세 경우 모두 유지됩니다.
 
 ### 관리자 username 변경
 
@@ -724,7 +749,15 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `drawer.css` | MediaDrawer |
 | `community.css` | 커뮤니티·랭킹 |
 | `auth.css` · `discord.css` | 로그인·프로필 메뉴 |
-| `admin-page.css` | 관리자 레이아웃·테이블 |
+| `admin-page.css` | 관리자 `@import` 진입점 |
+| `admin/layout.css` | 셸·사이드바·푸터 관리자 링크 |
+| `admin/shared.css` | 알림·테이블 공통 |
+| `admin/members.css` | 회원 명단 폼·행 버튼 |
+| `admin/dashboard.css` | 테스트 초기화 패널 |
+| `admin/points.css` | 기간별 포인트 `@import` 진입점 |
+| `admin/points/layout.css` · `period-toolbar.css` | 헤더·기간 필터 |
+| `admin/points/view-tabs.css` | 합산/후기/초대 탭 |
+| `admin/points/summary.css` · `ranking.css` | 요약 카드·랭킹 표 |
 | `toast.css` | 오프라인 토스트 |
 | `layout.css` | 정보·CTA·푸터·FAB |
 | `responsive.css` | 1024 / 768 / 640px |

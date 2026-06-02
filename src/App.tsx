@@ -7,6 +7,7 @@ import { DiscordAuthProvider } from './context/DiscordAuthContext';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminMembersPage } from './pages/admin/AdminMembersPage';
+import { AdminPointsPage } from './pages/admin/AdminPointsPage';
 
 import './App.css';
 
@@ -22,6 +23,7 @@ export default function App() {
               <Route element={<AdminLayout />}>
                 <Route index element={<AdminDashboardPage />} />
                 <Route path="members" element={<AdminMembersPage />} />
+                <Route path="points" element={<AdminPointsPage />} />
               </Route>
             </Route>
           </Routes>

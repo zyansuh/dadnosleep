@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Heart, Calendar, Edit3, AlertCircle, RotateCcw } from 'lucide-react';
 import type { Cell } from '../types';
 import { BASE_MEMBER_ROW } from '../constants/schedule';
-import { ScheduleTable } from './ScheduleTable';
-import { EditCellModal } from './EditCellModal';
+import { ScheduleTable } from './schedule/ScheduleTable';
+import { EditCellModal } from './schedule/EditCellModal';
 
 interface Props {
   sched:               Cell[][];

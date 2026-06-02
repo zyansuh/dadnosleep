@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import type { PointRecord } from '../../types/community';
+import { formatPointBreakdown } from '../../utils/community/pointCalc';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -31,7 +32,7 @@ export function HomeRanking({ points, onGoCommunity }: Props) {
               <span className="hrk-medal">{MEDALS[i] ?? `${i + 1}`}</span>
               <span className="hrk-nick">{p.nickname}</span>
               <span className="hrk-pts">{p.points.toLocaleString()}P</span>
-              <span className="hrk-cnt">{p.reviewCount}건</span>
+              <span className="hrk-cnt">{formatPointBreakdown(p)}</span>
             </div>
           ))}
           {points.length > 5 && (

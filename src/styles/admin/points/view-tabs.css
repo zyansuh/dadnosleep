@@ -1,0 +1,92 @@
+/* 포인트 종류 탭 — 합산 / 후기 / 지인 초대 */
+.ap-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+  .ap-view-tabs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-view-tab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-sub);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.ap-view-tab:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ap-view-tab.is-active {
+  transform: translateY(-1px);
+}
+
+.ap-view-tab--total.is-active {
+  border-color: rgba(255, 213, 122, 0.45);
+  background: linear-gradient(135deg, rgba(255, 213, 122, 0.12), rgba(255, 107, 138, 0.08));
+  box-shadow: 0 4px 20px rgba(255, 213, 122, 0.12);
+}
+
+.ap-view-tab--review.is-active {
+  border-color: rgba(255, 180, 120, 0.5);
+  background: linear-gradient(135deg, rgba(255, 150, 90, 0.14), rgba(255, 107, 138, 0.06));
+  box-shadow: 0 4px 20px rgba(255, 150, 90, 0.1);
+}
+
+.ap-view-tab--invite.is-active {
+  border-color: rgba(80, 200, 180, 0.55);
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.18), rgba(30, 90, 80, 0.1));
+  box-shadow: 0 4px 20px rgba(42, 157, 143, 0.15);
+}
+
+.ap-view-tab-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.ap-view-tab--total.is-active .ap-view-tab-ico { color: var(--gold); }
+.ap-view-tab--review.is-active .ap-view-tab-ico { color: #ffb88a; }
+.ap-view-tab--invite.is-active .ap-view-tab-ico { color: #8ee8d0; }
+
+.ap-view-tab-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ap-view-tab-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ap-view-tab-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.ap-view-tab.is-active .ap-view-tab-desc {
+  color: var(--text-sub);
+}

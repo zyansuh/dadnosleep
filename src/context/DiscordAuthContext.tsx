@@ -10,26 +10,12 @@ import {
   isDiscordLoggedIn,
   setSessionNickname,
   type DiscordSessionUser,
-} from '../utils/discordSession';
-import { isAdminSession } from '../utils/adminSession';
+} from '../utils/auth/discordSession';
+import { isAdminSession } from '../utils/auth/adminSession';
 import type { UserRole } from '../types/role';
 import { canAccessMemberContent } from '../types/role';
-import { updateMemberNickname } from '../utils/membersStore';
-
-function buildDiscordAuthorizeUrl(): string {
-  const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined;
-  const redirectUri = import.meta.env.VITE_DISCORD_REDIRECT_URI as string | undefined;
-  if (!clientId || !redirectUri) {
-    throw new Error('VITE_DISCORD_CLIENT_ID 또는 VITE_DISCORD_REDIRECT_URI가 설정되지 않았습니다.');
-  }
-  const params = new URLSearchParams({
-    client_id:     clientId,
-    redirect_uri:  redirectUri,
-    response_type: 'code',
-    scope:         'identify',
-  });
-  return `https://discord.com/oauth2/authorize?${params.toString()}`;
-}
+import { updateMemberNickname } from '../utils/members/membersStore';
+import { buildDiscordAuthorizeUrl } from '../utils/auth/discordOAuth';
 
 interface DiscordAuthContextValue {
   user:                   DiscordSessionUser | null;

@@ -1,0 +1,6 @@
+/* 기간별 포인트 — 진입점 */
+@import './points/layout.css';
+@import './points/period-toolbar.css';
+@import './points/view-tabs.css';
+@import './points/summary.css';
+@import './points/ranking.css';

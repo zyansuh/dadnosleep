@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { AdminTestTools } from '../../components/admin/AdminTestTools';
 
 export function AdminDashboardPage() {
   return (
@@ -17,7 +18,13 @@ export function AdminDashboardPage() {
         <li>
           <Link to="/admin/members">👥 회원 명단 관리</Link>
         </li>
+        <li>
+          <Link to="/admin/points">🏆 기간별 포인트</Link>
+        </li>
       </ul>
+
+      <AdminTestTools />
+
       <p className="admin-note">
         Discord 관리자 계정 또는 푸터 비밀번호로 인증된 세션입니다.
       </p>

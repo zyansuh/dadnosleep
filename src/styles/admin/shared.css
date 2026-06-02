@@ -1,0 +1,86 @@
+.admin-alert {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-alert-error {
+  background: rgba(255, 100, 100, 0.12);
+  color: #ff9a9a;
+}
+
+.admin-alert-ok {
+  background: rgba(100, 255, 180, 0.1);
+  color: #8effc8;
+}
+
+.admin-alert-warn {
+  background: rgba(255, 213, 122, 0.12);
+  color: var(--gold);
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-table th {
+  color: var(--text-dim);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.admin-table-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 24px !important;
+}
+
+.admin-code {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.admin-table-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.admin-row-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 100, 100, 0.35);
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff9a9a;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-row-remove:hover:not(:disabled) {
+  background: rgba(255, 80, 80, 0.2);
+}
+
+.admin-row-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,49 +1,19 @@
-import { useState } from 'react';
 import { X, Send, Star } from 'lucide-react';
 import type { Review } from '../../types/community';
+import { POINTS_PER_REVIEW } from '../../constants/points';
+import { useReviewForm } from '../../hooks/community/useReviewForm';
 
 interface Props {
   onSubmit: (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<void>;
   onClose:  () => void;
 }
 
-const INITIAL = { nickname: '', programTitle: '', rating: 5, content: '' };
-
 export function ReviewModal({ onSubmit, onClose }: Props) {
-  const [form,     setForm]     = useState(INITIAL);
-  const [errors,   setErrors]   = useState<Partial<typeof INITIAL>>({});
-  const [done,     setDone]     = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [saveErr,  setSaveErr]  = useState('');
-
-  const validate = () => {
-    const e: Partial<typeof INITIAL> = {};
-    if (!form.nickname.trim())     e.nickname = '닉네임을 입력해주세요';
-    if (!form.programTitle.trim()) e.programTitle = '프로그램명을 입력해주세요';
-    if (!form.content.trim())      e.content = '후기 내용을 입력해주세요';
-    setErrors(e);
-    return !Object.keys(e).length;
-  };
+  const { form, setForm, errors, done, saving, saveErr, submit } = useReviewForm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate() || saving) return;
-
-    setSaving(true);
-    setSaveErr('');
-    try {
-      await onSubmit({
-        nickname:     form.nickname.trim(),
-        programTitle: form.programTitle.trim(),
-        rating:       form.rating,
-        content:      form.content.trim(),
-      });
-      setDone(true);
-    } catch {
-      setSaveErr('저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
-    } finally {
-      setSaving(false);
-    }
+    await submit(onSubmit);
   };
 
   return (
@@ -54,7 +24,7 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
             <div className="modal-ico">✍️</div>
             <div>
               <h3>후기 작성</h3>
-              <p>작성 완료 시 <strong style={{ color: '#ffd57a' }}>1,500P</strong> 즉시 지급!</p>
+              <p>작성 완료 시 <strong style={{ color: '#ffd57a' }}>{POINTS_PER_REVIEW.toLocaleString()}P</strong> 즉시 지급!</p>
             </div>
           </div>
           <button className="modal-close" onClick={onClose} disabled={saving}><X size={18} /></button>
@@ -114,7 +84,7 @@ export function ReviewModal({ onSubmit, onClose }: Props) {
           <div className="success-box">
             <div className="success-emoji">🎉</div>
             <h3>후기가 등록됐어요!</h3>
-            <p><strong style={{ color: '#ffd57a' }}>1,500 포인트</strong>가 지급됐습니다.</p>
+            <p><strong style={{ color: '#ffd57a' }}>{POINTS_PER_REVIEW.toLocaleString()} 포인트</strong>가 지급됐습니다.</p>
             <div className="summary" style={{ marginTop: 8 }}>
               <div className="sum-row"><span className="sk">닉네임</span><span className="sv">{form.nickname}</span></div>
               <div className="sum-row"><span className="sk">프로그램</span><span className="sv">{form.programTitle}</span></div>
