@@ -46,6 +46,7 @@
 | **커뮤니티** | 후기(1,500P)·지인 초대(2,000P), 포인트 랭킹, JSONBin 동기화 |
 | **인증** | Discord OAuth2, guest / member / admin 3등급 |
 | **관리** | `/admin` — 회원 명단, 기간별 포인트, 테스트용 데이터 초기화 |
+| **반응형** | 1024 / 768 / 640 / 420px 브레이크포인트 — 홈·커뮤니티·관리자·모달 전 화면 대응 |
 
 ### 운영 시간대 (편성표 UI 기준)
 
@@ -284,7 +285,8 @@ dadnosleep/
 │   ├── styles/                       # App.css → @import 도메인 CSS
 │   │   ├── variables.css · header.css · hero.css · schedule.css
 │   │   ├── community.css · modal.css · admin/ (layout, shared, members, dashboard, points)
-│   │   └── responsive.css · …
+│   │   ├── responsive.css            # 공통 브레이크포인트 (홈·모달·드로어)
+│   │   └── responsive-admin.css      # 관리자·기간별 포인트 모바일 카드 UI
 │   │
 │   └── legacy/                       # 미사용 Ott/Yt JSX, 이메일 AuthContext
 │
@@ -760,9 +762,21 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `admin/points/summary.css` · `ranking.css` | 요약 카드·랭킹 표 |
 | `toast.css` | 오프라인 토스트 |
 | `layout.css` | 정보·CTA·푸터·FAB |
-| `responsive.css` | 1024 / 768 / 640px |
+| `responsive.css` | 홈·API·편성표·커뮤니티·모달·드로어 (1024 / 768 / 640 / 420px) |
+| `responsive-admin.css` | 관리자 사이드바·회원 카드·포인트 랭킹 카드 |
 
-**모바일:** `backdrop-filter` 비활성화, 배경 그라디언트 `html`/`body` 통일로 색 띠 현상 방지.
+### 반응형 레이아웃 요약
+
+| 화면 | ~768px 이하 | ~640px 이하 |
+|------|-------------|-------------|
+| **헤더** | 햄버거 메뉴(`MobileNav`), 데스크톱 nav 숨김 | 로고·버튼 축소 |
+| **편성표** | 요일 탭 + 카드형 `sched-mobile` | 셀 패딩·폰트 축소 |
+| **커뮤니티** | 랭킹·후기 1열, 프로모 카드 세로 배치 | 후기·초대 버튼 전체 너비 |
+| **모달·드로어** | 하단 시트형(full width) | 폼 버튼 세로 스택 |
+| **관리자** | 사이드바 → 가로 스크롤 탭, 표 → **카드 목록** | 요약 카드 1열, 초기화 버튼 full width |
+| **기간별 포인트** | 합산/후기/초대 탭 세로, 랭킹 **모바일 카드** | 요약 통계 1열 |
+
+**모바일 공통:** `backdrop-filter` 비활성화(색 왜곡 방지), 터치 기기 호버 효과 완화, 짧은 뷰포트(`max-height: 500px`)에서 모달 높이 조정.
 
 ### 주요 CSS 변수
 

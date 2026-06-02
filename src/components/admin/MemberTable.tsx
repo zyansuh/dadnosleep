@@ -1,6 +1,7 @@
 import { Check, Trash2, X } from 'lucide-react';
 import { getMemberRowKey, type MemberEntry } from '../../utils/members/membersStore';
 import { formatJoinedAt, displayMemberNickname } from '../../utils/members/memberDisplay';
+import { MemberMobileList } from './MemberMobileList';
 
 interface Props {
   members:        MemberEntry[];
@@ -19,9 +20,15 @@ export function MemberTable({
   members, loading, saving, editingKey, editNickname,
   onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onRemove,
 }: Props) {
+  const listProps = {
+    members, loading, saving, editingKey, editNickname,
+    onEditNicknameChange, onStartEdit, onCancelEdit, onSaveEdit, onRemove,
+  };
+
   return (
-    <div className="admin-table-wrap">
-      <table className="admin-table">
+    <div className="admin-table-wrap admin-table-wrap--members">
+      <MemberMobileList {...listProps} />
+      <table className="admin-table admin-table--desktop">
         <thead>
           <tr>
             <th>등록 식별 이름</th>

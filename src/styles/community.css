@@ -575,6 +575,25 @@
   .rv-promo-btn { width: 100%; justify-content: center; }
 }
 
+@media (max-width: 768px) {
+  .comm-page {
+    padding-bottom: 24px;
+  }
+
+  .rv-promo-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rv-promo-right {
+    min-height: 120px;
+  }
+
+  .pr-panel {
+    margin-bottom: 4px;
+  }
+}
+
 @media (max-width: 640px) {
   .comm-page-header {
     flex-direction: column;
@@ -583,6 +602,10 @@
 
   .comm-page-header .btn-back {
     align-self: flex-start;
+  }
+
+  .comm-page-title {
+    font-size: 22px;
   }
 
   .comm-list-header {
@@ -594,20 +617,13 @@
   .comm-list-actions {
     width: 100%;
     justify-content: stretch;
-  }
-
-  .rv-promo-row {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
   }
 
   .rv-promo-card {
     flex-direction: column;
     padding: 24px 20px;
     align-items: flex-start;
-  }
-
-  .comm-list-actions {
-    flex-wrap: wrap;
   }
 
   .comm-list-actions .rv-refresh-btn,
@@ -621,4 +637,18 @@
   .rv-promo-title { font-size: 20px; }
   .rv-promo-points { font-size: 38px; }
   .rv-grid { grid-template-columns: 1fr; }
+
+  .rv-card {
+    padding: 16px;
+  }
+
+  .rv-card-top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rv-owner-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }

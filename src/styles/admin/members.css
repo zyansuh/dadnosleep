@@ -68,6 +68,43 @@
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+
+.admin-row-save,
+.admin-row-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.admin-row-save {
+  background: rgba(100, 255, 180, 0.12);
+  color: #8effc8;
+}
+
+.admin-row-save:hover:not(:disabled) {
+  background: rgba(100, 255, 180, 0.22);
+}
+
+.admin-row-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+}
+
+.admin-row-cancel:hover {
+  color: #fff;
+}
+
+.admin-member-mobile-empty {
+  padding: 20px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
 .admin-field-hint {
   font-size: 11px;
   color: var(--text-dim);

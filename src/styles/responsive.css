@@ -1,23 +1,71 @@
+/* ── 반응형 브레이크포인트 ─────────────────────────────
+ * 1024px — 태블릿 가로 / 작은 노트북
+ * 768px  — 태블릿 세로 / 큰 폰 (편성표·헤더 전환)
+ * 640px  — 일반 스마트폰
+ * 420px  — 좁은 스마트폰
+ * ───────────────────────────────────────────────────── */
+
 @media (max-width: 1024px) {
   .hero           { grid-template-columns: 1fr; }
   .api-layout     { grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .api-desc-panel { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; }
   .info-section   { grid-template-columns: 1fr; }
+
+  .home-ranking-section {
+    padding: 22px 20px;
+  }
+
+  .home-ranking-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .comm-body {
+    gap: 20px;
+  }
 }
 
 @media (max-width: 768px) {
   /* iOS/Android: backdrop-filter가 배경색을 왜곡하는 경우 방지 */
   .header,
-  .sched-card {
+  .sched-card,
+  .modal,
+  .modal-overlay {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  .header,
+  .sched-card {
     background: rgba(30, 25, 50, 0.95);
+  }
+
+  .modal {
+    background: rgba(30, 25, 50, 0.98);
   }
 
   .app       { padding: 12px; }
   .hamburger { display: flex; }
   .header-nav-desktop { display: none !important; }
   .op-pill   { display: none; }
+
+  .header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hd-auth .hd-user {
+    display: none;
+  }
+
+  .btn-board span:not(.board-badge) {
+    display: none;
+  }
+
+  .btn-board {
+    padding: 8px 12px;
+    margin-right: 4px;
+  }
 
   .site-title { font-size: 48px; }
   .hero-ctas  { flex-direction: column; }
@@ -41,6 +89,75 @@
   .cta-btn    { font-size: 17px; }
 
   .fab { bottom: 20px; right: 16px; padding: 10px 16px; font-size: 13px; }
+
+  .home-ranking-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .home-ranking-more {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .home-ranking-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .comm-page {
+    padding: 0 4px;
+  }
+
+  .pr-panel {
+    margin-bottom: 8px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUpSheet 0.28s ease;
+  }
+
+  @keyframes slideUpSheet {
+    from { opacity: 0; transform: translateY(100%); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .sched-edit-big-modal,
+  .random-pick-modal {
+    max-height: 94vh;
+  }
+
+  .sem-slots {
+    max-height: 50vh;
+  }
+
+  .drawer-overlay {
+    justify-content: stretch;
+  }
+
+  .media-drawer {
+    width: 100%;
+    max-width: none;
+    border-left: none;
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh;
+    margin-top: auto;
+    animation: slideUpSheet 0.28s ease;
+  }
+
+  .auth-callback-page {
+    padding: 24px 20px;
+    min-height: 50vh;
+  }
 }
 
 @media (min-width: 769px) {
@@ -65,10 +182,103 @@
   .header { padding: 12px 16px; }
   .logo   { font-size: 15px; gap: 6px; }
   .logo-ico { font-size: 18px; }
+
+  .info-section {
+    padding: 18px 16px;
+    gap: 18px;
+  }
+
+  .home-ranking-section {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .home-ranking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-rank-card {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 14px 16px;
+  }
+
+  .modal-hd,
+  .modal-form,
+  .sem-day-tabs {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modal-hd {
+    padding-top: 18px;
+  }
+
+  .cat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-ghost-sm,
+  .btn-coral-form {
+    flex: none;
+    width: 100%;
+  }
+
+  .profile-menu-dropdown {
+    left: 0;
+    right: 0;
+    min-width: 0;
+  }
+
+  .rpm-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0 16px 10px;
+  }
 }
 
 @media (max-width: 420px) {
   .logo { font-size: 13px; }
   .logo-ico { font-size: 16px; }
   .sched-mobile-day-tab { padding: 8px 10px; font-size: 12px; }
+
+  .btn-suggest {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .comm-list-actions .rv-refresh-btn,
+  .comm-list-actions .rv-write-btn,
+  .comm-list-actions .rv-invite-btn {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+/* 터치 기기: 호버 의존 UI 완화 */
+@media (hover: none) and (pointer: coarse) {
+  .home-rank-card:hover {
+    transform: none;
+  }
+
+  .btn-suggest:hover {
+    transform: none;
+  }
+}
+
+/* 세로 공간이 짧은 기기 (주소창·키보드) */
+@media (max-height: 500px) and (max-width: 768px) {
+  .modal {
+    max-height: 100vh;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .sem-slots {
+    max-height: 38vh;
+  }
 }

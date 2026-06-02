@@ -1,6 +1,7 @@
 import type { PointPeriodView } from '../../../utils/community/pointPeriod';
 import type { PointPeriodRow } from '../../../utils/community/pointPeriod';
 import { PointPeriodTable } from './PointPeriodTable';
+import { PointPeriodMobileList } from './PointPeriodMobileList';
 
 const TITLES: Record<PointPeriodView, string> = {
   total:  '🏆 합산 랭킹',
@@ -25,6 +26,11 @@ interface Props {
 export function PointPeriodRanking({
   view, rows, loading, registeredOnly, memberCount,
 }: Props) {
+  const emptyMessage =
+    registeredOnly && memberCount === 0
+      ? '등록된 회원이 없습니다. 회원 명단 관리에서 추가해 주세요.'
+      : EMPTY[view];
+
   return (
     <section className={`ap-ranking ap-ranking--${view}`} aria-labelledby="ap-ranking-title">
       <header className="ap-ranking-hd">
@@ -37,18 +43,24 @@ export function PointPeriodRanking({
               : '후기·지인 초대 건수와 포인트를 한 표에서 보고, 합산 열로 총점을 확인할 수 있습니다.'}
         </p>
       </header>
-      <PointPeriodTable
-        view={view}
-        rows={rows}
-        loading={loading}
-        registeredOnly={registeredOnly}
-        memberCount={memberCount}
-        emptyMessage={
-          registeredOnly && memberCount === 0
-            ? '등록된 회원이 없습니다. 회원 명단 관리에서 추가해 주세요.'
-            : EMPTY[view]
-        }
-      />
+      <div className="ap-ranking-table ap-ranking-table--desktop">
+        <PointPeriodTable
+          view={view}
+          rows={rows}
+          loading={loading}
+          registeredOnly={registeredOnly}
+          memberCount={memberCount}
+          emptyMessage={emptyMessage}
+        />
+      </div>
+      <div className="ap-ranking-table ap-ranking-table--mobile">
+        <PointPeriodMobileList
+          view={view}
+          rows={rows}
+          loading={loading}
+          emptyMessage={emptyMessage}
+        />
+      </div>
     </section>
   );
 }

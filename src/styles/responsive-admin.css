@@ -1,0 +1,341 @@
+/* 관리자·기간별 포인트 — 모바일·태블릿 레이아웃 */
+
+@media (max-width: 900px) {
+  .admin-page-body {
+    padding: 18px 16px;
+  }
+
+  .ap-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-shell-body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-sidebar {
+    padding: 12px 14px;
+  }
+
+  .admin-sidebar-user {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .admin-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .admin-nav-link {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .admin-page-body {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+
+  .admin-panel-title {
+    font-size: 16px;
+  }
+
+  .admin-test-panel {
+    margin-top: 20px;
+    padding: 14px;
+  }
+
+  .admin-test-actions .admin-reset-points-btn,
+  .admin-test-actions .admin-reset-invite-btn,
+  .admin-test-actions .admin-reset-all-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-member-add-row {
+    flex-direction: column;
+  }
+
+  .admin-member-add-row .inp {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ap-period-presets {
+    gap: 6px;
+  }
+
+  .ap-period-preset {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .ap-period-custom {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ap-period-custom .inp {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ap-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ap-ranking-hd {
+    padding: 14px 16px 10px;
+  }
+
+  .ap-ranking-title {
+    font-size: 15px;
+  }
+
+  /* 데스크톱 표 / 모바일 카드 전환 */
+  .ap-ranking-table--desktop {
+    display: none;
+  }
+
+  .ap-ranking-table--mobile {
+    display: block;
+    padding: 0 12px 12px;
+  }
+}
+
+@media (min-width: 721px) {
+  .ap-ranking-table--mobile {
+    display: none;
+  }
+
+  .ap-ranking-table--desktop {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .ap-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-view-tab {
+    padding: 12px 14px;
+  }
+
+  .ap-view-tab-ico {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ap-view-tab-label {
+    font-size: 14px;
+  }
+}
+
+/* 회원 명단 — 모바일 카드 (720px 이하) */
+@media (max-width: 720px) {
+  .admin-table-wrap--members .admin-table--desktop {
+    display: none;
+  }
+
+  .admin-member-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (min-width: 721px) {
+  .admin-member-mobile-list {
+    display: none;
+  }
+}
+
+.admin-member-mobile-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.admin-member-mobile-card-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-member-mobile-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-member-mobile-meta dt {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.admin-member-mobile-meta dd {
+  margin: 0;
+  color: var(--text-sub);
+}
+
+.admin-member-mobile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-member-mobile-actions .admin-row-edit,
+.admin-member-mobile-actions .admin-row-remove,
+.admin-member-mobile-actions .admin-row-save,
+.admin-member-mobile-actions .admin-row-cancel {
+  flex: 1;
+  min-width: calc(50% - 4px);
+  justify-content: center;
+}
+
+/* 기간별 포인트 — 모바일 카드 목록 */
+.ap-mobile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ap-mobile-empty {
+  text-align: center;
+  padding: 24px 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.ap-mobile-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ap-mobile-card--zero {
+  opacity: 0.5;
+}
+
+.ap-mobile-card-hd {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ap-mobile-rank {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.ap-mobile-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-mobile-card-title strong {
+  display: block;
+  font-size: 14px;
+  color: #fff;
+}
+
+.ap-mobile-metrics {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.ap-mobile-metrics--total {
+  grid-template-columns: 1fr 1fr;
+}
+
+.ap-mobile-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0;
+}
+
+.ap-mobile-metric dt {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.ap-mobile-metric dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.ap-mobile-metric--review {
+  border: 1px solid rgba(255, 150, 90, 0.2);
+}
+
+.ap-mobile-metric--invite {
+  border: 1px solid rgba(42, 157, 143, 0.25);
+}
+
+.ap-mobile-metric--sum {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(255, 213, 122, 0.25);
+  background: rgba(255, 213, 122, 0.06);
+}
+
+.ap-mobile-metric--primary dd {
+  font-weight: 700;
+}
+
+.ap-mobile-pts {
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+
+.ap-mobile-pts--gold { color: var(--gold); }
+.ap-mobile-pts--review { color: #ffb88a; }
+.ap-mobile-pts--invite { color: #8ee8d0; }
+
+.ap-ranking--review .ap-mobile-card { border-color: rgba(255, 150, 90, 0.15); }
+.ap-ranking--invite .ap-mobile-card { border-color: rgba(42, 157, 143, 0.2); }
