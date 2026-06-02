@@ -152,7 +152,8 @@ export function AdminMembersPage() {
 
       {!hasMembersRemote && (
         <p className="admin-alert admin-alert-warn">
-          VITE_JSONBIN_BIN_MEMBERS와 VITE_JSONBIN_ACCESS_KEY를 설정해주세요.
+          VITE_JSONBIN_ACCESS_KEY와 VITE_JSONBIN_BIN_ID(또는 전용 VITE_JSONBIN_BIN_MEMBERS)를
+          .env / Vercel에 설정한 뒤 dev 서버 또는 사이트를 재시작해주세요.
         </p>
       )}
 

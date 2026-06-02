@@ -1,12 +1,11 @@
 import type { MemberEntry, MembersBinRecord } from '../types/member';
 import { resolveNickname } from './nickname';
+import { hasMembersBinConfigured } from './jsonbinEnv';
+import { loadMembersFromBin, saveMembersRecord } from './jsonbinRecord';
 
 export type { MemberEntry, MembersBinRecord };
 
-const BIN_ID  = (import.meta.env.VITE_JSONBIN_BIN_MEMBERS as string) ?? '';
-const BIN_KEY = (import.meta.env.VITE_JSONBIN_ACCESS_KEY as string) ?? '';
-
-export const hasMembersRemote = Boolean(BIN_ID && BIN_KEY);
+export const hasMembersRemote = hasMembersBinConfigured;
 
 function todayJoinedAt(): string {
   return new Date().toISOString().slice(0, 10);
@@ -54,26 +53,18 @@ function normalizeEntry(raw: unknown): MemberEntry | null {
   };
 }
 
-function normalizeRecord(record: unknown): MembersBinRecord {
-  if (!record || typeof record !== 'object') return { members: [] };
-  const membersRaw = (record as { members?: unknown }).members;
-  if (!Array.isArray(membersRaw)) return { members: [] };
-  const members = membersRaw
+function normalizeRecord(membersRaw: unknown[]): MemberEntry[] {
+  return membersRaw
     .map(normalizeEntry)
     .filter((e): e is MemberEntry => e !== null);
-  return { members };
 }
 
 export async function loadMembersBin(): Promise<MembersBinRecord> {
   if (!hasMembersRemote) return { members: [] };
 
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-      headers: { 'X-Access-Key': BIN_KEY },
-    });
-    if (!res.ok) throw new Error(`members bin fetch ${res.status}`);
-    const json = await res.json() as { record?: unknown };
-    return normalizeRecord(json.record);
+    const raw = await loadMembersFromBin();
+    return { members: normalizeRecord(raw) };
   } catch {
     return { members: [] };
   }
@@ -81,21 +72,9 @@ export async function loadMembersBin(): Promise<MembersBinRecord> {
 
 export async function saveMembersBin(data: MembersBinRecord): Promise<void> {
   if (!hasMembersRemote) {
-    throw new Error('VITE_JSONBIN_BIN_MEMBERS 또는 VITE_JSONBIN_ACCESS_KEY가 설정되지 않았습니다.');
+    throw new Error('VITE_JSONBIN_ACCESS_KEY와 Bin ID(VITE_JSONBIN_BIN_MEMBERS 또는 VITE_JSONBIN_BIN_ID)가 필요합니다.');
   }
-
-  const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-    method:  'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Access-Key': BIN_KEY,
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    throw new Error(`members bin save failed: ${res.status}`);
-  }
+  await saveMembersRecord(data.members);
 }
 
 export function findMemberByDiscordId(
@@ -133,7 +112,6 @@ export async function updateMemberFields(
   return data;
 }
 
-/** 로그인 시 회원 Bin의 avatar·globalName·username 동기화 */
 export async function syncMemberOnLogin(profile: {
   id:           string;
   username:     string;

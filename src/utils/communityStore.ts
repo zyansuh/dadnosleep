@@ -1,4 +1,7 @@
 import type { Review, PointRecord } from '../types/community';
+import type { MemberEntry } from '../types/member';
+import { getCommunityBinId, hasJsonBinAccessKey } from './jsonbinEnv';
+import { fetchJsonBinRecord, putJsonBinRecord } from './jsonbinRecord';
 
 export const LS_REVIEWS          = 'dadnosleep-reviews-v1';
 export const LS_POINTS           = 'dadnosleep-points-v1';
@@ -20,10 +23,9 @@ type RemoteResult<T> =
   | { ok: true; data: T }
   | { ok: false; reason: RemoteFailReason };
 
-const BIN_ID  = (import.meta.env.VITE_JSONBIN_BIN_ID as string) ?? '';
-const BIN_KEY = (import.meta.env.VITE_JSONBIN_ACCESS_KEY as string) ?? '';
+const BIN_ID = getCommunityBinId();
 
-export const hasRemoteStore = Boolean(BIN_ID && BIN_KEY);
+export const hasRemoteStore = Boolean(BIN_ID && hasJsonBinAccessKey());
 
 function isMigrated(): boolean {
   try {
@@ -86,25 +88,14 @@ function mergeData(local: CommunityData, remote: CommunityData): CommunityData {
   };
 }
 
-function classifyHttpError(status: number): RemoteFailReason {
-  if (status === 429) return 'rate_limit';
-  if (status >= 500) return 'server_error';
-  return 'client_error';
-}
-
 async function fetchRemote(): Promise<RemoteResult<CommunityData>> {
   if (!hasRemoteStore) return { ok: false, reason: 'unconfigured' };
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-      headers: { 'X-Access-Key': BIN_KEY },
-    });
-    if (!res.ok) return { ok: false, reason: classifyHttpError(res.status) };
-    const json = await res.json() as { record?: CommunityData };
-    const record = json.record;
-    if (!record || !Array.isArray(record.reviews) || !Array.isArray(record.points)) {
+    const record = await fetchJsonBinRecord(BIN_ID);
+    if (!Array.isArray(record.reviews) || !Array.isArray(record.points)) {
       return { ok: true, data: { reviews: [], points: [] } };
     }
-    return { ok: true, data: record };
+    return { ok: true, data: { reviews: record.reviews, points: record.points } };
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -113,15 +104,17 @@ async function fetchRemote(): Promise<RemoteResult<CommunityData>> {
 async function saveRemote(data: CommunityData): Promise<RemoteResult<true>> {
   if (!hasRemoteStore) return { ok: false, reason: 'unconfigured' };
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Access-Key': BIN_KEY,
-      },
-      body: JSON.stringify(data),
+    let members: MemberEntry[] = [];
+    try {
+      const existing = await fetchJsonBinRecord(BIN_ID);
+      if (Array.isArray(existing.members)) members = existing.members;
+    } catch { /* members 필드 없으면 빈 배열 */ }
+
+    await putJsonBinRecord(BIN_ID, {
+      reviews: data.reviews,
+      points:  data.points,
+      members,
     });
-    if (!res.ok) return { ok: false, reason: classifyHttpError(res.status) };
     return { ok: true, data: true };
   } catch {
     return { ok: false, reason: 'network' };
