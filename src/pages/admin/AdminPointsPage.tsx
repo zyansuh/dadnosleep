@@ -4,6 +4,7 @@ import { PointPeriodViewTabs } from '../../components/admin/points/PointPeriodVi
 import { PointPeriodSummary } from '../../components/admin/points/PointPeriodSummary';
 import { PointPeriodRanking } from '../../components/admin/points/PointPeriodRanking';
 import { FriendInviteLog } from '../../components/admin/points/FriendInviteLog';
+import { AdminFeedbackBanner } from '../../components/admin/feedback/AdminFeedbackBanner';
 import { useAdminPointReport } from '../../hooks/admin/useAdminPointReport';
 
 export function AdminPointsPage() {
@@ -29,7 +30,7 @@ export function AdminPointsPage() {
         </button>
       </div>
 
-      {r.error && <p className="admin-alert admin-alert-error">{r.error}</p>}
+      <AdminFeedbackBanner feedback={r.feedback} />
 
       <PointPeriodToolbar
         preset={r.preset}

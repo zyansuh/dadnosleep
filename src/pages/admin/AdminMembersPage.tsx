@@ -1,4 +1,5 @@
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { AdminFeedbackBanner } from '../../components/admin/feedback/AdminFeedbackBanner';
 import { MemberAddForm } from '../../components/admin/members/MemberAddForm';
 import { MemberListToolbar } from '../../components/admin/members/MemberListToolbar';
 import { MemberTable } from '../../components/admin/members/MemberTable';
@@ -24,12 +25,6 @@ export function AdminMembersPage() {
         </p>
       </div>
 
-      {!m.hasRemote() && (
-        <p className="admin-alert admin-alert-warn">
-          지금은 명단을 저장할 수 없습니다. 사이트 운영 담당자에게 문의해 주세요.
-        </p>
-      )}
-
       <MemberAddForm
         newUsername={m.newUsername}
         newNickname={m.newNickname}
@@ -42,8 +37,10 @@ export function AdminMembersPage() {
         onAdd={() => void m.handleAdd()}
       />
 
-      {m.error && <p className="admin-alert admin-alert-error">{m.error}</p>}
-      {m.success && <p className="admin-alert admin-alert-ok">{m.success}</p>}
+      <AdminFeedbackBanner
+        warn={!m.hasRemote() ? '지금은 명단을 저장할 수 없습니다. 사이트 운영 담당자에게 문의해 주세요.' : null}
+        feedback={m.feedback}
+      />
 
       <MemberListToolbar
         filter={m.listFilter}
