@@ -83,6 +83,7 @@ export function HomePage() {
           points={community.points}
           loading={community.loading}
           isAdmin={discord.isAdmin}
+          suggestionCount={suggest.suggestions.length}
           onAddReview={community.addReview}
           onAddFriendInvite={async (inviter, invitee) => {
             await community.addFriendInvite(inviter, invitee);

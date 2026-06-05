@@ -2,10 +2,11 @@ import type { Review, PointRecord } from '../../types/community';
 import { CommunityPage } from '../../components/community/CommunityPage';
 
 interface Props {
-  reviews:          Review[];
-  points:           PointRecord[];
-  loading:          boolean;
-  isAdmin:          boolean;
+  reviews:           Review[];
+  points:            PointRecord[];
+  loading:           boolean;
+  isAdmin:           boolean;
+  suggestionCount?:  number;
   onAddReview:      (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
   onAddFriendInvite: (inviter: string, invitee: string) => Promise<void>;
   onUpdateReview:   (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export function HomeCommunityView({
-  reviews, points, loading, isAdmin,
+  reviews, points, loading, isAdmin, suggestionCount,
   onAddReview, onAddFriendInvite, onUpdateReview, onDeleteReview, onRefresh, onBack,
 }: Props) {
   return (
@@ -24,6 +25,7 @@ export function HomeCommunityView({
       points={points}
       loading={loading}
       isAdmin={isAdmin}
+      suggestionCount={suggestionCount}
       onAddReview={onAddReview}
       onAddFriendInvite={onAddFriendInvite}
       onUpdateReview={onUpdateReview}

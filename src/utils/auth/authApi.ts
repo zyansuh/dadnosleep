@@ -1,4 +1,5 @@
 import type { AuthUser } from '../../types/auth';
+import { readJsonResponse } from '../http/parseJsonResponse';
 
 const LS_TOKEN = 'dadnosleep-auth-token';
 
@@ -26,7 +27,7 @@ async function authFetch<T>(path: string, init?: RequestInit): Promise<T> {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const res = await fetch(path, { ...init, headers });
-  const json = await res.json() as T & { error?: string };
+  const json = await readJsonResponse<T & { error?: string }>(res);
   if (!res.ok) throw new Error(json.error || `요청 실패 (${res.status})`);
   return json;
 }

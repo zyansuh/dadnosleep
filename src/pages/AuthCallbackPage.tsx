@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { saveDiscordSession } from '../utils/auth/discordSession';
 import { setAdminApiToken } from '../utils/admin/adminApiToken';
 import { processDiscordLogin } from '../utils/auth/processDiscordLogin';
+import { readJsonResponse } from '../utils/http/parseJsonResponse';
 import { useDiscordAuth } from '../context/DiscordAuthContext';
 
 export function AuthCallbackPage() {
@@ -26,14 +27,14 @@ export function AuthCallbackPage() {
           body:    JSON.stringify({ code }),
         });
 
-        const data = (await res.json()) as {
+        const data = await readJsonResponse<{
           id?: string;
           username?: string;
           global_name?: string | null;
           avatar?: string | null;
           adminToken?: string;
           error?: string;
-        };
+        }>(res);
 
         if (!res.ok) {
           throw new Error(data.error ?? 'Discord 로그인에 실패했습니다.');

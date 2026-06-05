@@ -1,6 +1,7 @@
 import { getJsonBinAccessKey } from './jsonbinEnv';
 import type { JsonBinFullRecord } from './types';
 import { classifyJsonBinStatus } from './http';
+import { readJsonResponse } from '../http/parseJsonResponse';
 
 export async function fetchJsonBinRecord(binId: string): Promise<JsonBinFullRecord> {
   const key = getJsonBinAccessKey();
@@ -10,6 +11,6 @@ export async function fetchJsonBinRecord(binId: string): Promise<JsonBinFullReco
   if (!res.ok) {
     throw new Error(classifyJsonBinStatus(res.status));
   }
-  const json = await res.json() as { record?: JsonBinFullRecord };
+  const json = await readJsonResponse<{ record?: JsonBinFullRecord }>(res);
   return json.record ?? {};
 }

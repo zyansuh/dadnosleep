@@ -11,10 +11,11 @@ import { CommunityRankingAside } from './CommunityRankingAside';
 import { CommunityReviewSection } from './CommunityReviewSection';
 
 interface Props {
-  reviews:         Review[];
-  points:          PointRecord[];
-  loading:         boolean;
-  isAdmin:         boolean;
+  reviews:          Review[];
+  points:           PointRecord[];
+  loading:          boolean;
+  isAdmin:          boolean;
+  suggestionCount?: number;
   onAddReview:     (draft: Omit<Review, 'id' | 'createdAt'>) => Promise<Review>;
   onAddFriendInvite: (inviterNickname: string, inviteeNickname: string) => Promise<void>;
   onUpdateReview:  (id: string, patch: Partial<Pick<Review, 'programTitle' | 'rating' | 'content'>>) => Promise<void>;
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function CommunityPage({
-  reviews, points, loading, isAdmin,
+  reviews, points, loading, isAdmin, suggestionCount,
   onAddReview, onAddFriendInvite, onUpdateReview, onDeleteReview, onRefresh, onBack,
 }: Props) {
   const discord = useDiscordAuth();
@@ -67,7 +68,11 @@ export function CommunityPage({
       />
 
       <div className="comm-body">
-        <CommunityRankingAside points={points} vipKeys={vipKeys} />
+        <CommunityRankingAside
+          points={points}
+          vipKeys={vipKeys}
+          suggestionCount={suggestionCount}
+        />
 
         <CommunityReviewSection
           reviews={reviews}
