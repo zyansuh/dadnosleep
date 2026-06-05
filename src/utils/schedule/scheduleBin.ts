@@ -1,4 +1,5 @@
-import { fetchJsonBinRecord } from '../jsonbin/jsonbinRecord';
+import type { Cell } from '../../types';
+import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
 import type { ScheduleSnapshot } from './store/types';
 
@@ -8,6 +9,13 @@ function isValidSnapshot(s: unknown): s is ScheduleSnapshot {
   return typeof o.week === 'string'
     && Array.isArray(o.data)
     && Array.isArray(o.memberRow);
+}
+
+function requireScheduleBin(): string {
+  if (!canUseScheduleBin()) {
+    throw new Error('편성표 저장소가 연결되지 않았습니다.');
+  }
+  return getCommunityBinId();
 }
 
 export function canUseScheduleBin(): boolean {
@@ -51,4 +59,56 @@ export async function loadDraftScheduleFromBin(): Promise<{
     isPublished: schedule.isPublished === true,
     publishedAt: schedule.publishedAt ?? null,
   };
+}
+
+export async function saveDraftScheduleToBin(
+  sched: Cell[][],
+  memberRow: Cell[],
+  week: string,
+): Promise<void> {
+  const binId = requireScheduleBin();
+  const record = await fetchJsonBinRecord(binId);
+  const prev = record.schedule ?? {};
+  const draft: ScheduleSnapshot = { week, data: sched, memberRow };
+  await putJsonBinRecord(binId, {
+    ...record,
+    schedule: { ...prev, draft },
+  });
+}
+
+export async function publishScheduleInBin(): Promise<string> {
+  const binId = requireScheduleBin();
+  const record = await fetchJsonBinRecord(binId);
+  const prev = record.schedule ?? {};
+  const draft = isValidSnapshot(prev.draft) ? prev.draft : prev.published;
+  if (!isValidSnapshot(draft)) {
+    throw new Error('공개할 편성표가 없습니다. 먼저 저장해 주세요.');
+  }
+  const publishedAt = new Date().toISOString();
+  await putJsonBinRecord(binId, {
+    ...record,
+    schedule: {
+      ...prev,
+      draft,
+      published:   draft,
+      isPublished: true,
+      publishedAt,
+    },
+  });
+  return publishedAt;
+}
+
+export async function unpublishScheduleInBin(): Promise<void> {
+  const binId = requireScheduleBin();
+  const record = await fetchJsonBinRecord(binId);
+  const prev = record.schedule ?? {};
+  await putJsonBinRecord(binId, {
+    ...record,
+    schedule: {
+      ...prev,
+      isPublished: false,
+      published:   undefined,
+      publishedAt: undefined,
+    },
+  });
 }
