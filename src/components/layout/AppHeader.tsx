@@ -13,14 +13,13 @@ interface Props {
   isMember:        boolean;
   onNavHome:       () => void;
   onNavCommunity:  () => void;
-  onOpenBoard:     () => void;
   onToggleMenu:    () => void;
 }
 
 export function AppHeader({
   page, menuOpen, totalReviews, suggestionCount,
   isLoggedIn, isAdmin, isMember,
-  onNavHome, onNavCommunity, onOpenBoard, onToggleMenu,
+  onNavHome, onNavCommunity, onToggleMenu,
 }: Props) {
   return (
     <header className="header">
@@ -55,13 +54,13 @@ export function AppHeader({
           )}
         </button>
 
-        <button className="btn-board" onClick={onOpenBoard} aria-label="건의함 열기">
+        <Link to="/suggestions" className="btn-board" aria-label="건의함">
           <MessageSquare size={15} />
           <span>건의함</span>
           {suggestionCount > 0 && (
             <span className="board-badge">{suggestionCount}</span>
           )}
-        </button>
+        </Link>
       </div>
 
       <button className="hamburger" onClick={onToggleMenu} aria-label="메뉴">

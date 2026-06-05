@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { DiscordLoginButton } from '../DiscordLoginButton';
 import { ProfileMenu } from '../ProfileMenu';
@@ -12,14 +13,13 @@ interface Props {
   onNavHome:       () => void;
   onNavCommunity:  () => void;
   onGoAdmin:       () => void;
-  onOpenBoard:     () => void;
   onOpenSuggest:   () => void;
 }
 
 export function MobileNav({
   page, totalReviews, suggestionCount,
   isLoggedIn, isAdmin, isMember,
-  onNavHome, onNavCommunity, onGoAdmin, onOpenBoard, onOpenSuggest,
+  onNavHome, onNavCommunity, onGoAdmin, onOpenSuggest,
 }: Props) {
   return (
     <nav className="mobile-nav" aria-label="메인 메뉴">
@@ -58,9 +58,9 @@ export function MobileNav({
           <Shield size={16} /> 관리자 페이지
         </button>
       )}
-      <button type="button" className="mob-nav-btn" onClick={onOpenBoard}>
+      <Link to="/suggestions" className="mob-nav-btn">
         📮 건의함 ({suggestionCount})
-      </button>
+      </Link>
       <button type="button" className="btn-suggest mob-cta" onClick={onOpenSuggest}>
         ✏️ 프로그램 신청하기
       </button>
