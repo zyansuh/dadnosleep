@@ -21,6 +21,9 @@ export function AdminDashboardPage() {
         <li>
           <Link to="/admin/points">🏆 기간별 포인트</Link>
         </li>
+        <li>
+          <Link to="/admin/suggestions">📮 건의함 관리</Link>
+        </li>
       </ul>
 
       <AdminTestToolsPanel />

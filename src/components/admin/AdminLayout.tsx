@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from 'react-router-dom';
-import { ArrowLeft, LogOut, Shield, Users, LayoutDashboard, Trophy } from 'lucide-react';
+import { ArrowLeft, LogOut, Shield, Users, LayoutDashboard, Trophy, MessageSquare } from 'lucide-react';
 import { useDiscordAuth } from '../../context/DiscordAuthContext';
 
 export function AdminLayout() {
@@ -29,6 +29,9 @@ export function AdminLayout() {
             </NavLink>
             <NavLink to="/admin/points" className={({ isActive }) => `admin-nav-link${isActive ? ' active' : ''}`}>
               <Trophy size={16} /> 기간별 포인트
+            </NavLink>
+            <NavLink to="/admin/suggestions" className={({ isActive }) => `admin-nav-link${isActive ? ' active' : ''}`}>
+              <MessageSquare size={16} /> 건의함 관리
             </NavLink>
           </nav>
         </aside>
