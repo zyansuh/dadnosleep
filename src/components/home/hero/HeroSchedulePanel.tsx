@@ -53,7 +53,6 @@ export function HeroSchedulePanel({
       : sched[editTarget.dayIdx]?.[editTarget.timeIdx]
     : null;
 
-  const showSchedule = canEditSchedule || isPublished;
   const publishedLabel = publishedAt
     ? new Date(publishedAt).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
     : null;
@@ -118,14 +117,6 @@ export function HeroSchedulePanel({
       {scheduleLoading ? (
         <div className="sched-card sched-loading-card">
           <p>편성표 불러오는 중…</p>
-        </div>
-      ) : !showSchedule ? (
-        <div className="sched-card sched-unpublished-card">
-          <h3>📅 이번 주 편성표</h3>
-          <p className="sched-unpublished-msg">
-            아직 공개된 편성표가 없습니다.<br />
-            관리자가 편성을 완료하면 이곳에 표시됩니다.
-          </p>
         </div>
       ) : (
         <ScheduleTable

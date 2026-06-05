@@ -15,7 +15,7 @@ export function useSchedule(canManage: boolean) {
     canManage,
   });
   const ui = useScheduleUi();
-  const random = useScheduleRandom(core, canManage);
+  const random = useScheduleRandom(core);
   const publish = useSchedulePublish(canManage, loader);
 
   return {

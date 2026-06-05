@@ -1,5 +1,6 @@
 import type { Cell } from '../../types';
 import { adminAuthHeaders } from '../admin/adminApiToken';
+import { readJsonResponse } from '../http/parseJsonResponse';
 import type { ScheduleSnapshot } from './store/types';
 
 interface PublishedResponse {
@@ -29,7 +30,7 @@ export async function fetchPublishedSchedule(): Promise<{
   publishedAt: string | null;
 }> {
   const res = await fetch('/api/schedule/published');
-  const data = await res.json() as PublishedResponse;
+  const data = await readJsonResponse<PublishedResponse>(res);
   if (!res.ok) await parseError(res, data);
   return {
     published:   data.published === true,
@@ -40,7 +41,7 @@ export async function fetchPublishedSchedule(): Promise<{
 
 export async function fetchDraftSchedule(): Promise<DraftResponse> {
   const res = await fetch('/api/schedule/draft', { headers: adminAuthHeaders() });
-  const data = await res.json() as DraftResponse;
+  const data = await readJsonResponse<DraftResponse>(res);
   if (!res.ok) await parseError(res, data);
   return data;
 }
@@ -55,7 +56,7 @@ export async function saveDraftSchedule(
     headers: { 'Content-Type': 'application/json', ...adminAuthHeaders() },
     body:    JSON.stringify({ draft: { week, data: sched, memberRow } }),
   });
-  const data = await res.json() as { error?: string };
+  const data = await readJsonResponse<{ error?: string }>(res);
   if (!res.ok) await parseError(res, data);
 }
 
@@ -64,7 +65,7 @@ export async function publishScheduleRemote(): Promise<string> {
     method:  'POST',
     headers: adminAuthHeaders(),
   });
-  const data = await res.json() as { publishedAt?: string; error?: string };
+  const data = await readJsonResponse<{ publishedAt?: string; error?: string }>(res);
   if (!res.ok) await parseError(res, data);
   return data.publishedAt ?? new Date().toISOString();
 }
@@ -74,6 +75,6 @@ export async function unpublishScheduleRemote(): Promise<void> {
     method:  'POST',
     headers: adminAuthHeaders(),
   });
-  const data = await res.json() as { error?: string };
+  const data = await readJsonResponse<{ error?: string }>(res);
   if (!res.ok) await parseError(res, data);
 }

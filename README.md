@@ -41,7 +41,7 @@
 
 | 영역 | 한 줄 요약 |
 |------|-----------|
-| **편성표** | 7일×3슬롯 + VIP 회원 행, 관리자 draft 편집 → **공개** 시 전체 열람 (JSONBin) |
+| **편성표** | 7일×3슬롯 + VIP 회원 행 — 항상 `BASE_SCHED` 기본 표시, 관리자 **공개** 시 published 반영 (JSONBin) |
 | **건의함** | `/suggestions` 목록·상세, JSONBin 저장, 관리자 처리 상태 변경 |
 | **추천 API** | TMDB·YouTube 인기작, OTT 통합·랜덤 목록 드로어 |
 | **커뮤니티** | 후기(1,500P)·지인 초대(2,000P), 포인트 랭킹, JSONBin 동기화 |
@@ -127,15 +127,17 @@ sequenceDiagram
 | 기능 | 설명 | 권한 |
 |------|------|------|
 | 주간 그리드 | 월~일 × 20:00/22:00/00:00 | 전체 공개 |
+| 기본 편성 | 미공개·API 오류 시 `constants/schedule.ts`의 `BASE_SCHED` (목 22:00 나는 솔로, 금 22:00 이혼숙려캠프 등) | 전체 |
+| 공개 편성 | 관리자가 **편성표 공개** 후 `schedule.published` 스냅샷 표시 | 전체 |
 | VIP 회원 행 | `type: member` 셀 | member / admin |
 | 고정 편성 | `type: fixed` — 지정·해제 | admin |
 | 수기 편집 | 제목·링크만 변경 (고정 여부 별도) | admin |
-| 랜덤 편성 | TMDB 한국어 작품 → **미리보기 모달**에서 선택 적용 | 전체 |
+| 랜덤 편성 | TMDB 한국어 작품 → **미리보기 모달**에서 선택 적용 (비관리자는 화면 미리보기만, admin은 draft 저장) | 전체 |
 | 초기화 | 고정 편성만 남기고 나머지 빈 셀 | admin (확인 모달) |
 | 셀 편집 모드 | 셀 클릭 수정 | admin |
 | LIVE | 오늘 요일·현재 슬롯 강조 | 전체 |
 
-편성 데이터는 `dadnosleep-sched` 키에 **ISO 주차(`week`)** 와 함께 저장되며, 주가 바뀌면 `BASE_SCHED` 기준으로 초기화됩니다.
+편성 데이터는 JSONBin `schedule` 필드에 **ISO 주차(`week`)** 와 함께 저장됩니다. `/api/schedule/*` 응답이 JSON이 아니거나 실패하면 `readJsonResponse`가 안전하게 처리하고, 화면은 `BASE_SCHED`로 폴백합니다 (일반 사용자에게는 오류 배너를 숨김).
 
 ### 📺 API 추천
 
@@ -348,6 +350,7 @@ dadnosleep/
 │   │   │   ├── scheduleStorage.ts    # weekKey 등 re-export
 │   │   │   ├── scheduleTime.ts · recommend.ts · scheduleCell · cellDisplay
 │   │   ├── suggestion/               # suggestionApi, formatSuggestionDate
+│   │   ├── http/                     # parseJsonResponse (API 비-JSON 응답 안전 처리)
 │   │   ├── admin/                    # adminApiToken (sessionStorage JWT)
 │   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
 │   │   ├── jsonbin/
@@ -693,17 +696,18 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 ### 12-1. 편성표 (시청자)
 
-1. 메인 → **오늘 편성표 보기** 또는 스크롤
+1. 메인 → **오늘 편성표 보기** 또는 스크롤 — 관리자가 아직 공개하지 않아도 **기본 편성표**가 표시됩니다
 2. 셀 클릭 시 링크가 있으면 OTT/YouTube/TMDB 이동
-3. **랜덤 편성 생성하기** → 목록에서 작품 선택 → 적용
+3. **랜덤 편성 생성하기** → 목록에서 작품 선택 → 적용 (본인 화면에서만 미리보기, 새로고침 시 원래 편성으로 복귀)
 
 ### 12-2. 편성표 (관리자)
 
 1. Discord **admin**으로 로그인 (편집 UI는 admin 전용)
 2. **편성표 수정하기** — 요일별 일괄 편집 (draft → JSONBin)
 3. **셀 편집 모드** ON → 셀 클릭, 고정 지정/해제(🔓)
-4. **편성표 공개** — 시청자에게 published 반영 / **공개 취소** — 관리자만 draft 열람
-5. **초기화** — 고정만 남김 (확인 모달)
+4. **랜덤 편성 생성하기** — 선택 적용 시 draft에 저장 (시청자는 **편성표 공개** 후에만 반영)
+5. **편성표 공개** — 시청자에게 `published` 반영 / **공개 취소** — 시청자는 다시 기본 편성표 표시
+6. **초기화** — 고정만 남김 (확인 모달)
 
 ### 12-2b. 건의함
 
@@ -807,7 +811,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 | 필드 | 설명 |
 |------|------|
 | `schedule.draft` | 관리자만 보는 작업 중 편성 |
-| `schedule.published` | `isPublished: true` 일 때 일반 사용자에게 노출 |
+| `schedule.published` | `isPublished: true` 일 때 일반 사용자에게 노출 (미공개·오류 시 클라이언트 `BASE_SCHED` 폴백) |
 | `suggestions[]` | 건의함 — `status`: pending / reviewing / answered / closed |
 | `pointsCleared` | `true`면 후기·초대는 유지하고 랭킹 `points[]`만 0 (관리자 **포인트만 초기화**) |
 | `members` | 회원 명단 — 후기 저장 시 `putCommunityBinRecord`가 **항상 보존** |

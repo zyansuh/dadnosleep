@@ -125,10 +125,9 @@ export function useScheduleCore({
   const applyRandomToSched = useCallback((
     mapper: (prev: Cell[][]) => Cell[][],
   ) => {
-    if (!canManage) return;
     setSched(prev => {
       const next = mapper(prev);
-      void persist(next, memberRow);
+      if (canManage) void persist(next, memberRow);
       return next;
     });
   }, [canManage, persist, memberRow, setSched]);

@@ -6,17 +6,13 @@ import type { useScheduleCore } from './useScheduleCore';
 
 type Core = ReturnType<typeof useScheduleCore>;
 
-export function useScheduleRandom(core: Core, canManage: boolean) {
+export function useScheduleRandom(core: Core) {
   const [randing, setRanding] = useState(false);
   const [randError, setRandError] = useState('');
   const [randomPool, setRandomPool] = useState<RecommendItem[]>([]);
   const [randomPickerOpen, setRandomPickerOpen] = useState(false);
 
   const openRandomPicker = useCallback(async () => {
-    if (!canManage) {
-      setRandError('편성표 수정은 관리자만 할 수 있습니다.');
-      return;
-    }
     setRanding(true);
     setRandError('');
     try {
@@ -32,10 +28,10 @@ export function useScheduleRandom(core: Core, canManage: boolean) {
     } finally {
       setRanding(false);
     }
-  }, [canManage]);
+  }, []);
 
   const applyRandomSelection = useCallback((selected: RecommendItem[]) => {
-    if (!selected.length || !canManage) return;
+    if (!selected.length) return;
     let pi = 0;
     core.applyRandomToSched(prev =>
       prev.map(day =>
@@ -48,7 +44,7 @@ export function useScheduleRandom(core: Core, canManage: boolean) {
       )
     );
     setRandomPickerOpen(false);
-  }, [canManage, core]);
+  }, [core]);
 
   return {
     randing,

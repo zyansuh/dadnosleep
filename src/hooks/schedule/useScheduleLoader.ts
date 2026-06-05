@@ -16,6 +16,12 @@ function snapshotToCells(s: ScheduleSnapshot | null): { sched: Cell[][]; memberR
   };
 }
 
+function loadFailureMessage(canManage: boolean): string {
+  return canManage
+    ? '원격 편성표를 불러오지 못했습니다. 기본 편성을 표시합니다.'
+    : '';
+}
+
 export function useScheduleLoader(canManage: boolean) {
   const [sched, setSched] = useState<Cell[][]>(BASE_SCHED);
   const [memberRow, setMemberRow] = useState<Cell[]>(BASE_MEMBER_ROW);
@@ -68,8 +74,8 @@ export function useScheduleLoader(canManage: boolean) {
           setMemberRow(BASE_MEMBER_ROW);
         }
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '편성표를 불러오지 못했습니다.');
+    } catch {
+      setError(loadFailureMessage(canManage));
       setSched(BASE_SCHED);
       setMemberRow(BASE_MEMBER_ROW);
     } finally {
@@ -124,9 +130,9 @@ export function useScheduleLoader(canManage: boolean) {
             setMemberRow(BASE_MEMBER_ROW);
           }
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : '편성표를 불러오지 못했습니다.');
+          setError(loadFailureMessage(canManage));
           setSched(BASE_SCHED);
           setMemberRow(BASE_MEMBER_ROW);
         }
