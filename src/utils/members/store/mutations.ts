@@ -1,6 +1,6 @@
 import type { MemberEntry, MembersBinRecord } from '../../../types/member';
 import { resolveNickname } from '../../nickname';
-import { findMemberIndex } from '../memberIdentity';
+import { findMemberIndex, membersAreSamePerson } from '../memberIdentity';
 import { loadMembersBin } from './load';
 import { saveMembersBin } from './save';
 import { patchMemberAt } from './patch';
@@ -52,8 +52,17 @@ export async function syncMemberOnLogin(profile: {
     globalName,
     avatar:     profile.avatar ?? existing.avatar,
   };
-  data.members[idx] = updated;
-  await saveMembersBin(data);
+
+  const next: MemberEntry[] = [];
+  for (let i = 0; i < data.members.length; i++) {
+    if (i === idx) {
+      next.push(updated);
+      continue;
+    }
+    if (membersAreSamePerson(data.members[i], updated)) continue;
+    next.push(data.members[i]);
+  }
+  await saveMembersBin({ members: next });
   return updated;
 }
 

@@ -45,11 +45,21 @@ export function AdminMembersPage() {
         feedback={m.feedback}
       />
 
-      <MemberListToolbar
-        filter={m.listFilter}
-        counts={m.filterCounts}
-        onChange={m.setListFilter}
-      />
+      <div className="admin-member-toolbar-row">
+        <MemberListToolbar
+          filter={m.listFilter}
+          counts={m.filterCounts}
+          onChange={m.setListFilter}
+        />
+        <button
+          type="button"
+          className="btn-ghost-sm admin-member-reload"
+          disabled={m.loading}
+          onClick={() => void m.reload()}
+        >
+          새로고침
+        </button>
+      </div>
 
       <MemberTable
         members={m.filteredMembers}

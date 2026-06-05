@@ -81,6 +81,59 @@ function profileKeys(profile: MemberProfileRef): string[] {
   return keys;
 }
 
+function entryIdentityFields(entry: MemberEntry): string[] {
+  return [entry.username, entry.globalName, entry.nickname]
+    .map(v => v?.trim())
+    .filter((v): v is string => Boolean(v));
+}
+
+/** 명단 행이 Discord 로그인 프로필과 같은 사람인지 (@이름 · 표시 이름 · 닉네임 · ID) */
+export function memberEntryMatchesProfile(
+  entry: MemberEntry,
+  profile: { id: string; username: string; global_name?: string | null },
+): boolean {
+  if (entry.discordId && entry.discordId === profile.id) return true;
+  if (entry.username.trim() === profile.id) return true;
+
+  const profileRef: MemberProfileRef = {
+    username:   profile.username,
+    globalName: profile.global_name,
+  };
+  const keys = new Set(profileKeys(profileRef));
+
+  for (const field of entryIdentityFields(entry)) {
+    if (memberIdentityMatches(field, profileRef)) return true;
+    if (keys.has(normalizeMemberKey(field))) return true;
+  }
+  return false;
+}
+
+/** 동일 인물 중복 행 판별 (대기 + 완료가 같이 있을 때) */
+export function membersAreSamePerson(a: MemberEntry, b: MemberEntry): boolean {
+  if (a.discordId && b.discordId) return a.discordId === b.discordId;
+  if (a.discordId && b.username.trim() === a.discordId) return true;
+  if (b.discordId && a.username.trim() === b.discordId) return true;
+
+  const aKeys = getMemberCommunityKeys(a);
+  for (const k of getMemberCommunityKeys(b)) {
+    if (aKeys.has(k)) return true;
+  }
+  return false;
+}
+
+/** discordId가 있는 쪽을 우선해 한 명으로 합침 */
+export function preferLinkedMember(a: MemberEntry, b: MemberEntry): MemberEntry {
+  const linked = a.discordId ? a : b.discordId ? b : b;
+  const other  = linked === a ? b : a;
+  return {
+    ...linked,
+    nickname:  linked.nickname || other.nickname,
+    globalName: linked.globalName || other.globalName,
+    isVip:     linked.isVip || other.isVip,
+    joinedAt:  linked.joinedAt || other.joinedAt,
+  };
+}
+
 export function findMemberIndex(
   members: MemberEntry[],
   ref: { discordId?: string; username?: string; globalName?: string | null },
@@ -92,19 +145,14 @@ export function findMemberIndex(
     if (byStoredId >= 0) return byStoredId;
   }
 
-  if (ref.username?.trim() || ref.globalName?.trim()) {
-    const profile: MemberProfileRef = {
-      username:   ref.username?.trim() ?? '',
-      globalName: ref.globalName,
+  if (ref.discordId || ref.username?.trim() || ref.globalName?.trim()) {
+    const profile = {
+      id:           ref.discordId ?? '',
+      username:     ref.username?.trim() ?? '',
+      global_name:  ref.globalName,
     };
-    const keys = new Set(profileKeys(profile));
-    const idx = members.findIndex(m => memberIdentityMatches(m.username, profile));
+    const idx = members.findIndex(m => memberEntryMatchesProfile(m, profile));
     if (idx >= 0) return idx;
-    const byNick = members.findIndex(m => {
-      const nick = m.nickname?.trim();
-      return nick ? keys.has(normalizeMemberKey(nick)) : false;
-    });
-    if (byNick >= 0) return byNick;
   }
 
   if (ref.username?.trim()) {

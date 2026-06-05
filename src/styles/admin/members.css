@@ -20,11 +20,23 @@
   line-height: 1.65;
 }
 
+.admin-member-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
 .admin-member-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+}
+
+.admin-member-reload {
+  flex-shrink: 0;
 }
 
 .admin-member-filter {
