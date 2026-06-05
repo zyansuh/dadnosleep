@@ -41,11 +41,12 @@
 
 | 영역 | 한 줄 요약 |
 |------|-----------|
-| **편성표** | 7일×3슬롯 + VIP 회원 행, 고정·랜덤·수기 편집, localStorage 주간 저장 |
+| **편성표** | 7일×3슬롯 + VIP 회원 행, 관리자 draft 편집 → **공개** 시 전체 열람 (JSONBin) |
+| **건의함** | `/suggestions` 목록·상세, JSONBin 저장, 관리자 처리 상태 변경 |
 | **추천 API** | TMDB·YouTube 인기작, OTT 통합·랜덤 목록 드로어 |
 | **커뮤니티** | 후기(1,500P)·지인 초대(2,000P), 포인트 랭킹, JSONBin 동기화 |
 | **인증** | Discord OAuth2, guest / member / admin 3등급 |
-| **관리** | `/admin` — 회원 명단·탈퇴(포인트 포함 삭제), 기간별 포인트, 테스트 초기화 |
+| **관리** | `/admin` — 회원 명단·탈퇴, 기간별 포인트, **건의함 관리**, 테스트 초기화 |
 | **반응형** | 1024 / 768 / 640 / 420px — 홈·커뮤니티·관리자·모달 전 화면 대응 |
 | **UI 색상** | 모바일·데스크톱 동일 `--bg-card` 단색 카드 (블러/반투명 보정 없음) |
 | **코드 구조** | 도메인별 `store/` · `table|cell|modals/` · `pages/home/` — 기존 import는 re-export로 유지 |
@@ -68,6 +69,23 @@
 | `/admin` | 관리 대시보드 · 테스트 초기화 | 푸터 비밀번호 **또는** Discord admin |
 | `/admin/members` | 회원 명단 (로그인 전 사전 등록 가능) | 동일 |
 | `/admin/points` | 기간별 포인트 집계 | 동일 |
+| `/suggestions` | 건의함 목록 (제목·작성자·작성일·처리상태) | 없음 |
+| `/suggestions/:id` | 건의 상세 (추후 답변 `replies[]` 예비) | 없음 |
+| `/admin/suggestions` | 건의함 관리 (상태 변경) | 푸터 비밀번호 **또는** Discord admin |
+
+### 서버 API (편성표·건의함)
+
+| 메서드 | 경로 | 권한 | 설명 |
+|--------|------|------|------|
+| GET | `/api/schedule/published` | 공개 | 게시된 편성표만 |
+| GET/PUT | `/api/schedule/draft` | Admin JWT | draft 조회·저장 |
+| POST | `/api/schedule/publish` | Admin JWT | draft → published |
+| POST | `/api/schedule/unpublish` | Admin JWT | 공개 취소 |
+| GET/POST | `/api/suggestions` | 공개 | 목록·등록 |
+| GET/PATCH | `/api/suggestions/:id` | GET 공개 / PATCH Admin | 상세·상태 변경 |
+| POST | `/api/admin/token` | 공개 | 푸터 비밀번호 → Admin JWT |
+
+로컬: `vite.config.ts` → `appApiMiddleware()`. 프로덕션: `api/*` → `server/appApi/vercelHandler.ts`.
 
 ### 요청 흐름 (Discord 로그인)
 
@@ -297,14 +315,19 @@ dadnosleep/
 │   │   ├── schedule/
 │   │   │   ├── useScheduleCore.ts    # 셀·memberRow·persist
 │   │   │   ├── useScheduleRandom.ts  # TMDB 랜덤·피커
+│   │   │   ├── useScheduleLoader.ts  # published/draft 원격 로드
+│   │   │   ├── useSchedulePublish.ts # 공개·비공개 API
+│   │   │   ├── useScheduleRandom.ts  # 랜덤 추천 피커
 │   │   │   ├── useScheduleUi.ts      # 편집 모드·초기화 모달 플래그
 │   │   │   ├── useScheduleEditForm.ts
-│   │   │   └── useSchedule.ts        # re-export 조합
+│   │   │   └── useSchedule.ts        # Core·Loader·Random·Publish·Ui 조합
+│   │   ├── suggestion/               # useSuggestionForm
 │   │   ├── community/                # useCommunity, useReviewForm
 │   │   ├── members/                  # useMemberVipKeys
 │   │   ├── admin/
-│   │   │   ├── members/              # useMembersListQuery, useMembersMutations, useAdminMembers …
+│   │   │   ├── members/              # useMembersListQuery, useMembersMutations …
 │   │   │   ├── points/               # usePointReportQuery, usePointReportDerived …
+│   │   │   ├── suggestions/          # useAdminSuggestions
 │   │   │   ├── useAdminFeedback.ts · useAdminTestReset.ts
 │   │   │   └── useAdminMembers.ts    # re-export
 │   │   └── useClock.ts 등            # re-export → hooks/shared
@@ -319,25 +342,28 @@ dadnosleep/
 │   │   │   ├── membersStore.ts       # re-export
 │   │   │   └── memberIdentity, memberVip, memberDisplay
 │   │   ├── schedule/
-│   │   │   ├── store/                # constants, read, write, weekKey
-│   │   │   ├── scheduleStorage.ts    # re-export
-│   │   │   └── scheduleCell, cellDisplay
+│   │   │   ├── store/                # constants, weekKey, types (원격 저장 — localStorage 제거)
+│   │   │   ├── scheduleApi.ts        # /api/schedule/* 클라이언트
+│   │   │   ├── scheduleStorage.ts    # weekKey 등 re-export
+│   │   │   ├── scheduleTime.ts · recommend.ts · scheduleCell · cellDisplay
+│   │   ├── suggestion/               # suggestionApi, formatSuggestionDate
+│   │   ├── admin/                    # adminApiToken (sessionStorage JWT)
 │   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
 │   │   ├── jsonbin/
 │   │   │   ├── fetch.ts · put.ts · communityPut.ts · membersBin.ts · extractMembers.ts
 │   │   │   ├── jsonbinEnv.ts · jsonbinRecord.ts (re-export)
 │   │   ├── auth/                     # discordOAuth, discordSession, processDiscordLogin
-│   │   └── nickname.ts · scheduleTime.ts · format.ts · api.ts · recommend.ts
+│   │   └── nickname.ts · format.ts · api.ts (+ scheduleTime/recommend shim)
 │   │
 │   ├── constants/                    # 라벨·설정 표 (UI/훅에서 import)
-│   │   ├── schedule.ts · points.ts · adminPointPresets.ts · adminTestReset.ts · emptyCell.ts
+│   │   ├── schedule.ts · points.ts · suggestion.ts · adminPointPresets.ts …
 │   │
 │   ├── context/                      # DiscordAuth, AdminGate, Toast
-│   ├── types/                        # Cell, community, member, role, adminAlert
+│   ├── types/                        # Cell, community, member, role, suggestion, adminAlert
 │   │
 │   ├── styles/                       # CSS만 — App.css → @import (컴포넌트에 import 금지)
-│   │   ├── variables.css · header.css · hero.css · schedule.css · community.css
-│   │   ├── admin/                    # layout, shared, alerts, members, test-tools, points/, dashboard
+│   │   ├── variables.css · header.css · hero.css · schedule.css · suggestions.css · community.css
+│   │   ├── admin/                    # layout, shared, alerts, members, suggestions, points/, dashboard
 │   │   ├── responsive.css · responsive-admin.css
 │   │   └── admin/responsive-test-tools.css
 │   │
@@ -369,7 +395,9 @@ dadnosleep/
 
 **회원 명단 저장소** (`utils/members/store/`): `cache.ts` · `normalize.ts` · `load.ts`/`save.ts` · `mutations.ts` · `withdraw.ts`. 진입점은 `membersStore.ts` re-export.
 
-**편성표 훅** (`hooks/schedule/`): `useScheduleCore`(셀·저장) · `useScheduleRandom`(랜덤 추천) · `useScheduleUi`(편집·초기화 모달) → `useSchedule.ts`에서 조합.
+**편성표 훅** (`hooks/schedule/`): `useScheduleLoader`(원격 로드) · `useScheduleCore`(셀·draft 저장) · `useScheduleRandom` · `useSchedulePublish` · `useScheduleUi` → `useSchedule.ts`에서 조합.
+
+**건의함** (`hooks/suggestion/` · `utils/suggestion/` · `pages/suggestions/`): `useSuggestionForm` → API 등록 · `useAdminSuggestions` → 상태 변경.
 
 **JSONBin** (`utils/jsonbin/`): `fetch` · `put` · `communityPut` · `membersBin` · `extractMembers` — `jsonbinRecord.ts`는 re-export.
 
@@ -402,7 +430,8 @@ dadnosleep/
 |------|------|
 | `components/community/CommunityPage.tsx` | 후기 목록·폼·랭킹 탭 분리 |
 | `hooks/community/useCommunity.ts` | load / persist / storage 이벤트 분리 |
-| `components/layout/HomeOverlays.tsx` | 모달·드로어 그룹별 파일 |
+
+`components/layout/overlays/` — `HomeSuggestionOverlays` · `HomeScheduleOverlays` · `HomeMediaOverlays` (분리 완료)
 
 ### import 규칙 (예시)
 
@@ -488,7 +517,7 @@ cp .env.example .env.local
 | `VITE_JSONBIN_BIN_MEMBERS` | △ | 회원 전용 Bin (비우면 아래 Bin에 `members` 필드로 통합) |
 | `VITE_DISCORD_CLIENT_ID` | ○ | Discord Application Client ID |
 | `VITE_DISCORD_REDIRECT_URI` | ○ | OAuth Redirect (로컬/프로덕션 각각) |
-| `VITE_ADMIN_PASSWORD` | △ | 푸터 관리자 비밀번호 |
+| `VITE_ADMIN_PASSWORD` | △ | 푸터 관리자 비밀번호 (브라우저 — `/admin` 진입) |
 
 > **`VITE_DISCORD_CLIENT_SECRET` 사용 금지** — 브라우저에 노출됩니다. 반드시 `DISCORD_CLIENT_SECRET`(서버 전용)을 쓰세요.
 
@@ -499,10 +528,13 @@ cp .env.example .env.local
 | `DISCORD_CLIENT_ID` | ○ | Client ID (`VITE_`와 동일) |
 | `DISCORD_CLIENT_SECRET` | ○ | Client Secret (**Git·VITE_ 금지**) |
 | `DISCORD_REDIRECT_URI` | ○ | Redirect URI (`VITE_`와 동일) |
-| `JWT_SECRET` | △ | (선택) 이메일 API JWT |
+| `JWT_SECRET` | ○* | Admin JWT 서명 (Discord adminToken·password adminToken) — 프로덕션 32자+ 랜덤 |
+| `ADMIN_PASSWORD` | △ | 서버 API 인증용 — **`VITE_ADMIN_PASSWORD`와 동일 값 권장** |
 | `JSONBIN_USERS_BIN_ID` | △ | (선택) 이메일 회원 Bin |
-| `JSONBIN_ACCESS_KEY` | △ | (선택) 서버 auth용 |
+| `JSONBIN_ACCESS_KEY` | ○ | 서버 JSONBin (편성표·건의함 patch) |
 | `ADMIN_EMAILS` | △ | (선택) 이메일 admin 목록 |
+
+\* 편성표·건의 API를 쓰려면 `JWT_SECRET` + `ADMIN_PASSWORD`(또는 `VITE_ADMIN_PASSWORD`) + `JSONBIN_ACCESS_KEY` 필요.
 
 로컬 개발 시 `vite.config.ts`의 `loadEnv`가 `.env.local`의 `DISCORD_*`를 `process.env`에 주입해 dev API가 동작합니다.
 
@@ -525,9 +557,58 @@ DISCORD_CLIENT_ID=your_client_id
 DISCORD_CLIENT_SECRET=your_client_secret
 DISCORD_REDIRECT_URI=http://localhost:5173/auth/callback
 
-# (선택) 푸터 관리자
+# 관리자 비밀번호 — 아래 두 줄은 반드시 같은 값
 VITE_ADMIN_PASSWORD=your_admin_pw
+ADMIN_PASSWORD=your_admin_pw
+
+# Admin JWT 서명 (프로덕션 필수)
+JWT_SECRET=your_random_32_char_or_longer_secret
 ```
+
+### ADMIN_PASSWORD 설정 가이드 (자세히)
+
+관리자 비밀번호는 **역할이 두 가지**입니다. 헷갈리기 쉬우니 **같은 문자열**로 맞추는 것을 권장합니다.
+
+| 변수 | 어디서 쓰나 | 하는 일 |
+|------|------------|---------|
+| `VITE_ADMIN_PASSWORD` | **브라우저** (Vite 빌드) | 푸터 「관리자」 클릭 → 비밀번호 입력 → `/admin` 페이지 진입 (`sessionStorage`) |
+| `ADMIN_PASSWORD` | **서버** (Vercel·로컬 API) | `POST /api/admin/token` 에서 비밀번호 검증 → **Admin JWT** 발급 |
+
+**Admin JWT**가 필요한 API (Authorization: `Bearer <token>`):
+
+- 편성표 draft 저장·공개·비공개 (`/api/schedule/*`)
+- 건의함 처리 상태 변경 (`PATCH /api/suggestions/:id`)
+
+**JWT를 받는 방법 (둘 중 하나):**
+
+1. **푸터 비밀번호** — `/admin` 진입 시 `AdminPasswordModal`이 `POST /api/admin/token` 호출 → `sessionStorage`에 JWT 저장
+2. **Discord 관리자 로그인** — OAuth 콜백 응답의 `adminToken` 자동 저장
+
+**설정 순서 (로컬):**
+
+1. `.env.example` → `.env.local` 복사
+2. 원하는 비밀번호 정하기 (예: `dad-admin-2026`)
+3. `.env.local`에 입력:
+   ```env
+   VITE_ADMIN_PASSWORD=dad-admin-2026
+   ADMIN_PASSWORD=dad-admin-2026
+   JWT_SECRET=랜덤_32자_이상_문자열
+   VITE_JSONBIN_BIN_ID=...
+   VITE_JSONBIN_ACCESS_KEY=...
+   JSONBIN_ACCESS_KEY=...   # 서버용 (클라이언트 키와 동일 Bin이면 같은 값)
+   ```
+4. `npm run dev` 재시작 (env 변경 반영)
+5. 푸터 관리자 비밀번호 입력 → `/admin` 접속 확인
+6. Discord **admin** 계정으로 편성표 **공개** 버튼 동작 확인
+
+**Vercel 배포 시:** Project → Settings → Environment Variables 에 **Production** 기준으로  
+`VITE_ADMIN_PASSWORD`, `ADMIN_PASSWORD`, `JWT_SECRET`, `JSONBIN_ACCESS_KEY`, `VITE_JSONBIN_*` 등록 후 **Redeploy**.
+
+**주의:**
+
+- `VITE_ADMIN_PASSWORD`만 넣고 `ADMIN_PASSWORD`를 비우면 → `/admin` UI는 열리지만 **편성표 API·건의 상태 변경이 401** 될 수 있음 (서버는 `ADMIN_PASSWORD` → 없으면 `VITE_ADMIN_PASSWORD` fallback)
+- `JWT_SECRET` 미설정 시 개발용 기본값 사용 — **프로덕션에서는 반드시 변경**
+- Discord **admin**만 편성표 **UI 편집** 가능 (`canEditSchedule`). 푸터 비밀번호만으로는 `/admin`·건의 관리는 되지만 메인 편성 **셀 편집 버튼은 숨김**
 
 ---
 
@@ -551,7 +632,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 | 환경 | 경로 | 구현 |
 |------|------|------|
-| 프로덕션 | `POST /api/discord-callback` | `api/discord-callback.js` |
+| 프로덕션 | `POST /api/discord-callback` | `api/discord-callback.ts` |
 | 로컬 | 동일 | `server/discord/viteMiddleware.ts` |
 
 요청 본문: `{ "code": "<oauth_code>" }`  
@@ -656,10 +737,18 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 ### 12-2. 편성표 (관리자)
 
-1. Discord **admin**으로 로그인
-2. **편성표 수정하기** — 요일별 일괄 편집
+1. Discord **admin**으로 로그인 (편집 UI는 admin 전용)
+2. **편성표 수정하기** — 요일별 일괄 편집 (draft → JSONBin)
 3. **셀 편집 모드** ON → 셀 클릭, 고정 지정/해제(🔓)
-4. **초기화** — 고정만 남김 (확인 모달)
+4. **편성표 공개** — 시청자에게 published 반영 / **공개 취소** — 관리자만 draft 열람
+5. **초기화** — 고정만 남김 (확인 모달)
+
+### 12-2b. 건의함
+
+1. 헤더 **건의함** → `/suggestions` 목록
+2. **건의하기** → 프로그램·시간대·내용 제출
+3. 항목 클릭 → `/suggestions/:id` 상세
+4. 관리자: `/admin/suggestions` 또는 상세에서 처리 상태 변경
 
 ### 12-3. 커뮤니티
 
@@ -730,12 +819,34 @@ VITE_ADMIN_PASSWORD=your_admin_pw
       "role": "member",
       "joinedAt": "2026-06-02"
     }
+  ],
+  "schedule": {
+    "draft": { "week": "2026-W23", "data": [], "memberRow": [] },
+    "published": { "week": "2026-W23", "data": [], "memberRow": [] },
+    "isPublished": true,
+    "publishedAt": "2026-06-05T12:00:00.000Z"
+  },
+  "suggestions": [
+    {
+      "id": "1717200000000-abc12",
+      "title": "프로그램명",
+      "category": "예능",
+      "time": "금요일 밤",
+      "desc": "건의 내용",
+      "nick": "닉네임",
+      "createdAt": "2026-06-05T10:00:00.000Z",
+      "status": "pending",
+      "replies": []
+    }
   ]
 }
 ```
 
 | 필드 | 설명 |
 |------|------|
+| `schedule.draft` | 관리자만 보는 작업 중 편성 |
+| `schedule.published` | `isPublished: true` 일 때 일반 사용자에게 노출 |
+| `suggestions[]` | 건의함 — `status`: pending / reviewing / answered / closed |
 | `pointsCleared` | `true`면 후기·초대는 유지하고 랭킹 `points[]`만 0 (관리자 **포인트만 초기화**) |
 | `members` | 회원 명단 — 후기 저장 시 `putCommunityBinRecord`가 **항상 보존** |
 
@@ -743,11 +854,9 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 
 | 키 | 내용 | 만료 |
 |----|------|------|
-| `dadnosleep-sched` | `{ week, data, memberRow }` 편성표 | 주차 변경 시 초기화 |
 | `dadnosleep-members-cache-v1` | 회원 명단 마지막 스냅샷 (원격 유실·HMR 복구) | 수동 삭제 전까지 |
 | `dadnosleep-points-cleared-v1` | `1` = 포인트만 초기화 플래그 (로컬) | 초기화 해제·재집계 시 삭제 |
-| `dadnosleep-suggestions` | 건의 목록 | 최초 저장 +30일 |
-| `dadnosleep-suggestions-saved-at` | 건의 최초 저장 시각 | — |
+| `dadnosleep-admin-api-token` | Admin JWT (sessionStorage) | 탭 닫으면 만료 |
 | `dadnosleep-reviews-v1` | 후기 fallback / 마이그레이션 원본 | 수동 삭제 전까지 |
 | `dadnosleep-points-v1` | 포인트 fallback | 동일 |
 | `dadnosleep-friend-invites-v1` | 지인 초대 fallback | 동일 |
@@ -782,6 +891,7 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `/admin` | 대시보드, 링크, **포인트만/후기만/초대만/전체** 테스트 초기화 |
 | `/admin/members` | 회원 명단·탈퇴(포인트 삭제 포함) |
 | `/admin/points` | 기간별 포인트 집계 (후기·지인 초대 시각 기준) |
+| `/admin/suggestions` | 건의함 목록·처리 상태 변경 |
 
 ### 회원 명단 (`/admin/members`)
 
@@ -924,6 +1034,8 @@ VITE_ADMIN_PASSWORD=your_admin_pw
 | `admin/points/view-tabs.css` | 합산/후기/초대 탭 |
 | `admin/points/summary.css` · `ranking.css` | 요약 카드·랭킹 표 |
 | `admin/points/invite-log.css` | 지인 초대 신고 내역 (관리자) |
+| `admin/suggestions.css` | 건의함 관리·상세 관리자 UI |
+| `suggestions.css` | 공개 건의함 목록·상세 페이지 |
 | `toast.css` | 오프라인 토스트 |
 | `layout.css` | 정보·CTA·푸터·FAB |
 | `responsive.css` | 홈·API·편성표·커뮤니티·모달·드로어 (1024 / 768 / 640 / 420px) |
