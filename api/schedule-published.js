@@ -1,19 +1,9 @@
-function getServerJsonBinAccessKey() {
-  const raw = process.env.JSONBIN_ACCESS_KEY
-    ?? process.env.VITE_JSONBIN_ACCESS_KEY
-    ?? '';
-  return raw.replace(/^["']|["']$/g, '').trim();
-}
-
-function getServerCommunityBinId() {
-  return (process.env.JSONBIN_BIN_ID
-    ?? process.env.VITE_JSONBIN_BIN_ID
-    ?? '').trim();
-}
+import { fetchBinRecord } from './_shared.js';
 
 function isValidSnapshot(s) {
-  if (!s || typeof s !== 'object') return false;
-  return typeof s.week === 'string'
+  return s
+    && typeof s === 'object'
+    && typeof s.week === 'string'
     && Array.isArray(s.data)
     && Array.isArray(s.memberRow);
 }
@@ -26,21 +16,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const key = getServerJsonBinAccessKey();
-    const binId = getServerCommunityBinId();
-    if (!key || !binId) {
-      return res.status(500).json({ error: 'JSONBin이 설정되지 않았습니다.' });
-    }
-
-    const fetchRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-      headers: { 'X-Access-Key': key },
-    });
-    if (!fetchRes.ok) {
-      return res.status(500).json({ error: '저장소를 불러오지 못했습니다.' });
-    }
-
-    const json = await fetchRes.json();
-    const schedule = json.record?.schedule ?? {};
+    const record = await fetchBinRecord();
+    const schedule = record.schedule ?? {};
 
     if (!schedule.isPublished || !isValidSnapshot(schedule.published)) {
       return res.status(200).json({ ok: true, published: false, data: null });
