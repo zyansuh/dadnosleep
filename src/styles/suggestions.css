@@ -83,6 +83,10 @@
 
 .sugg-empty-ico { font-size: 36px; margin-bottom: 12px; }
 
+.sugg-empty .btn-coral-sm {
+  margin-top: 20px;
+}
+
 .sugg-table-wrap {
   overflow-x: auto;
   background: var(--bg-card);

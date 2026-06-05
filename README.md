@@ -73,20 +73,24 @@
 | `/suggestions/:id` | 건의 상세 (추후 답변 `replies[]` 예비) | 없음 |
 | `/admin/suggestions` | 건의함 관리 (상태 변경) | Discord **admin** 로그인 |
 
-### 서버 API (편성표·건의함)
+### 데이터 저장 (편성표·건의함 · JSONBin 직접)
 
-| 메서드 | 경로 | 권한 | 설명 |
-|--------|------|------|------|
-| GET | `/api/schedule/published` | 공개 | 게시된 편성표만 |
-| GET/PUT | `/api/schedule/draft` | Admin JWT | draft 조회·저장 |
-| POST | `/api/schedule/publish` | Admin JWT | draft → published |
-| POST | `/api/schedule/unpublish` | Admin JWT | 공개 취소 |
-| GET/POST | `/api/suggestions` | 공개 | 목록·등록 |
-| GET/PATCH | `/api/suggestions/:id` | GET 공개 / PATCH Admin | 상세·상태 변경 |
+편성표·건의함은 **커뮤니티 후기와 동일하게** 브라우저가 `VITE_JSONBIN_*`로 JSONBin v3 API를 직접 호출합니다. Vercel 서버 API를 거치지 않습니다.
 
-Admin JWT는 Discord **admin** OAuth 콜백 시 `adminToken`으로 발급됩니다.
+| 도메인 | 클라이언트 | JSONBin 필드 | 관리자 UI |
+|--------|-----------|--------------|-----------|
+| 편성표 | `scheduleApi.ts` → `scheduleBin.ts` | `schedule` (draft / published / isPublished) | Discord **admin** 로그인 시 편집·공개 |
+| 건의함 | `suggestionApi.ts` → `suggestionBin.ts` | `suggestions[]` | `/admin/suggestions`에서 상태 변경 (admin) |
 
-로컬: `vite.config.ts` → `appApiMiddleware()`. 프로덕션: `api/*` → `server/appApi/vercelHandler.ts`.
+### 서버 API (Discord 로그인만)
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| POST | `/api/discord-callback` | OAuth code → Discord 프로필 반환 (`client_secret` 보호) |
+
+로컬: `vite.config.ts` → `server/discord/viteMiddleware.ts`. 프로덕션: `api/discord-callback.js`.
+
+> `api/schedule-*`, `api/suggestions-*` 파일은 레거시이며 **앱은 사용하지 않습니다**. 편성·건의는 위 JSONBin 직접 호출만 사용합니다.
 
 ### 요청 흐름 (Discord 로그인)
 
@@ -114,9 +118,9 @@ sequenceDiagram
 | 저장소 | 용도 | 만료 |
 |--------|------|------|
 | **sessionStorage** | Discord 로그인 세션, role, nickname | 탭 닫으면 삭제 |
-| **localStorage** | 편성표, 건의함, 후기 fallback | 브라우저별 유지 |
-| **JSONBin** | 후기·포인트·회원 명단 (클라우드 동기화) | 영구 (Bin 유지 시) |
-| **Vercel Serverless** | Discord `client_secret` 처리 | 요청 단위 |
+| **localStorage** | 후기·포인트 fallback, 회원 캐시 | 브라우저별 유지 |
+| **JSONBin** | 후기·포인트·회원·**편성표·건의함** (클라우드 동기화) | 영구 (Bin 유지 시) |
+| **Vercel Serverless** | Discord `client_secret` 처리만 | 요청 단위 |
 
 ---
 
@@ -137,7 +141,7 @@ sequenceDiagram
 | 셀 편집 모드 | 셀 클릭 수정 | admin |
 | LIVE | 오늘 요일·현재 슬롯 강조 | 전체 |
 
-편성 데이터는 JSONBin `schedule` 필드에 **ISO 주차(`week`)** 와 함께 저장됩니다. `/api/schedule/*` 응답이 JSON이 아니거나 실패하면 `readJsonResponse`가 안전하게 처리하고, 화면은 `BASE_SCHED`로 폴백합니다 (일반 사용자에게는 오류 배너를 숨김).
+편성 데이터는 JSONBin `schedule` 필드에 **ISO 주차(`week`)** 와 함께 저장됩니다. JSONBin 로드 실패 시 화면은 `BASE_SCHED`로 폴백합니다 (일반 사용자에게는 오류 배너를 숨김).
 
 ### 📺 API 추천
 
@@ -158,6 +162,7 @@ sequenceDiagram
 | 지인 초대 신고 | **내 닉네임** + **초대한 지인 닉네임** 입력 → 1건당 **2,000P** (포인트는 내 닉네임 기준) |
 | 포인트 | 후기 1,500P + 지인 초대 2,000P (자동 합산) |
 | 랭킹 | 메인(`HomeRanking` TOP 5) · 커뮤니티(`PointRanking` TOP 10) |
+| 건의함 링크 | 커뮤니티 랭킹 아래 → `/suggestions` (`CommunitySuggestionLink`) |
 | 수정·삭제 | 본인 닉네임(`dadnosleep-my-nickname`) 또는 **admin** |
 | JSONBin | 원격 저장 실패 시 localStorage + 토스트 「오프라인 모드로 저장됩니다」 |
 | 마이그레이션 | 예전 `dadnosleep-reviews-v1` → JSONBin 1회 병합 |
@@ -270,9 +275,9 @@ nickname (사이트·JSONBin) → globalName (Discord) → username
 
 ```
 dadnosleep/
-├── api/                              # Vercel Serverless
-│   ├── discord-callback.js
-│   └── auth/                         # (선택) 이메일 JWT
+├── api/                              # Vercel Serverless (Discord OAuth만 사용)
+│   ├── discord-callback.js           # 프로덕션 OAuth 콜백
+│   └── schedule-*.js · suggestions-*.js  # 레거시 (앱 미사용)
 │
 ├── server/                           # 로컬 dev API 미들웨어
 │
@@ -346,12 +351,13 @@ dadnosleep/
 │   │   │   └── memberIdentity, memberVip, memberDisplay
 │   │   ├── schedule/
 │   │   │   ├── store/                # constants, weekKey, types (원격 저장 — localStorage 제거)
-│   │   │   ├── scheduleApi.ts        # /api/schedule/* 클라이언트
+│   │   │   ├── scheduleApi.ts        # 편성표 facade (JSONBin 직접)
+│   │   │   ├── scheduleBin.ts        # schedule JSONBin read/write
 │   │   │   ├── scheduleStorage.ts    # weekKey 등 re-export
 │   │   │   ├── scheduleTime.ts · recommend.ts · scheduleCell · cellDisplay
-│   │   ├── suggestion/               # suggestionApi, formatSuggestionDate
-│   │   ├── http/                     # parseJsonResponse (API 비-JSON 응답 안전 처리)
-│   │   ├── admin/                    # adminApiToken (sessionStorage JWT)
+│   │   ├── suggestion/               # suggestionApi · suggestionBin · formatSuggestionDate
+│   │   ├── http/                     # parseJsonResponse (Discord API 등 비-JSON 안전 처리)
+│   │   ├── admin/                    # adminApiToken (레거시 JWT, 선택)
 │   │   ├── messages/                 # toUserFacingError (화면용 오류 문구)
 │   │   ├── jsonbin/
 │   │   │   ├── fetch.ts · put.ts · communityPut.ts · membersBin.ts · extractMembers.ts
@@ -401,7 +407,7 @@ dadnosleep/
 
 **편성표 훅** (`hooks/schedule/`): `useScheduleLoader`(원격 로드) · `useScheduleCore`(셀·draft 저장) · `useScheduleRandom` · `useSchedulePublish` · `useScheduleUi` → `useSchedule.ts`에서 조합.
 
-**건의함** (`hooks/suggestion/` · `utils/suggestion/` · `pages/suggestions/`): `useSuggestionForm` → API 등록 · `useAdminSuggestions` → 상태 변경.
+**건의함** (`hooks/suggestion/` · `utils/suggestion/` · `pages/suggestions/`): `useSuggestionForm` → JSONBin 등록 · `useAdminSuggestions` → 상태 변경.
 
 **커뮤니티 훅** (`hooks/community/`): `useCommunityLoad`(조회·storage 동기화) · `useCommunityMutations`(persist·CRUD) → `useCommunity.ts`에서 조합.
 
@@ -535,13 +541,13 @@ cp .env.example .env.local
 | `DISCORD_CLIENT_ID` | ○ | Client ID (`VITE_`와 동일) |
 | `DISCORD_CLIENT_SECRET` | ○ | Client Secret (**Git·VITE_ 금지**) |
 | `DISCORD_REDIRECT_URI` | ○ | Redirect URI (`VITE_`와 동일) |
-| `JWT_SECRET` | ○* | Discord adminToken JWT 서명 — 프로덕션 32자+ 랜덤 |
+| `JWT_SECRET` | △ | (선택) Discord `adminToken` JWT 서명 — 레거시 API용 |
 | `ADMIN_DISCORD_USERS` | △ | 서버 측 관리자 username (쉼표 구분, 비우면 코드 기본값) |
 | `JSONBIN_USERS_BIN_ID` | △ | (선택) 이메일 회원 Bin |
-| `JSONBIN_ACCESS_KEY` | ○ | 서버 JSONBin (편성표·건의함 patch) |
+| `JSONBIN_ACCESS_KEY` | △ | (선택) 레거시 서버 API용 — **편성·건의는 `VITE_JSONBIN_*`만 사용** |
 | `ADMIN_EMAILS` | △ | (선택) 이메일 admin 목록 |
 
-\* 편성표·건의 API를 쓰려면 `JWT_SECRET` + `JSONBIN_ACCESS_KEY` + Discord **admin** 로그인 필요.
+편성표·건의함·커뮤니티는 **`VITE_JSONBIN_BIN_ID` + `VITE_JSONBIN_ACCESS_KEY`** 만 있으면 동작합니다. Discord **admin** 판별은 `VITE_ADMIN_DISCORD_USERS` 또는 `constants/adminUsers.ts`입니다.
 
 로컬 개발 시 `vite.config.ts`의 `loadEnv`가 `.env.local`의 `DISCORD_*`를 `process.env`에 주입해 dev API가 동작합니다.
 
@@ -568,8 +574,8 @@ DISCORD_REDIRECT_URI=http://localhost:5173/auth/callback
 VITE_ADMIN_DISCORD_USERS=your_discord_username,another_admin
 ADMIN_DISCORD_USERS=your_discord_username,another_admin
 
-# Admin JWT 서명 (프로덕션 필수)
-JWT_SECRET=your_random_32_char_or_longer_secret
+# (선택) 레거시 adminToken JWT
+# JWT_SECRET=your_random_32_char_or_longer_secret
 ```
 
 ---
@@ -594,7 +600,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 | 환경 | 경로 | 구현 |
 |------|------|------|
-| 프로덕션 | `POST /api/discord-callback` | `api/discord-callback.ts` |
+| 프로덕션 | `POST /api/discord-callback` | `api/discord-callback.js` |
 | 로컬 | 동일 | `server/discord/viteMiddleware.ts` |
 
 요청 본문: `{ "code": "<oauth_code>" }`  
@@ -670,9 +676,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 | `DISCORD_CLIENT_ID` | ✅ |
 | `DISCORD_CLIENT_SECRET` | ✅ |
 | `DISCORD_REDIRECT_URI` | ✅ 프로덕션 URL |
-| `JWT_SECRET` | ✅ |
-| `JSONBIN_ACCESS_KEY` | ✅ |
-| `VITE_ADMIN_DISCORD_USERS` | △ (비우면 코드 기본값) |
+| `VITE_ADMIN_DISCORD_USERS` | △ (비우면 `adminUsers.ts` 기본값) |
 | `ADMIN_DISCORD_USERS` | △ |
 | `VITE_JSONBIN_BIN_MEMBERS` | △ (비워도 됨) |
 
@@ -681,14 +685,19 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 ### `vercel.json`
 
+SPA 라우팅(`index.html`)과 레거시 API rewrite만 정의합니다. 편성·건의는 JSONBin 직접 호출이므로 rewrite에 의존하지 않습니다.
+
 ```json
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
 ```
+
+### 빌드 실패 (`ERESOLVE` / `esbuild`)
+
+Vite 8은 `esbuild@^0.27` 이상을 요구합니다. 이 프로젝트는 빌드에 `esbuild`를 쓰지 않으므로 **루트 `package.json`에서 `esbuild` devDependency를 제거**했습니다. Vercel에서 `npm install`이 실패하면 최신 `main`을 Redeploy하세요.
 
 ---
 
@@ -711,7 +720,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 ### 12-2b. 건의함
 
-1. 헤더 **건의함** → `/suggestions` 목록
+1. 헤더 **건의함** 또는 커뮤니티 탭 랭킹 아래 **건의함** 카드 → `/suggestions` 목록
 2. **건의하기** → 프로그램·시간대·내용 제출
 3. 항목 클릭 → `/suggestions/:id` 상세
 4. 관리자: `/admin/suggestions` 또는 상세에서 처리 상태 변경
@@ -822,7 +831,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 |----|------|------|
 | `dadnosleep-members-cache-v1` | 회원 명단 마지막 스냅샷 (원격 유실·HMR 복구) | 수동 삭제 전까지 |
 | `dadnosleep-points-cleared-v1` | `1` = 포인트만 초기화 플래그 (로컬) | 초기화 해제·재집계 시 삭제 |
-| `dadnosleep-admin-api-token` | Admin JWT (sessionStorage) | 탭 닫으면 만료 |
+| `dadnosleep-admin-api-token` | (레거시) Admin JWT — sessionStorage | 탭 닫으면 만료 |
 | `dadnosleep-reviews-v1` | 후기 fallback / 마이그레이션 원본 | 수동 삭제 전까지 |
 | `dadnosleep-points-v1` | 포인트 fallback | 동일 |
 | `dadnosleep-friend-invites-v1` | 지인 초대 fallback | 동일 |
@@ -846,7 +855,7 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 `PrivateRoute`는 Discord **admin** 역할 로그인 시에만 통과합니다 (`DiscordAuthContext.isAdmin`).
 
-편성표·건의 API도 동일하게 Discord admin OAuth 시 발급되는 `adminToken`(JWT)으로 인증합니다.
+편성표 편집·건의 상태 변경도 **클라이언트에서 admin 역할**로 UI를 제한합니다 (JSONBin Access Key는 후기·커뮤니티와 동일하게 빌드에 포함됩니다).
 
 ### 관리자 추가 방법
 
@@ -873,8 +882,8 @@ VITE_ADMIN_DISCORD_USERS=username1,username2
 ADMIN_DISCORD_USERS=username1,username2
 ```
 
-- 클라이언트: 로그인 시 admin 역할 판별
-- 서버: OAuth 콜백에서 `adminToken` 발급 여부 판별
+- 클라이언트: 로그인 시 admin 역할 판별 (`processDiscordLogin` → `adminUsers.ts`)
+- 서버: OAuth 콜백에서 동일 username 목록으로 admin 여부 판별 (선택 `adminToken` 발급)
 
 **적용 확인**
 
@@ -1003,6 +1012,20 @@ ADMIN_DISCORD_USERS=username1,username2
 
 - JSONBin env 미설정 → offline localStorage만 사용
 - `VITE_JSONBIN_ACCESS_KEY` 401 → Key·Bin ID 재확인
+
+### 건의함·편성표가 비어 있거나 저장 실패
+
+| 확인 | 조치 |
+|------|------|
+| Vercel에 `VITE_JSONBIN_BIN_ID` · `VITE_JSONBIN_ACCESS_KEY` | Production env 등록 후 **Redeploy** |
+| JSONBin Bin에 `suggestions` · `schedule` 필드 | 없어도 첫 저장 시 자동 생성 |
+| 관리자 편집·상태 변경 | Discord **admin**으로 로그인 (`adminUsers.ts` 또는 env) |
+| 콘솔 `api/suggestions` 500 | 무시 가능 — 앱은 JSONBin 직접 호출 (레거시 API 미사용) |
+
+### Vercel `npm install` / `ERESOLVE`
+
+- 최신 `main`에 `esbuild` devDependency 제거 반영 여부 확인
+- Redeploy 시 **Clear build cache** 후 재시도
 
 ---
 
