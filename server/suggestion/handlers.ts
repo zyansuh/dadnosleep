@@ -1,6 +1,7 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import { fetchServerBinRecord, patchServerBinRecord } from '../jsonbin/record';
 import { verifyAdminRequest } from '../admin/verifyRequest';
+import { readJsonBody, type ApiRequest } from '../appApi/readJsonBody';
+import { sendJson, type ApiResponse } from '../appApi/jsonResponse';
 
 export type SuggestionStatus = 'pending' | 'reviewing' | 'answered' | 'closed';
 
@@ -23,21 +24,6 @@ export interface SuggestionRecord {
 
 const VALID_STATUS = new Set<SuggestionStatus>(['pending', 'reviewing', 'answered', 'closed']);
 
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', c => chunks.push(c as Buffer));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-    req.on('error', reject);
-  });
-}
-
-function sendJson(res: ServerResponse, status: number, data: unknown): void {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(data));
-}
-
 function normalizeList(raw: unknown): SuggestionRecord[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter((item): item is SuggestionRecord => {
@@ -54,8 +40,8 @@ function normalizeList(raw: unknown): SuggestionRecord[] {
 }
 
 export async function handleSuggestionsList(
-  _req: IncomingMessage,
-  res: ServerResponse,
+  _req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   try {
     const record = await fetchServerBinRecord();
@@ -69,8 +55,8 @@ export async function handleSuggestionsList(
 }
 
 export async function handleSuggestionGet(
-  _req: IncomingMessage,
-  res: ServerResponse,
+  _req: ApiRequest,
+  res: ApiResponse,
   id: string,
 ): Promise<void> {
   try {
@@ -90,11 +76,11 @@ export async function handleSuggestionGet(
 }
 
 export async function handleSuggestionCreate(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   try {
-    const body = JSON.parse(await readBody(req)) as Partial<SuggestionRecord>;
+    const body = await readJsonBody<Partial<SuggestionRecord>>(req);
     const title = body.title?.trim() ?? '';
     const category = body.category?.trim() ?? '';
     const time = body.time?.trim() ?? '';
@@ -130,8 +116,8 @@ export async function handleSuggestionCreate(
 }
 
 export async function handleSuggestionStatus(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
   id: string,
 ): Promise<void> {
   const auth = await verifyAdminRequest(req);
@@ -141,7 +127,7 @@ export async function handleSuggestionStatus(
   }
 
   try {
-    const body = JSON.parse(await readBody(req)) as { status?: SuggestionStatus };
+    const body = await readJsonBody<{ status?: SuggestionStatus }>(req);
     const status = body.status;
     if (!status || !VALID_STATUS.has(status)) {
       sendJson(res, 400, { error: '유효하지 않은 처리 상태입니다.' });

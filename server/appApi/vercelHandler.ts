@@ -13,60 +13,49 @@ import {
   handleSuggestionsList,
 } from '../suggestion/handlers';
 
-function toNodeReq(req: VercelRequest) {
-  return req as unknown as import('node:http').IncomingMessage;
-}
-
-function toNodeRes(res: VercelResponse) {
-  return res as unknown as import('node:http').ServerResponse;
-}
-
 export async function dispatchAppApi(
   req: VercelRequest,
   res: VercelResponse,
   segments: string[],
 ): Promise<boolean> {
-  const nodeReq = toNodeReq(req);
-  const nodeRes = toNodeRes(res);
-
   if (segments[0] === 'schedule') {
     if (segments[1] === 'published' && req.method === 'GET') {
-      await handleSchedulePublished(nodeReq, nodeRes);
+      await handleSchedulePublished(req, res);
       return true;
     }
     if (segments[1] === 'draft' && req.method === 'GET') {
-      await handleScheduleDraft(nodeReq, nodeRes);
+      await handleScheduleDraft(req, res);
       return true;
     }
     if (segments[1] === 'draft' && req.method === 'PUT') {
-      await handleScheduleSaveDraft(nodeReq, nodeRes);
+      await handleScheduleSaveDraft(req, res);
       return true;
     }
     if (segments[1] === 'publish' && req.method === 'POST') {
-      await handleSchedulePublish(nodeReq, nodeRes);
+      await handleSchedulePublish(req, res);
       return true;
     }
     if (segments[1] === 'unpublish' && req.method === 'POST') {
-      await handleScheduleUnpublish(nodeReq, nodeRes);
+      await handleScheduleUnpublish(req, res);
       return true;
     }
   }
 
   if (segments[0] === 'suggestions') {
     if (!segments[1] && req.method === 'GET') {
-      await handleSuggestionsList(nodeReq, nodeRes);
+      await handleSuggestionsList(req, res);
       return true;
     }
     if (!segments[1] && req.method === 'POST') {
-      await handleSuggestionCreate(nodeReq, nodeRes);
+      await handleSuggestionCreate(req, res);
       return true;
     }
     if (segments[1] && req.method === 'GET') {
-      await handleSuggestionGet(nodeReq, nodeRes, decodeURIComponent(segments[1]));
+      await handleSuggestionGet(req, res, decodeURIComponent(segments[1]));
       return true;
     }
     if (segments[1] && req.method === 'PATCH') {
-      await handleSuggestionStatus(nodeReq, nodeRes, decodeURIComponent(segments[1]));
+      await handleSuggestionStatus(req, res, decodeURIComponent(segments[1]));
       return true;
     }
   }

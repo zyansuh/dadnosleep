@@ -1,26 +1,12 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import { isAdminDiscordUsername } from '../constants/adminUsers';
 import { signDiscordAdminToken } from '../admin/discordAdminJwt';
+import { readJsonBody, type ApiRequest } from '../appApi/readJsonBody';
+import { sendJson, type ApiResponse } from '../appApi/jsonResponse';
 import { exchangeDiscordCode } from './oauth';
 
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', c => chunks.push(c as Buffer));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-    req.on('error', reject);
-  });
-}
-
-function sendJson(res: ServerResponse, status: number, data: unknown): void {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(data));
-}
-
 export async function handleDiscordCallback(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   if (req.method !== 'POST') {
     sendJson(res, 405, { error: 'Method not allowed' });
@@ -28,7 +14,7 @@ export async function handleDiscordCallback(
   }
 
   try {
-    const body = JSON.parse(await readBody(req)) as { code?: string };
+    const body = await readJsonBody<{ code?: string }>(req);
     const code = body.code;
     if (!code || typeof code !== 'string') {
       sendJson(res, 400, { error: 'Missing code' });

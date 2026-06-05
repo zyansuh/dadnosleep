@@ -1,22 +1,8 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import { fetchServerBinRecord, patchServerBinRecord } from '../jsonbin/record';
 import { verifyAdminRequest } from '../admin/verifyRequest';
+import { readJsonBody, type ApiRequest } from '../appApi/readJsonBody';
+import { sendJson, type ApiResponse } from '../appApi/jsonResponse';
 import type { ScheduleRemoteRecord, ScheduleSnapshot } from './types';
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', c => chunks.push(c as Buffer));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-    req.on('error', reject);
-  });
-}
-
-function sendJson(res: ServerResponse, status: number, data: unknown): void {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(data));
-}
 
 function parseScheduleField(raw: unknown): ScheduleRemoteRecord {
   if (!raw || typeof raw !== 'object') return {};
@@ -32,8 +18,8 @@ function isValidSnapshot(s: unknown): s is ScheduleSnapshot {
 }
 
 export async function handleSchedulePublished(
-  _req: IncomingMessage,
-  res: ServerResponse,
+  _req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   try {
     const record = await fetchServerBinRecord();
@@ -56,8 +42,8 @@ export async function handleSchedulePublished(
 }
 
 export async function handleScheduleDraft(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   const auth = await verifyAdminRequest(req);
   if (!auth.ok) {
@@ -83,8 +69,8 @@ export async function handleScheduleDraft(
 }
 
 export async function handleScheduleSaveDraft(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   const auth = await verifyAdminRequest(req);
   if (!auth.ok) {
@@ -93,7 +79,7 @@ export async function handleScheduleSaveDraft(
   }
 
   try {
-    const body = JSON.parse(await readBody(req)) as { draft?: ScheduleSnapshot };
+    const body = await readJsonBody<{ draft?: ScheduleSnapshot }>(req);
     if (!isValidSnapshot(body.draft)) {
       sendJson(res, 400, { error: '유효하지 않은 편성표 데이터입니다.' });
       return;
@@ -116,8 +102,8 @@ export async function handleScheduleSaveDraft(
 }
 
 export async function handleSchedulePublish(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   const auth = await verifyAdminRequest(req);
   if (!auth.ok) {
@@ -153,8 +139,8 @@ export async function handleSchedulePublish(
 }
 
 export async function handleScheduleUnpublish(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
 ): Promise<void> {
   const auth = await verifyAdminRequest(req);
   if (!auth.ok) {
