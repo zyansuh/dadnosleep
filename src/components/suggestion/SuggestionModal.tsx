@@ -3,7 +3,7 @@ import { X, Send } from 'lucide-react';
 import type { SuggForm } from '../../types';
 import { Field } from '../ui/Field';
 
-const CATEGORIES = ['드라마', '예능', '영화', '애니', '다큐', '기타'] as const;
+import { SUGGESTION_CATEGORIES } from '../../constants/suggestion';
 
 interface Props {
   form:         SuggForm;
@@ -11,20 +11,21 @@ interface Props {
   errors:       Partial<SuggForm>;
   submitted:    boolean;
   setSubmitted: React.Dispatch<React.SetStateAction<boolean>>;
-  validate:     () => boolean;
+  validate:     () => Promise<boolean>;
+  submitError?: string;
   onClose:      () => void;
 }
 
 export function SuggestionModal({
-  form, setForm, errors, submitted, setSubmitted, validate, onClose,
+  form, setForm, errors, submitted, setSubmitted, validate, submitError, onClose,
 }: Props) {
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) setSubmitted(true);
+    if (await validate()) setSubmitted(true);
   };
 
   return (
@@ -57,7 +58,7 @@ export function SuggestionModal({
 
             <Field label="카테고리" error={errors.category}>
               <div className="cat-grid">
-                {CATEGORIES.map(c => (
+                {SUGGESTION_CATEGORIES.map(c => (
                   <button
                     key={c}
                     type="button"
@@ -97,6 +98,8 @@ export function SuggestionModal({
                 onChange={e => setForm(f => ({ ...f, nick: e.target.value }))}
               />
             </Field>
+
+            {submitError && <p className="form-error-msg">{submitError}</p>}
 
             <div className="form-actions">
               <button type="button" className="btn-ghost-sm" onClick={onClose}>

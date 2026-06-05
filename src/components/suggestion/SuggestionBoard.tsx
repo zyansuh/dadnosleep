@@ -1,17 +1,12 @@
 
 import { X, MessageSquare } from 'lucide-react';
-import type { SavedSuggestion } from '../../hooks/useSuggestionForm';
+import { Link } from 'react-router-dom';
+import type { SavedSuggestion } from '../../types/suggestion';
+import { formatSuggestionDate } from '../../utils/suggestion/formatSuggestionDate';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   드라마: '🎭', 예능: '🎉', 영화: '🎬', 애니: '🌟', 다큐: '📹', 기타: '📌',
 };
-
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  } catch { return iso; }
-}
 
 interface Props {
   suggestions: SavedSuggestion[];
@@ -31,7 +26,12 @@ export function SuggestionBoard({ suggestions, onClose }: Props) {
               <p>총 {suggestions.length}건의 건의가 있어요</p>
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}><X size={18} /></button>
+          <div className="sb-hd-actions">
+            <Link to="/suggestions" className="btn-ghost-sm sb-all-link" onClick={onClose}>
+              전체 보기
+            </Link>
+            <button className="modal-close" onClick={onClose}><X size={18} /></button>
+          </div>
         </div>
 
         {/* 리스트 */}
@@ -50,7 +50,7 @@ export function SuggestionBoard({ suggestions, onClose }: Props) {
                     {CATEGORY_EMOJI[s.category] ?? '📌'} {s.category}
                   </span>
                   <span className="sb-nick">@{s.nick}</span>
-                  <span className="sb-date">{formatDate(s.createdAt)}</span>
+                  <span className="sb-date">{formatSuggestionDate(s.createdAt)}</span>
                 </div>
                 <p className="sb-title">{s.title}</p>
                 <div className="sb-meta">
