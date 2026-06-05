@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleSuggestionGet, handleSuggestionStatus } from '../../server/suggestion/handlers';
+import { handleSuggestionGet, handleSuggestionStatus } from '../../../server/suggestion/handlers';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const id = typeof req.query.id === 'string' ? req.query.id : '';

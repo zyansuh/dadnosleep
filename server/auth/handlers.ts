@@ -1,23 +1,10 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage } from 'node:http';
+import { readJsonBody, type ApiRequest } from '../appApi/readJsonBody';
+import { sendJson, type ApiResponse } from '../appApi/jsonResponse';
 import { loadUsers, saveUsers, isAdminEmail } from './usersStore';
 import { hashPassword, verifyPassword } from './password';
 import { signToken, verifyToken } from './jwt';
 import type { PublicUser, StoredUser } from './types';
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', c => chunks.push(c as Buffer));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-    req.on('error', reject);
-  });
-}
-
-function sendJson(res: ServerResponse, status: number, data: unknown): void {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(data));
-}
 
 function getBearer(req: IncomingMessage): string | null {
   const h = req.headers.authorization;
@@ -33,9 +20,9 @@ function toPublic(user: StoredUser): PublicUser {
   return { id: user.id, email: user.email, role: user.role };
 }
 
-export async function handleRegister(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export async function handleRegister(req: ApiRequest, res: ApiResponse): Promise<void> {
   try {
-    const body = JSON.parse(await readBody(req)) as { email?: string; password?: string };
+    const body = await readJsonBody<{ email?: string; password?: string }>(req);
     const email = body.email?.trim().toLowerCase() ?? '';
     const password = body.password ?? '';
 
@@ -74,9 +61,9 @@ export async function handleRegister(req: IncomingMessage, res: ServerResponse):
   }
 }
 
-export async function handleLogin(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export async function handleLogin(req: ApiRequest, res: ApiResponse): Promise<void> {
   try {
-    const body = JSON.parse(await readBody(req)) as { email?: string; password?: string };
+    const body = await readJsonBody<{ email?: string; password?: string }>(req);
     const email = body.email?.trim().toLowerCase() ?? '';
     const password = body.password ?? '';
 
@@ -95,7 +82,7 @@ export async function handleLogin(req: IncomingMessage, res: ServerResponse): Pr
   }
 }
 
-export async function handleMe(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export async function handleMe(req: ApiRequest, res: ApiResponse): Promise<void> {
   const token = getBearer(req);
   if (!token) {
     sendJson(res, 401, { error: '인증이 필요합니다.' });
@@ -110,8 +97,8 @@ export async function handleMe(req: IncomingMessage, res: ServerResponse): Promi
 }
 
 export async function handleAuthRoute(
-  req: IncomingMessage,
-  res: ServerResponse,
+  req: ApiRequest,
+  res: ApiResponse,
   pathname: string,
 ): Promise<boolean> {
   if (!pathname.startsWith('/api/auth/')) return false;
