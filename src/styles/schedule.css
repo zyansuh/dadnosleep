@@ -472,6 +472,64 @@
   color: rgba(255,255,255,0.45);
 }
 
+.btn-sched-publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  background: rgba(110, 231, 183, 0.15);
+  border: 1px solid rgba(110, 231, 183, 0.4);
+  color: #6ee7b7;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sched-publish:hover:not(:disabled) { background: rgba(110, 231, 183, 0.25); }
+.btn-sched-publish:disabled { opacity: 0.5; cursor: wait; }
+
+.btn-sched-unpublish {
+  background: rgba(255, 150, 90, 0.12);
+  border-color: rgba(255, 150, 90, 0.35);
+  color: #ffc9a8;
+}
+
+.btn-sched-unpublish:hover:not(:disabled) { background: rgba(255, 150, 90, 0.2); }
+
+.sched-publish-badge {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.sched-publish-badge.is-public {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.1);
+}
+
+.sched-publish-badge.is-draft {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sched-publish-error { margin-bottom: 10px; }
+
+.sched-loading-card,
+.sched-unpublished-card {
+  min-height: 200px;
+  text-align: center;
+}
+
+.sched-unpublished-msg {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 .cell-editable .cell-inner {
   cursor: pointer;
   border: 1px dashed rgba(255,255,255,0.2);

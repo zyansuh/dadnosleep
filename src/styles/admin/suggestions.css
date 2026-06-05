@@ -1,0 +1,79 @@
+/* ── 관리자 건의함 페이지 */
+.admin-page-body--suggestions .admin-muted {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.admin-link {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-link:hover { color: var(--gold); }
+
+.admin-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sugg-admin-table select:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* 상세 페이지 — 관리자 상태 변경 */
+.sugg-admin-status {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sugg-admin-status h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.sugg-status-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sugg-status-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sugg-status-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.sugg-status-btn.active {
+  background: rgba(88, 101, 242, 0.25);
+  border-color: rgba(88, 101, 242, 0.5);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sugg-inline-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #ffb0b0;
+}
