@@ -1,6 +1,7 @@
 import type { Cell } from '../../types';
 import { adminAuthHeaders } from '../admin/adminApiToken';
 import { readJsonResponse } from '../http/parseJsonResponse';
+import { loadDraftScheduleFromBin, loadPublishedScheduleFromBin } from './scheduleBin';
 import type { ScheduleSnapshot } from './store/types';
 
 interface PublishedResponse {
@@ -29,21 +30,30 @@ export async function fetchPublishedSchedule(): Promise<{
   snapshot:    ScheduleSnapshot | null;
   publishedAt: string | null;
 }> {
-  const res = await fetch('/api/schedule/published');
-  const data = await readJsonResponse<PublishedResponse>(res);
-  if (!res.ok) await parseError(res, data);
-  return {
-    published:   data.published === true,
-    snapshot:    data.data,
-    publishedAt: data.publishedAt ?? null,
-  };
+  try {
+    const res = await fetch('/api/schedule/published');
+    const data = await readJsonResponse<PublishedResponse>(res);
+    if (!res.ok) await parseError(res, data);
+    return {
+      published:   data.published === true,
+      snapshot:    data.data,
+      publishedAt: data.publishedAt ?? null,
+    };
+  } catch {
+    return loadPublishedScheduleFromBin();
+  }
 }
 
 export async function fetchDraftSchedule(): Promise<DraftResponse> {
-  const res = await fetch('/api/schedule/draft', { headers: adminAuthHeaders() });
-  const data = await readJsonResponse<DraftResponse>(res);
-  if (!res.ok) await parseError(res, data);
-  return data;
+  try {
+    const res = await fetch('/api/schedule/draft', { headers: adminAuthHeaders() });
+    const data = await readJsonResponse<DraftResponse>(res);
+    if (!res.ok) await parseError(res, data);
+    return data;
+  } catch {
+    const bin = await loadDraftScheduleFromBin();
+    return { ok: true, ...bin };
+  }
 }
 
 export async function saveDraftSchedule(
