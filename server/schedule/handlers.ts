@@ -3,43 +3,9 @@ import { verifyAdminRequest } from '../admin/verifyRequest';
 import { readJsonBody, type ApiRequest } from '../appApi/readJsonBody';
 import { sendJson, type ApiResponse } from '../appApi/jsonResponse';
 import type { ScheduleRemoteRecord, ScheduleSnapshot } from './types';
+import { isValidSnapshot, parseScheduleField } from './scheduleParse';
 
-function parseScheduleField(raw: unknown): ScheduleRemoteRecord {
-  if (!raw || typeof raw !== 'object') return {};
-  return raw as ScheduleRemoteRecord;
-}
-
-function isValidSnapshot(s: unknown): s is ScheduleSnapshot {
-  if (!s || typeof s !== 'object') return false;
-  const o = s as ScheduleSnapshot;
-  return typeof o.week === 'string'
-    && Array.isArray(o.data)
-    && Array.isArray(o.memberRow);
-}
-
-export async function handleSchedulePublished(
-  _req: ApiRequest,
-  res: ApiResponse,
-): Promise<void> {
-  try {
-    const record = await fetchServerBinRecord();
-    const schedule = parseScheduleField(record.schedule);
-    if (!schedule.isPublished || !isValidSnapshot(schedule.published)) {
-      sendJson(res, 200, { ok: true, published: false, data: null });
-      return;
-    }
-    sendJson(res, 200, {
-      ok:          true,
-      published:   true,
-      data:        schedule.published,
-      publishedAt: schedule.publishedAt ?? null,
-    });
-  } catch (e) {
-    sendJson(res, 500, {
-      error: e instanceof Error ? e.message : '편성표를 불러오지 못했습니다.',
-    });
-  }
-}
+export { handleSchedulePublished } from './publishedHandler';
 
 export async function handleScheduleDraft(
   req: ApiRequest,

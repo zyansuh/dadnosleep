@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleSchedulePublished } from '../../../server/schedule/handlers';
+import { handleSchedulePublished } from '../../../server/schedule/publishedHandler';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {

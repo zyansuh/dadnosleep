@@ -1,5 +1,4 @@
 import type { IncomingMessage } from 'node:http';
-import { verifyDiscordAdminToken } from './discordAdminJwt';
 
 export type AdminAuthKind = 'discord_admin';
 
@@ -31,6 +30,7 @@ export async function verifyAdminRequest(
     return { ok: false, status: 401, message: '관리자 인증이 필요합니다. Discord 관리자로 로그인해 주세요.' };
   }
 
+  const { verifyDiscordAdminToken } = await import('./discordAdminJwt');
   const discord = await verifyDiscordAdminToken(token);
   if (discord) {
     return { ok: true, kind: 'discord_admin', username: discord.username };

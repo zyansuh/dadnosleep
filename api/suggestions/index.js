@@ -45,9 +45,6 @@ async function patchServerBinRecord(patch) {
   return next;
 }
 
-// server/admin/discordAdminJwt.ts
-import { SignJWT, jwtVerify } from "jose";
-
 // server/appApi/readJsonBody.ts
 function readStreamBody(req) {
   return new Promise((resolve, reject) => {
@@ -82,7 +79,7 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-// server/suggestion/handlers.ts
+// server/suggestion/publicHandlers.ts
 var VALID_STATUS = /* @__PURE__ */ new Set(["pending", "reviewing", "answered", "closed"]);
 function normalizeList(raw) {
   if (!Array.isArray(raw)) return [];

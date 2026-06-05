@@ -1,3 +1,48 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// server/admin/discordAdminJwt.ts
+var discordAdminJwt_exports = {};
+__export(discordAdminJwt_exports, {
+  signDiscordAdminToken: () => signDiscordAdminToken,
+  verifyDiscordAdminToken: () => verifyDiscordAdminToken
+});
+import { SignJWT, jwtVerify } from "jose";
+function secretKey() {
+  const secret = process.env.JWT_SECRET ?? process.env.VITE_JWT_SECRET ?? "dadnosleep-dev-secret-change-in-production";
+  return new TextEncoder().encode(secret);
+}
+async function signDiscordAdminToken(discordId, username) {
+  return new SignJWT({ kind: "discord_admin", username, discordId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime(EXPIRY).sign(secretKey());
+}
+async function verifyDiscordAdminToken(token) {
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (payload.kind !== "discord_admin") return null;
+    if (!payload.username || !payload.discordId) return null;
+    return {
+      kind: "discord_admin",
+      username: String(payload.username),
+      discordId: String(payload.discordId)
+    };
+  } catch {
+    return null;
+  }
+}
+var EXPIRY;
+var init_discordAdminJwt = __esm({
+  "server/admin/discordAdminJwt.ts"() {
+    EXPIRY = "12h";
+  }
+});
+
 // server/jsonbin/config.ts
 function getServerJsonBinAccessKey() {
   const raw = process.env.JSONBIN_ACCESS_KEY ?? process.env.VITE_JSONBIN_ACCESS_KEY ?? "";
@@ -45,27 +90,6 @@ async function patchServerBinRecord(patch) {
   return next;
 }
 
-// server/admin/discordAdminJwt.ts
-import { SignJWT, jwtVerify } from "jose";
-function secretKey() {
-  const secret = process.env.JWT_SECRET ?? process.env.VITE_JWT_SECRET ?? "dadnosleep-dev-secret-change-in-production";
-  return new TextEncoder().encode(secret);
-}
-async function verifyDiscordAdminToken(token) {
-  try {
-    const { payload } = await jwtVerify(token, secretKey());
-    if (payload.kind !== "discord_admin") return null;
-    if (!payload.username || !payload.discordId) return null;
-    return {
-      kind: "discord_admin",
-      username: String(payload.username),
-      discordId: String(payload.discordId)
-    };
-  } catch {
-    return null;
-  }
-}
-
 // server/admin/verifyRequest.ts
 function getBearer(req) {
   const h = req.headers.authorization;
@@ -77,7 +101,8 @@ async function verifyAdminRequest(req) {
   if (!token) {
     return { ok: false, status: 401, message: "\uAD00\uB9AC\uC790 \uC778\uC99D\uC774 \uD544\uC694\uD569\uB2C8\uB2E4. Discord \uAD00\uB9AC\uC790\uB85C \uB85C\uADF8\uC778\uD574 \uC8FC\uC138\uC694." };
   }
-  const discord = await verifyDiscordAdminToken(token);
+  const { verifyDiscordAdminToken: verifyDiscordAdminToken2 } = await Promise.resolve().then(() => (init_discordAdminJwt(), discordAdminJwt_exports));
+  const discord = await verifyDiscordAdminToken2(token);
   if (discord) {
     return { ok: true, kind: "discord_admin", username: discord.username };
   }
@@ -98,11 +123,13 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-// server/schedule/handlers.ts
+// server/schedule/scheduleParse.ts
 function parseScheduleField(raw) {
   if (!raw || typeof raw !== "object") return {};
   return raw;
 }
+
+// server/schedule/handlers.ts
 async function handleScheduleUnpublish(req, res) {
   const auth = await verifyAdminRequest(req);
   if (!auth.ok) {

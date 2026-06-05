@@ -2,17 +2,17 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Connect } from 'vite';
 import {
   handleScheduleDraft,
-  handleSchedulePublished,
   handleSchedulePublish,
   handleScheduleSaveDraft,
   handleScheduleUnpublish,
 } from '../schedule/handlers';
+import { handleSchedulePublished } from '../schedule/publishedHandler';
+import { handleSuggestionStatus } from '../suggestion/handlers';
 import {
   handleSuggestionCreate,
   handleSuggestionGet,
-  handleSuggestionStatus,
   handleSuggestionsList,
-} from '../suggestion/handlers';
+} from '../suggestion/publicHandlers';
 
 async function routeAppApi(
   req: IncomingMessage,

@@ -25,9 +25,6 @@ async function fetchServerBinRecord() {
   return json.record ?? {};
 }
 
-// server/admin/discordAdminJwt.ts
-import { SignJWT, jwtVerify } from "jose";
-
 // server/appApi/jsonResponse.ts
 function isVercelResponse(res) {
   return typeof res.status === "function" && typeof res.json === "function";
@@ -42,7 +39,7 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-// server/schedule/handlers.ts
+// server/schedule/scheduleParse.ts
 function parseScheduleField(raw) {
   if (!raw || typeof raw !== "object") return {};
   return raw;
@@ -52,6 +49,8 @@ function isValidSnapshot(s) {
   const o = s;
   return typeof o.week === "string" && Array.isArray(o.data) && Array.isArray(o.memberRow);
 }
+
+// server/schedule/publishedHandler.ts
 async function handleSchedulePublished(_req, res) {
   try {
     const record = await fetchServerBinRecord();

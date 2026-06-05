@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleSuggestionCreate, handleSuggestionsList } from '../../../server/suggestion/handlers';
+import { handleSuggestionCreate, handleSuggestionsList } from '../../../server/suggestion/publicHandlers';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
