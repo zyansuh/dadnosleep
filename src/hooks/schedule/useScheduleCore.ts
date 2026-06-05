@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { Cell } from '../../types';
-import { loadStoredSchedule, persistSchedule } from '../../utils/schedule/scheduleStorage';
 import {
   patchCellContent,
   toFixedCell,
@@ -9,43 +8,55 @@ import {
   emptyNonFixedCell,
   touchMemberCell,
 } from '../../utils/schedule/scheduleCell';
+import { saveDraftSchedule } from '../../utils/schedule/scheduleApi';
 
-export function useScheduleCore() {
-  const initial = loadStoredSchedule();
-  const [sched, setSched] = useState<Cell[][]>(initial.sched);
-  const [memberRow, setMemberRow] = useState<Cell[]>(initial.memberRow);
+interface UseScheduleCoreArgs {
+  sched:       Cell[][];
+  memberRow:   Cell[];
+  setSched:    React.Dispatch<React.SetStateAction<Cell[][]>>;
+  setMemberRow: React.Dispatch<React.SetStateAction<Cell[]>>;
+  weekKey:     string;
+  canManage:   boolean;
+}
 
-  const persist = useCallback((next: Cell[][], member: Cell[]) => {
-    persistSchedule(next, member);
-  }, []);
+export function useScheduleCore({
+  sched, memberRow, setSched, setMemberRow, weekKey, canManage,
+}: UseScheduleCoreArgs) {
+  const persist = useCallback(async (next: Cell[][], member: Cell[]) => {
+    if (!canManage) return;
+    await saveDraftSchedule(next, member, weekKey);
+  }, [canManage, weekKey]);
 
   const updateCell = useCallback((dayIdx: number, timeIdx: number, title: string, link?: string) => {
+    if (!canManage) return;
     setSched(prev => {
       const next = prev.map((day, di) =>
         day.map((cell, ti) =>
           di === dayIdx && ti === timeIdx ? patchCellContent(cell, title, link) : cell
         )
       );
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   const updateMemberCell = useCallback((dayIdx: number, title: string, link?: string) => {
+    if (!canManage) return;
     setMemberRow(prev => {
       const next = prev.map((cell, i) =>
         i === dayIdx ? touchMemberCell(cell, title, link) : cell
       );
       setSched(s => {
-        persist(s, next);
+        void persist(s, next);
         return s;
       });
       return next;
     });
-  }, [persist]);
+  }, [canManage, persist, setSched, setMemberRow]);
 
   const updateMany = useCallback(
     (edits: { dayIdx: number; timeIdx: number; title: string; link?: string }[]) => {
+      if (!canManage) return;
       setSched(prev => {
         let next = prev;
         for (const e of edits) {
@@ -55,14 +66,15 @@ export function useScheduleCore() {
             )
           );
         }
-        persist(next, memberRow);
+        void persist(next, memberRow);
         return next;
       });
     },
-    [persist, memberRow],
+    [canManage, persist, memberRow, setSched],
   );
 
   const setCellFixed = useCallback((dayIdx: number, timeIdx: number, title?: string, link?: string) => {
+    if (!canManage) return;
     setSched(prev => {
       const next = prev.map((day, di) =>
         day.map((cell, ti) => {
@@ -70,52 +82,56 @@ export function useScheduleCore() {
           return toFixedCell(cell, title?.trim() || cell.title, link);
         })
       );
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   const unfixCell = useCallback((dayIdx: number, timeIdx: number) => {
+    if (!canManage) return;
     setSched(prev => {
       const next = prev.map((day, di) =>
         day.map((cell, ti) =>
           di === dayIdx && ti === timeIdx ? toUnfixedCell(cell) : cell
         )
       );
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   const resetCell = useCallback((dayIdx: number, timeIdx: number) => {
+    if (!canManage) return;
     setSched(prev => {
       const next = prev.map((day, di) =>
         day.map((cell, ti) =>
           di === dayIdx && ti === timeIdx ? resetCellToBase(di, ti) : cell
         )
       );
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   const resetNonFixed = useCallback(() => {
+    if (!canManage) return;
     setSched(prev => {
       const next = prev.map(day => day.map(emptyNonFixedCell));
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   const applyRandomToSched = useCallback((
     mapper: (prev: Cell[][]) => Cell[][],
   ) => {
+    if (!canManage) return;
     setSched(prev => {
       const next = mapper(prev);
-      persist(next, memberRow);
+      void persist(next, memberRow);
       return next;
     });
-  }, [persist, memberRow]);
+  }, [canManage, persist, memberRow, setSched]);
 
   return {
     sched,

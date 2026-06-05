@@ -1,18 +1,22 @@
 import { useState, useCallback } from 'react';
 import type { RecommendItem } from '../../types';
-import { fetchRandomRecommendPool } from '../../utils/recommend';
+import { fetchRandomRecommendPool } from '../../utils/schedule/recommend';
 import { recommendToCell } from '../../utils/schedule/scheduleCell';
 import type { useScheduleCore } from './useScheduleCore';
 
 type Core = ReturnType<typeof useScheduleCore>;
 
-export function useScheduleRandom(core: Core) {
+export function useScheduleRandom(core: Core, canManage: boolean) {
   const [randing, setRanding] = useState(false);
   const [randError, setRandError] = useState('');
   const [randomPool, setRandomPool] = useState<RecommendItem[]>([]);
   const [randomPickerOpen, setRandomPickerOpen] = useState(false);
 
   const openRandomPicker = useCallback(async () => {
+    if (!canManage) {
+      setRandError('편성표 수정은 관리자만 할 수 있습니다.');
+      return;
+    }
     setRanding(true);
     setRandError('');
     try {
@@ -24,15 +28,14 @@ export function useScheduleRandom(core: Core) {
       setRandomPool(pool);
       setRandomPickerOpen(true);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setRandError(`오류: ${msg}`);
+      setRandError(e instanceof Error ? e.message : String(e));
     } finally {
       setRanding(false);
     }
-  }, []);
+  }, [canManage]);
 
   const applyRandomSelection = useCallback((selected: RecommendItem[]) => {
-    if (!selected.length) return;
+    if (!selected.length || !canManage) return;
     let pi = 0;
     core.applyRandomToSched(prev =>
       prev.map(day =>
@@ -45,7 +48,7 @@ export function useScheduleRandom(core: Core) {
       )
     );
     setRandomPickerOpen(false);
-  }, [core]);
+  }, [canManage, core]);
 
   return {
     randing,
