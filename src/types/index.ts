@@ -12,13 +12,7 @@ export interface Cell {
   updatedAt?: string;
 }
 
-export interface SuggForm {
-  title:    string;
-  category: string;
-  time:     string;
-  desc:     string;
-  nick:     string;
-}
+export type { SuggForm } from './suggestion';
 
 export interface OttItem {
   id:              number;
