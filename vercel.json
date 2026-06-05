@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/schedule/published", "destination": "/api/schedule-published" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
