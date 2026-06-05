@@ -1,5 +1,11 @@
 {
   "rewrites": [
+    { "source": "/api/suggestions", "destination": "/api/suggestions-list" },
+    { "source": "/api/suggestions/:id", "destination": "/api/suggestions-id?id=:id" },
+    { "source": "/api/schedule/published", "destination": "/api/schedule-published" },
+    { "source": "/api/schedule/draft", "destination": "/api/schedule-draft" },
+    { "source": "/api/schedule/publish", "destination": "/api/schedule-publish" },
+    { "source": "/api/schedule/unpublish", "destination": "/api/schedule-unpublish" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
