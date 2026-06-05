@@ -118,6 +118,4 @@ function handler(req, res) {
   }
   return handleLogin(req, res);
 }
-export {
-  handler as default
-};
+export default handler;

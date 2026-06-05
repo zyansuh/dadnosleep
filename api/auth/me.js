@@ -66,6 +66,4 @@ function handler(req, res) {
   }
   return handleMe(req, res);
 }
-export {
-  handler as default
-};
+export default handler;

@@ -161,6 +161,4 @@ async function handler(req, res) {
   }
   await handleScheduleUnpublish(req, res);
 }
-export {
-  handler as default
-};
+export default handler;

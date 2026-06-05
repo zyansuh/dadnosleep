@@ -173,6 +173,4 @@ async function handler(req, res) {
   }
   await handleSchedulePublish(req, res);
 }
-export {
-  handler as default
-};
+export default handler;

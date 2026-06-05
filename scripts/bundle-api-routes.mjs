@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild';
-import { readdirSync, statSync, unlinkSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const sourceRoot = 'scripts/api-route-sources';
@@ -38,5 +38,8 @@ for (const entry of entries) {
     packages:  'external',
     logLevel:  'warning',
   });
+  let code = readFileSync(outfile, 'utf8');
+  code = code.replace(/\nexport\s*\{\s*handler\s+as\s+default\s*\};?\s*$/, '\nexport default handler;\n');
+  writeFileSync(outfile, code);
   console.log(`[bundle-api] ${rel} -> ${relative(apiRoot, outfile)}`);
 }

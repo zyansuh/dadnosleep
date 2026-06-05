@@ -169,6 +169,4 @@ function handler(req, res) {
   }
   return handleRegister(req, res);
 }
-export {
-  handler as default
-};
+export default handler;
