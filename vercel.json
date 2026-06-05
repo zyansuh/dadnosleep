@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/suggestions", "destination": "/api/suggestions-api" },
     { "source": "/api/suggestions/:id", "destination": "/api/suggestion-detail?id=:id" },
     { "source": "/api/schedule/published", "destination": "/api/schedule-published" },
     { "source": "/api/schedule/draft", "destination": "/api/schedule-draft" },
