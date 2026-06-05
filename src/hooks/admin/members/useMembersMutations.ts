@@ -9,7 +9,8 @@ import {
   type MemberEntry,
 } from '../../../utils/members/membersStore';
 import { validateNickname } from '../../../utils/nickname';
-import { validateMemberIdentity } from '../../../utils/members/memberIdentity';
+import { validateDiscordId, validateMemberIdentity } from '../../../utils/members/memberIdentity';
+import { isDiscordIdTaken } from '../../../utils/members/store/filters';
 import { displayMemberNickname } from '../../../utils/members/memberDisplay';
 import { getDiscordSession, setSessionVip } from '../../../utils/auth/discordSession';
 import { toUserFacingError } from '../../../utils/messages/userMessages';
@@ -22,10 +23,11 @@ interface FeedbackApi {
 }
 
 interface AddFormApi {
-  newUsername: string;
-  newNickname: string;
-  newIsVip:    boolean;
-  resetForm:   () => void;
+  newUsername:  string;
+  newNickname:  string;
+  newDiscordId: string;
+  newIsVip:     boolean;
+  resetForm:    () => void;
 }
 
 export function useMembersMutations(
@@ -72,10 +74,21 @@ export function useMembersMutations(
       feedback.showError('이미 등록된 식별 이름입니다.');
       return;
     }
+    const discordId = form.newDiscordId.trim();
+    const idErr = validateDiscordId(discordId);
+    if (idErr) {
+      feedback.showError(idErr);
+      return;
+    }
+    if (discordId && isDiscordIdTaken(members, discordId)) {
+      feedback.showError('이미 등록된 Discord ID입니다.');
+      return;
+    }
     const entry = createMemberEntry({
       username,
-      nickname: form.newNickname.trim() || undefined,
-      isVip:    form.newIsVip,
+      nickname:  form.newNickname.trim() || undefined,
+      discordId: discordId || undefined,
+      isVip:     form.newIsVip,
     });
     const ok = await persist([...members, entry]);
     if (ok) form.resetForm();

@@ -20,10 +20,11 @@ export function useAdminMembers() {
 
   const handleAdd = useCallback(() => {
     void mutations.handleAdd({
-      newUsername: form.newUsername,
-      newNickname: form.newNickname,
-      newIsVip:    form.newIsVip,
-      resetForm:   form.resetForm,
+      newUsername:  form.newUsername,
+      newNickname:  form.newNickname,
+      newDiscordId: form.newDiscordId,
+      newIsVip:     form.newIsVip,
+      resetForm:    form.resetForm,
     });
   }, [mutations, form]);
 
@@ -40,6 +41,8 @@ export function useAdminMembers() {
     setNewUsername:       form.setNewUsername,
     newNickname:          form.newNickname,
     setNewNickname:       form.setNewNickname,
+    newDiscordId:         form.newDiscordId,
+    setNewDiscordId:      form.setNewDiscordId,
     newIsVip:             form.newIsVip,
     setNewIsVip:          form.setNewIsVip,
     feedback,

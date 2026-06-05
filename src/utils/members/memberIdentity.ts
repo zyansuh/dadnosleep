@@ -62,6 +62,25 @@ export function getMemberRowKey(m: MemberEntry): string {
   return `user:${normalizeMemberKey(m.username)}`;
 }
 
+/** Discord 사용자 ID (숫자 snowflake) — 선택 입력 */
+export function validateDiscordId(value: string): string | null {
+  const id = value.trim();
+  if (!id) return null;
+  if (!/^\d{15,20}$/.test(id)) {
+    return 'Discord ID는 15~20자리 숫자입니다. (프로필 우클릭 → ID 복사)';
+  }
+  return null;
+}
+
+function profileKeys(profile: MemberProfileRef): string[] {
+  const keys: string[] = [];
+  const u = profile.username?.trim();
+  if (u) keys.push(normalizeMemberKey(u));
+  const g = profile.globalName?.trim();
+  if (g) keys.push(normalizeMemberKey(g));
+  return keys;
+}
+
 export function findMemberIndex(
   members: MemberEntry[],
   ref: { discordId?: string; username?: string; globalName?: string | null },
@@ -69,6 +88,8 @@ export function findMemberIndex(
   if (ref.discordId) {
     const byId = members.findIndex(m => m.discordId === ref.discordId);
     if (byId >= 0) return byId;
+    const byStoredId = members.findIndex(m => m.username.trim() === ref.discordId);
+    if (byStoredId >= 0) return byStoredId;
   }
 
   if (ref.username?.trim() || ref.globalName?.trim()) {
@@ -76,8 +97,14 @@ export function findMemberIndex(
       username:   ref.username?.trim() ?? '',
       globalName: ref.globalName,
     };
+    const keys = new Set(profileKeys(profile));
     const idx = members.findIndex(m => memberIdentityMatches(m.username, profile));
     if (idx >= 0) return idx;
+    const byNick = members.findIndex(m => {
+      const nick = m.nickname?.trim();
+      return nick ? keys.has(normalizeMemberKey(nick)) : false;
+    });
+    if (byNick >= 0) return byNick;
   }
 
   if (ref.username?.trim()) {

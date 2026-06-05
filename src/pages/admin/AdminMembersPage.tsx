@@ -13,8 +13,9 @@ export function AdminMembersPage() {
     <div className="admin-page-body admin-page-body--members">
       <h2 className="admin-panel-title">회원 명단 관리</h2>
       <p className="admin-page-desc admin-page-desc--compact">
-        Discord <strong>@이름</strong> 또는 <strong>표시 이름</strong>으로 회원을 등록합니다.
-        <strong>VIP</strong> 회원만 회원 전용 편성을 볼 수 있고, 후기·랭킹에 왕관이 표시됩니다.
+        Discord <strong>@사용자명</strong> 또는 <strong>표시 이름</strong>으로 회원을 등록합니다.
+        로그인 열 <strong>대기</strong>는 아직 Discord로 한 번도 로그인하지 않은 상태입니다 (정상).
+        Discord ID를 알면 함께 입력해 두면 바로 <strong>완료</strong>로 표시됩니다.
       </p>
 
       <div className="admin-withdraw-callout">
@@ -28,11 +29,13 @@ export function AdminMembersPage() {
       <MemberAddForm
         newUsername={m.newUsername}
         newNickname={m.newNickname}
+        newDiscordId={m.newDiscordId}
         newIsVip={m.newIsVip}
         saving={m.saving}
         hasRemote={m.hasRemote()}
         onUsernameChange={m.setNewUsername}
         onNicknameChange={m.setNewNickname}
+        onDiscordIdChange={m.setNewDiscordId}
         onIsVipChange={m.setNewIsVip}
         onAdd={() => void m.handleAdd()}
       />

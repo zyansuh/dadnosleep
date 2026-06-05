@@ -23,6 +23,7 @@ export interface JsonBinFullRecord {
     nick:      string;
     createdAt: string;
     status:    string;
+    comments?: Array<{ id: string; body: string; nick: string; createdAt: string; isAdmin?: boolean }>;
     replies?:  Array<{ id: string; body: string; createdAt: string; authorRole: string }>;
   }>;
 }

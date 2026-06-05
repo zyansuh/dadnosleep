@@ -1,20 +1,22 @@
 import { Plus } from 'lucide-react';
 
 interface Props {
-  newUsername:    string;
-  newNickname:    string;
-  newIsVip:       boolean;
-  saving:         boolean;
-  hasRemote:      boolean;
-  onUsernameChange: (v: string) => void;
-  onNicknameChange: (v: string) => void;
-  onIsVipChange:  (v: boolean) => void;
-  onAdd:          () => void;
+  newUsername:      string;
+  newNickname:      string;
+  newDiscordId:     string;
+  newIsVip:         boolean;
+  saving:           boolean;
+  hasRemote:        boolean;
+  onUsernameChange:   (v: string) => void;
+  onNicknameChange:   (v: string) => void;
+  onDiscordIdChange:  (v: string) => void;
+  onIsVipChange:      (v: boolean) => void;
+  onAdd:              () => void;
 }
 
 export function MemberAddForm({
-  newUsername, newNickname, newIsVip, saving, hasRemote,
-  onUsernameChange, onNicknameChange, onIsVipChange, onAdd,
+  newUsername, newNickname, newDiscordId, newIsVip, saving, hasRemote,
+  onUsernameChange, onNicknameChange, onDiscordIdChange, onIsVipChange, onAdd,
 }: Props) {
   return (
     <div className="admin-member-add admin-member-add-form">
@@ -33,7 +35,7 @@ export function MemberAddForm({
             autoComplete="off"
           />
           <p className="admin-field-hint admin-field-hint--oneline">
-            @이름·표시 이름 그대로 입력 · 로그인은 나중에 해도 됩니다
+            Discord @사용자명 또는 표시 이름 · 숫자 ID만 넣지 마세요
           </p>
         </div>
         <div className="admin-member-field admin-member-field--secondary">
@@ -48,6 +50,24 @@ export function MemberAddForm({
             onChange={e => onNicknameChange(e.target.value)}
             disabled={saving || !hasRemote}
           />
+        </div>
+        <div className="admin-member-field admin-member-field--secondary">
+          <label className="fl admin-member-label-fluid" htmlFor="new-discord-id">
+            Discord ID <span className="admin-optional">(선택)</span>
+          </label>
+          <input
+            id="new-discord-id"
+            className="inp admin-member-inp"
+            placeholder="예: 123456789012345678"
+            inputMode="numeric"
+            value={newDiscordId}
+            onChange={e => onDiscordIdChange(e.target.value)}
+            disabled={saving || !hasRemote}
+            autoComplete="off"
+          />
+          <p className="admin-field-hint admin-field-hint--oneline">
+            알고 있으면 입력 · 로그인 열에 「완료」로 표시 · 비우면 첫 로그인 때 연결
+          </p>
         </div>
       </div>
       <label className="admin-member-vip-check">

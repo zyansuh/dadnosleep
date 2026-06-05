@@ -22,3 +22,16 @@ export function isUsernameTaken(
     return normalizeDiscordUsername(m.username) === target;
   });
 }
+
+export function isDiscordIdTaken(
+  members: MemberEntry[],
+  discordId: string,
+  exceptRowKey?: string,
+): boolean {
+  const id = discordId.trim();
+  if (!id) return false;
+  return members.some(m => {
+    if (exceptRowKey && getMemberRowKey(m) === exceptRowKey) return false;
+    return m.discordId === id;
+  });
+}

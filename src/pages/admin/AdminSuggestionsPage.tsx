@@ -16,7 +16,7 @@ export function AdminSuggestionsPage() {
       <h2 className="admin-panel-title">건의함 관리</h2>
       <p className="admin-page-desc admin-page-desc--compact">
         접수된 편성 건의를 확인하고 처리 상태를 변경할 수 있습니다.
-        상세 내용은 항목을 클릭해 확인하세요.
+        <strong>댓글</strong>은 제목을 클릭해 상세 페이지 하단에서 남길 수 있습니다.
       </p>
 
       <AdminFeedbackBanner warn={s.error || null} feedback={s.feedback} />
@@ -35,6 +35,7 @@ export function AdminSuggestionsPage() {
                 <th>작성일</th>
                 <th>처리상태</th>
                 <th>상태 변경</th>
+                <th>댓글</th>
               </tr>
             </thead>
             <tbody>
@@ -60,6 +61,11 @@ export function AdminSuggestionsPage() {
                         <option key={st} value={st}>{SUGGESTION_STATUS_LABELS[st]}</option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    <Link to={`/suggestions/${item.id}#comments`} className="admin-link">
+                      {(item.comments?.length ?? 0) > 0 ? `${item.comments!.length}개` : '쓰기'}
+                    </Link>
                   </td>
                 </tr>
               ))}

@@ -94,7 +94,12 @@ export function MemberTable({
                     {m.discordId ? (
                       <span className="admin-linked-badge" title={m.discordId}>완료</span>
                     ) : (
-                      <span className="admin-pending-badge">대기</span>
+                      <span
+                        className="admin-pending-badge"
+                        title="명단에는 등록됨 · Discord 첫 로그인 후 완료로 바뀝니다"
+                      >
+                        대기
+                      </span>
                     )}
                   </td>
                   <td>

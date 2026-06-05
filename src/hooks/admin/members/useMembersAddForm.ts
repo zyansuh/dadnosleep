@@ -1,13 +1,15 @@
 import { useState } from 'react';
 
 export function useMembersAddForm() {
-  const [newUsername, setNewUsername] = useState('');
-  const [newNickname, setNewNickname] = useState('');
+  const [newUsername, setNewUsername]   = useState('');
+  const [newNickname, setNewNickname]   = useState('');
+  const [newDiscordId, setNewDiscordId] = useState('');
   const [newIsVip, setNewIsVip]         = useState(false);
 
   const resetForm = () => {
     setNewUsername('');
     setNewNickname('');
+    setNewDiscordId('');
     setNewIsVip(false);
   };
 
@@ -16,6 +18,8 @@ export function useMembersAddForm() {
     setNewUsername,
     newNickname,
     setNewNickname,
+    newDiscordId,
+    setNewDiscordId,
     newIsVip,
     setNewIsVip,
     resetForm,

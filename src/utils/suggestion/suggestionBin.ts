@@ -1,20 +1,48 @@
-import type { SavedSuggestion, SuggestionReply, SuggestionStatus } from '../../types/suggestion';
+import type { SavedSuggestion, SuggestionComment, SuggestionReply, SuggestionStatus } from '../../types/suggestion';
 import type { SuggForm } from '../../types';
 import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
+import { validateNickname } from '../nickname';
 
 const VALID_STATUS = new Set<SuggestionStatus>(['pending', 'reviewing', 'answered', 'closed']);
 
-function normalizeReplies(raw: unknown): SuggestionReply[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((item): item is SuggestionReply => {
+function normalizeComments(raw: unknown, legacyReplies: unknown): SuggestionComment[] {
+  const fromComments: SuggestionComment[] = [];
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== 'object') continue;
+      const o = item as SuggestionComment;
+      if (typeof o.id !== 'string' || typeof o.body !== 'string' || typeof o.nick !== 'string') {
+        continue;
+      }
+      if (typeof o.createdAt !== 'string') continue;
+      fromComments.push({
+        id:        o.id,
+        body:      o.body,
+        nick:      o.nick,
+        createdAt: o.createdAt,
+        isAdmin:   o.isAdmin === true,
+      });
+    }
+  }
+
+  if (fromComments.length > 0) return fromComments;
+
+  if (!Array.isArray(legacyReplies)) return [];
+  return legacyReplies.filter((item): item is SuggestionReply => {
     if (!item || typeof item !== 'object') return false;
     const o = item as SuggestionReply;
     return typeof o.id === 'string'
       && typeof o.body === 'string'
       && typeof o.createdAt === 'string'
       && o.authorRole === 'admin';
-  });
+  }).map(r => ({
+    id:        r.id,
+    body:      r.body,
+    nick:      '관리자',
+    createdAt: r.createdAt,
+    isAdmin:   true,
+  }));
 }
 
 function normalizeList(raw: unknown): SavedSuggestion[] {
@@ -26,11 +54,15 @@ function normalizeList(raw: unknown): SavedSuggestion[] {
       && typeof o.title === 'string'
       && typeof o.nick === 'string'
       && typeof o.createdAt === 'string';
-  }).map(item => ({
-    ...item,
-    status: VALID_STATUS.has(item.status) ? item.status : 'pending',
-    replies: normalizeReplies(item.replies),
-  }));
+  }).map(item => {
+    const comments = normalizeComments(item.comments, item.replies);
+    const { replies: _legacy, ...rest } = item;
+    return {
+      ...rest,
+      status: VALID_STATUS.has(item.status) ? item.status : 'pending',
+      comments,
+    };
+  });
 }
 
 export function canUseSuggestionBin(): boolean {
@@ -64,7 +96,7 @@ export async function createSuggestionInBin(form: SuggForm): Promise<SavedSugges
     nick:      form.nick.trim(),
     createdAt: new Date().toISOString(),
     status:    'pending',
-    replies:   [],
+    comments:  [],
   };
   await putJsonBinRecord(binId, { ...record, suggestions: [item, ...list] });
   return item;
@@ -87,15 +119,19 @@ export async function updateSuggestionStatusInBin(
   return list[idx];
 }
 
-export async function addSuggestionReplyInBin(
+export async function addSuggestionCommentInBin(
   id: string,
   body: string,
+  nick: string,
+  isAdmin = false,
 ): Promise<SavedSuggestion> {
   if (!canUseSuggestionBin()) {
     throw new Error('건의함 저장소가 연결되지 않았습니다.');
   }
   const text = body.trim();
-  if (!text) throw new Error('답변 내용을 입력해 주세요.');
+  if (!text) throw new Error('댓글 내용을 입력해 주세요.');
+  const nickErr = validateNickname(nick);
+  if (nickErr) throw new Error(nickErr);
 
   const binId = getCommunityBinId();
   const record = await fetchJsonBinRecord(binId);
@@ -103,16 +139,15 @@ export async function addSuggestionReplyInBin(
   const idx = list.findIndex(s => s.id === id);
   if (idx < 0) throw new Error('건의사항을 찾을 수 없습니다.');
 
-  const reply: SuggestionReply = {
-    id:         `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    body:       text,
-    createdAt:  new Date().toISOString(),
-    authorRole: 'admin',
+  const comment: SuggestionComment = {
+    id:        `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    body:      text,
+    nick:      nick.trim(),
+    createdAt: new Date().toISOString(),
+    isAdmin,
   };
   const prev = list[idx];
-  const replies = [...(prev.replies ?? []), reply];
-  const status = prev.status === 'closed' ? 'closed' : 'answered';
-  list[idx] = { ...prev, replies, status };
+  list[idx] = { ...prev, comments: [...(prev.comments ?? []), comment] };
   await putJsonBinRecord(binId, { ...record, suggestions: list });
   return list[idx];
 }

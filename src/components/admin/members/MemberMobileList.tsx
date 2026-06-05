@@ -47,7 +47,12 @@ export function MemberMobileList({
               {m.discordId ? (
                 <span className="admin-linked-badge">로그인 완료</span>
               ) : (
-                <span className="admin-pending-badge">로그인 전</span>
+                <span
+                  className="admin-pending-badge"
+                  title="명단 등록됨 · Discord 첫 로그인 후 완료"
+                >
+                  로그인 전
+                </span>
               )}
             </div>
             <dl className="admin-member-mobile-meta">

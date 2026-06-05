@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { SuggestionPageShell } from '../../components/suggestion/SuggestionPageShell';
 import { SuggestionStatusBadge } from '../../components/suggestion/SuggestionStatusBadge';
 import { useDiscordAuth } from '../../context/DiscordAuthContext';
 import {
-  addSuggestionReply,
+  addSuggestionComment,
   fetchSuggestionById,
   updateSuggestionStatus,
 } from '../../utils/suggestion/suggestionApi';
 import { formatSuggestionDate } from '../../utils/suggestion/formatSuggestionDate';
 import type { SavedSuggestion, SuggestionStatus } from '../../types/suggestion';
 import { SUGGESTION_STATUS_LABELS } from '../../constants/suggestion';
+import { getMyNickname, saveMyNickname } from '../../utils/nickname';
 
 const CATEGORY_EMOJI: Record<string, string> = {
   드라마: '🎭', 예능: '🎉', 영화: '🎬', 애니: '🌟', 다큐: '📹', 기타: '📌',
@@ -19,17 +20,28 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 const STATUS_OPTIONS: SuggestionStatus[] = ['pending', 'reviewing', 'answered', 'closed'];
 
+function defaultCommentNick(displayName: string | null): string {
+  return displayName?.trim() || getMyNickname()?.trim() || '';
+}
+
 export function SuggestionDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { isAdmin } = useDiscordAuth();
-  const [item, setItem]         = useState<SavedSuggestion | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
+  const { isAdmin, displayName } = useDiscordAuth();
+  const [item, setItem]           = useState<SavedSuggestion | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState('');
   const [statusBusy, setBusy]     = useState(false);
   const [statusError, setStErr]   = useState('');
-  const [replyBody, setReplyBody]   = useState('');
-  const [replyBusy, setReplyBusy]   = useState(false);
-  const [replyError, setReplyError] = useState('');
+  const [commentBody, setCommentBody] = useState('');
+  const [commentNick, setCommentNick] = useState(() => defaultCommentNick(displayName));
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [commentError, setCommentError] = useState('');
+
+  const initialNick = useMemo(() => defaultCommentNick(displayName), [displayName]);
+
+  useEffect(() => {
+    if (initialNick && !commentNick) setCommentNick(initialNick);
+  }, [initialNick, commentNick]);
 
   useEffect(() => {
     if (!id) return;
@@ -66,18 +78,24 @@ export function SuggestionDetailPage() {
     }
   };
 
-  const handleReplySubmit = async () => {
-    if (!id || !replyBody.trim()) return;
-    setReplyBusy(true);
-    setReplyError('');
+  const handleCommentSubmit = async () => {
+    if (!id || !commentBody.trim() || !commentNick.trim()) return;
+    setCommentBusy(true);
+    setCommentError('');
     try {
-      const updated = await addSuggestionReply(id, replyBody);
+      const updated = await addSuggestionComment(
+        id,
+        commentBody,
+        commentNick,
+        isAdmin,
+      );
+      saveMyNickname(commentNick);
       setItem(updated);
-      setReplyBody('');
+      setCommentBody('');
     } catch (e) {
-      setReplyError(e instanceof Error ? e.message : '답변 등록에 실패했습니다.');
+      setCommentError(e instanceof Error ? e.message : '댓글 등록에 실패했습니다.');
     } finally {
-      setReplyBusy(false);
+      setCommentBusy(false);
     }
   };
 
@@ -152,50 +170,67 @@ export function SuggestionDetailPage() {
             </section>
           )}
 
-          <section className="sugg-replies-section" aria-label="관리자 답변">
-            <h3>관리자 답변</h3>
+          <section id="comments" className="sugg-comments-section" aria-label="댓글">
+            <h3>댓글 {(item.comments?.length ?? 0) > 0 && `(${item.comments!.length})`}</h3>
 
-            {isAdmin && (
-              <form
-                className="sugg-reply-form"
-                onSubmit={e => {
-                  e.preventDefault();
-                  void handleReplySubmit();
-                }}
-              >
-                <textarea
-                  className="sugg-reply-input"
-                  rows={4}
-                  placeholder="답변을 입력하세요. 등록 시 처리 상태가 「답변 완료」로 변경됩니다."
-                  value={replyBody}
-                  disabled={replyBusy}
-                  onChange={e => setReplyBody(e.target.value)}
-                />
-                <div className="sugg-reply-form-actions">
-                  <button
-                    type="submit"
-                    className="btn-coral-sm"
-                    disabled={replyBusy || !replyBody.trim()}
+            {(item.comments?.length ?? 0) > 0 ? (
+              <ul className="sugg-comments-list">
+                {item.comments!.map(c => (
+                  <li
+                    key={c.id}
+                    className={`sugg-comment-item${c.isAdmin ? ' sugg-comment-item--admin' : ''}`}
                   >
-                    {replyBusy ? '등록 중…' : '답변 등록'}
-                  </button>
-                </div>
-                {replyError && <p className="sugg-inline-error">{replyError}</p>}
-              </form>
-            )}
-
-            {(item.replies?.length ?? 0) > 0 ? (
-              <ul className="sugg-replies-list">
-                {item.replies!.map(r => (
-                  <li key={r.id} className="sugg-reply-item">
-                    <time>{formatSuggestionDate(r.createdAt)}</time>
-                    <p>{r.body}</p>
+                    <div className="sugg-comment-hd">
+                      <strong>@{c.nick}</strong>
+                      {c.isAdmin && <span className="sugg-comment-admin-badge">관리자</span>}
+                      <time>{formatSuggestionDate(c.createdAt)}</time>
+                    </div>
+                    <p>{c.body}</p>
                   </li>
                 ))}
               </ul>
-            ) : !isAdmin ? (
-              <p className="sugg-muted">아직 답변이 없습니다.</p>
-            ) : null}
+            ) : (
+              <p className="sugg-muted">아직 댓글이 없습니다.</p>
+            )}
+
+            <form
+              className="sugg-comment-form"
+              onSubmit={e => {
+                e.preventDefault();
+                void handleCommentSubmit();
+              }}
+            >
+              <label className="sugg-comment-nick-label" htmlFor="sugg-comment-nick">
+                닉네임
+              </label>
+              <input
+                id="sugg-comment-nick"
+                className="sugg-comment-nick-input"
+                value={commentNick}
+                maxLength={20}
+                disabled={commentBusy}
+                placeholder="댓글에 표시할 닉네임"
+                onChange={e => setCommentNick(e.target.value)}
+              />
+              <textarea
+                className="sugg-comment-input"
+                rows={3}
+                placeholder="댓글을 입력하세요"
+                value={commentBody}
+                disabled={commentBusy}
+                onChange={e => setCommentBody(e.target.value)}
+              />
+              <div className="sugg-comment-form-actions">
+                <button
+                  type="submit"
+                  className="btn-coral-sm"
+                  disabled={commentBusy || !commentBody.trim() || !commentNick.trim()}
+                >
+                  {commentBusy ? '등록 중…' : '댓글 등록'}
+                </button>
+              </div>
+              {commentError && <p className="sugg-inline-error">{commentError}</p>}
+            </form>
           </section>
         </article>
       )}
