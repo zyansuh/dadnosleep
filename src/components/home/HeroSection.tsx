@@ -23,7 +23,15 @@ interface Props {
   onSetCellFixed:      (dayIdx: number, timeIdx: number, title?: string, link?: string) => void;
   onUnfixCell:         (dayIdx: number, timeIdx: number) => void;
   onResetCell:         (dayIdx: number, timeIdx: number) => void;
-  onOpenRandomPicker:  () => void;
+  onOpenRandomPicker:    () => void;
+  scheduleLoading:       boolean;
+  loadError:             string;
+  isPublished:           boolean;
+  publishedAt:           string | null;
+  publishBusy:           boolean;
+  publishError:          string;
+  onPublishSchedule:     () => void;
+  onUnpublishSchedule:   () => void;
 }
 
 export function HeroSection(props: Props) {

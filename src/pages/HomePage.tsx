@@ -22,12 +22,11 @@ export function HomePage() {
   const [page, setPage] = useState<HomePageTab>('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [schedEditOpen, setSchedEditOpen] = useState(false);
-  const [boardOpen, setBoardOpen] = useState(false);
 
   const discord = useDiscordAuth();
   const { goToAdmin } = useAdminGate();
   const clock = useClock();
-  const sched = useSchedule();
+  const sched = useSchedule(discord.canEditSchedule);
   const api = useApiCards();
   const suggest = useSuggestionForm();
   const community = useCommunity();
@@ -45,6 +44,7 @@ export function HomePage() {
     isEditMode: sched.isEditMode,
     toggleEditMode: sched.toggleEditMode,
     refreshReviews: community.refreshReviews,
+    refreshSuggestions: suggest.refresh,
   });
 
   return (
@@ -59,7 +59,6 @@ export function HomePage() {
         isMember={discord.role === 'member'}
         onNavHome={() => nav('home')}
         onNavCommunity={() => nav('community')}
-        onOpenBoard={() => setBoardOpen(true)}
         onToggleMenu={() => setMenuOpen(v => !v)}
       />
 
@@ -74,7 +73,6 @@ export function HomePage() {
           onNavHome={() => nav('home')}
           onNavCommunity={() => nav('community')}
           onGoAdmin={() => { setMenuOpen(false); goToAdmin(); }}
-          onOpenBoard={() => { setMenuOpen(false); setBoardOpen(true); }}
           onOpenSuggest={() => { setMenuOpen(false); suggest.openModal(); }}
         />
       )}
@@ -120,6 +118,14 @@ export function HomePage() {
             if (!discord.canEditSchedule) return;
             setSchedEditOpen(true);
           }}
+          scheduleLoading={sched.loading}
+          loadError={sched.loadError}
+          isPublished={sched.isPublished}
+          publishedAt={sched.publishedAt}
+          publishBusy={sched.publishBusy}
+          publishError={sched.publishError}
+          onPublishSchedule={() => void sched.publishSchedule()}
+          onUnpublishSchedule={() => void sched.unpublishSchedule()}
           activeApi={api.activeApi}
           ottItems={api.ottItems}
           ytItems={api.ytItems}
@@ -140,10 +146,8 @@ export function HomePage() {
         suggest={suggest}
         api={api}
         schedEditOpen={schedEditOpen}
-        boardOpen={boardOpen}
         canEditSchedule={discord.canEditSchedule}
         onCloseSchedEdit={() => setSchedEditOpen(false)}
-        onCloseBoard={() => setBoardOpen(false)}
       />
     </div>
   );

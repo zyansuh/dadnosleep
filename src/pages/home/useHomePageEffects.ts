@@ -7,6 +7,7 @@ interface UseHomePageEffectsArgs {
   isEditMode:            boolean;
   toggleEditMode:        () => void;
   refreshReviews:        () => Promise<void>;
+  refreshSuggestions:    () => Promise<void>;
 }
 
 export function useHomePageEffects({
@@ -15,6 +16,7 @@ export function useHomePageEffects({
   isEditMode,
   toggleEditMode,
   refreshReviews,
+  refreshSuggestions,
 }: UseHomePageEffectsArgs): void {
   useEffect(() => {
     if (!canEditSchedule && isEditMode) toggleEditMode();
@@ -23,4 +25,8 @@ export function useHomePageEffects({
   useEffect(() => {
     if (page === 'community') void refreshReviews();
   }, [page, refreshReviews]);
+
+  useEffect(() => {
+    void refreshSuggestions();
+  }, [refreshSuggestions]);
 }

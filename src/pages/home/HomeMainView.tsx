@@ -29,6 +29,14 @@ interface Props {
   onResetCell:              (dayIdx: number, timeIdx: number) => void;
   onOpenRandomPicker:       () => void;
   onOpenScheduleEdit:       () => void;
+  scheduleLoading:          boolean;
+  loadError:                string;
+  isPublished:              boolean;
+  publishedAt:              string | null;
+  publishBusy:              boolean;
+  publishError:             string;
+  onPublishSchedule:        () => void;
+  onUnpublishSchedule:      () => void;
   activeApi:                ApiType | null;
   ottItems:                 OttItem[];
   ytItems:                  YtItem[];
@@ -49,6 +57,8 @@ export function HomeMainView({
   isEditMode, onLoginClick, onToggleEditMode, onOpenResetConfirm,
   onUpdateCell, onUpdateMemberCell, onSetCellFixed, onUnfixCell, onResetCell,
   onOpenRandomPicker, onOpenScheduleEdit,
+  scheduleLoading, loadError, isPublished, publishedAt, publishBusy, publishError,
+  onPublishSchedule, onUnpublishSchedule,
   activeApi, ottItems, ytItems, ottLoading, ottError, apiRanding,
   handleApiCard, onOpenOttDrawer, onOpenRandomDrawer,
   points, vipKeys, onGoCommunity,
@@ -77,6 +87,14 @@ export function HomeMainView({
         onResetCell={onResetCell}
         onOpenRandomPicker={onOpenRandomPicker}
         onOpenScheduleEdit={onOpenScheduleEdit}
+        scheduleLoading={scheduleLoading}
+        loadError={loadError}
+        isPublished={isPublished}
+        publishedAt={publishedAt}
+        publishBusy={publishBusy}
+        publishError={publishError}
+        onPublishSchedule={onPublishSchedule}
+        onUnpublishSchedule={onUnpublishSchedule}
       />
 
       <ApiSection
