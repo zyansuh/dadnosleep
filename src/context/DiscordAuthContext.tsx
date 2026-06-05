@@ -16,13 +16,14 @@ import type { UserRole } from '../types/role';
 import { canAccessVipSchedule } from '../types/role';
 import { updateMemberNickname } from '../utils/members/membersStore';
 import { buildDiscordAuthorizeUrl } from '../utils/auth/discordOAuth';
+import { clearAdminApiToken } from '../utils/admin/adminApiToken';
 
 interface DiscordAuthContextValue {
   user:                   DiscordSessionUser | null;
   role:                   UserRole;
   isLoggedIn:             boolean;
   isAdmin:                boolean;
-  /** 편성표 수정하기·셀 편집·초기화 (Discord admin 또는 비로그인 푸터 관리자만, member 제외) */
+  /** 편성표 생성·수정·삭제·공개 (Discord 관리자 username만) */
   canEditSchedule:        boolean;
   isMember:               boolean;
   isVip:                  boolean;
@@ -64,6 +65,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     clearDiscordSession();
+    clearAdminApiToken();
     setUser(null);
     setRole('guest');
     setPasswordAdmin(false);
@@ -80,8 +82,7 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
   }, [user, role, refresh]);
 
   const isAdmin = role === 'admin' || passwordAdmin;
-  /** 동호회 member는 푸터 비밀번호로 isAdmin이 켜져도 편성표 수정 불가 */
-  const canEditSchedule = role === 'admin' || (passwordAdmin && role !== 'member');
+  const canEditSchedule = role === 'admin';
   const isVip = user?.isVip ?? false;
   const vipAccess = canAccessVipSchedule(role, isVip, { passwordAdmin });
   const canChangeNickname = role === 'member' && !!user;

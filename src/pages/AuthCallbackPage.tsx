@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { saveDiscordSession } from '../utils/auth/discordSession';
+import { setAdminApiToken } from '../utils/admin/adminApiToken';
 import { processDiscordLogin } from '../utils/auth/processDiscordLogin';
 import { useDiscordAuth } from '../context/DiscordAuthContext';
 
@@ -30,6 +31,7 @@ export function AuthCallbackPage() {
           username?: string;
           global_name?: string | null;
           avatar?: string | null;
+          adminToken?: string;
           error?: string;
         };
 
@@ -52,6 +54,7 @@ export function AuthCallbackPage() {
 
         const { role, nickname, isVip } = await processDiscordLogin(profile);
         saveDiscordSession(profile, role, nickname, isVip);
+        if (data.adminToken) setAdminApiToken(data.adminToken);
         refresh();
         navigate('/', { replace: true });
       } catch (e) {

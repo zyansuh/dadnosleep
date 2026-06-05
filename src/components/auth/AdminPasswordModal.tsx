@@ -6,6 +6,7 @@ import {
   setAdminSession,
   verifyAdminPassword,
 } from '../../utils/auth/adminSession';
+import { fetchPasswordAdminToken, setAdminApiToken } from '../../utils/admin/adminApiToken';
 
 interface Props {
   onSuccess: () => void;
@@ -40,8 +41,16 @@ export function AdminPasswordModal({ onSuccess, onClose }: Props) {
     }
 
     if (verifyAdminPassword(password)) {
-      setAdminSession();
-      onSuccess();
+      void (async () => {
+        try {
+          const token = await fetchPasswordAdminToken(password);
+          setAdminApiToken(token);
+          setAdminSession();
+          onSuccess();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : '인증에 실패했습니다.');
+        }
+      })();
       return;
     }
 
