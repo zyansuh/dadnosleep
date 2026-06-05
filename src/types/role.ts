@@ -6,12 +6,7 @@ export function canAccessMemberContent(role: UserRole): boolean {
 }
 
 /** 회원 전용(VIP) 편성표 행 열람 */
-export function canAccessVipSchedule(
-  role: UserRole,
-  isVip: boolean,
-  opts?: { passwordAdmin?: boolean },
-): boolean {
+export function canAccessVipSchedule(role: UserRole, isVip: boolean): boolean {
   if (role === 'admin') return true;
-  if (opts?.passwordAdmin) return true;
   return role === 'member' && isVip;
 }

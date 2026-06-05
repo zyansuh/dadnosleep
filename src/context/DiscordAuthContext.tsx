@@ -11,7 +11,6 @@ import {
   setSessionNickname,
   type DiscordSessionUser,
 } from '../utils/auth/discordSession';
-import { isAdminSession } from '../utils/auth/adminSession';
 import type { UserRole } from '../types/role';
 import { canAccessVipSchedule } from '../types/role';
 import { updateMemberNickname } from '../utils/members/membersStore';
@@ -45,12 +44,10 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<DiscordSessionUser | null>(() => getDiscordSession());
   const [role, setRole] = useState<UserRole>(() => getSessionRole());
-  const [passwordAdmin, setPasswordAdmin] = useState(() => isAdminSession());
 
   const refresh = useCallback(() => {
     setUser(getDiscordSession());
     setRole(getSessionRole());
-    setPasswordAdmin(isAdminSession());
   }, []);
 
   useEffect(() => {
@@ -68,7 +65,6 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     clearAdminApiToken();
     setUser(null);
     setRole('guest');
-    setPasswordAdmin(false);
     navigate('/', { replace: true });
   }, [navigate]);
 
@@ -81,10 +77,10 @@ export function DiscordAuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [user, role, refresh]);
 
-  const isAdmin = role === 'admin' || passwordAdmin;
+  const isAdmin = role === 'admin';
   const canEditSchedule = role === 'admin';
   const isVip = user?.isVip ?? false;
-  const vipAccess = canAccessVipSchedule(role, isVip, { passwordAdmin });
+  const vipAccess = canAccessVipSchedule(role, isVip);
   const canChangeNickname = role === 'member' && !!user;
 
   const value = useMemo<DiscordAuthContextValue>(() => ({
