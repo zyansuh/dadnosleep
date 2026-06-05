@@ -29,7 +29,7 @@ export function AdminDashboardPage() {
       <AdminTestToolsPanel />
 
       <p className="admin-note">
-        Discord 관리자 계정 또는 푸터 비밀번호로 인증된 세션입니다.
+        Discord 관리자 계정으로 로그인한 세션입니다. 관리자 추가는 README 「관리자 추가」를 참고하세요.
       </p>
     </div>
   );

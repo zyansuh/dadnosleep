@@ -1,8 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import { verifyDiscordAdminToken } from './discordAdminJwt';
-import { verifyPasswordAdminToken } from './passwordAdminJwt';
 
-export type AdminAuthKind = 'discord_admin' | 'password_admin';
+export type AdminAuthKind = 'discord_admin';
 
 export interface AdminAuthResult {
   ok:       true;
@@ -29,7 +28,7 @@ export async function verifyAdminRequest(
 ): Promise<VerifyAdminResult> {
   const token = getBearer(req);
   if (!token) {
-    return { ok: false, status: 401, message: '관리자 인증이 필요합니다.' };
+    return { ok: false, status: 401, message: '관리자 인증이 필요합니다. Discord 관리자로 로그인해 주세요.' };
   }
 
   const discord = await verifyDiscordAdminToken(token);
@@ -37,18 +36,5 @@ export async function verifyAdminRequest(
     return { ok: true, kind: 'discord_admin', username: discord.username };
   }
 
-  const password = await verifyPasswordAdminToken(token);
-  if (password) {
-    return { ok: true, kind: 'password_admin' };
-  }
-
-  return { ok: false, status: 403, message: '관리자 권한이 없습니다.' };
-}
-
-export function verifyAdminPasswordInput(input: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD
-    ?? process.env.VITE_ADMIN_PASSWORD
-    ?? '';
-  if (!expected) return false;
-  return input === expected;
+  return { ok: false, status: 403, message: '관리자 권한이 없습니다. Discord 관리자 계정으로 로그인해 주세요.' };
 }

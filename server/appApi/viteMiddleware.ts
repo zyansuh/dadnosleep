@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Connect } from 'vite';
-import { handleAdminToken } from '../admin/handlers';
 import {
   handleScheduleDraft,
   handleSchedulePublished,
@@ -20,11 +19,6 @@ async function routeAppApi(
   res: ServerResponse,
   pathname: string,
 ): Promise<boolean> {
-  if (pathname === '/api/admin/token' && req.method === 'POST') {
-    await handleAdminToken(req, res);
-    return true;
-  }
-
   if (pathname === '/api/schedule/published' && req.method === 'GET') {
     await handleSchedulePublished(req, res);
     return true;

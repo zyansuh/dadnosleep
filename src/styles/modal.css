@@ -73,6 +73,18 @@
 .btn-coral-form { flex: 2; display: flex; align-items: center; justify-content: center; gap: 6px; background: linear-gradient(135deg, var(--coral), var(--coral2)); border: none; color: #fff; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; font-family: inherit; transition: opacity 0.18s; cursor: pointer; }
 .btn-coral-form:hover { opacity: 0.9; }
 
+.admin-login-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.admin-login-hint code {
+  font-size: 12px;
+  color: var(--gold);
+}
+
 .form-error-msg {
   margin: 0 0 12px;
   font-size: 13px;

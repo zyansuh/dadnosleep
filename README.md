@@ -66,12 +66,12 @@
 |------|------|------|
 | `/` | 메인 (`HomePage` — `pages/home/*` 조합, 홈·커뮤니티 탭) | 없음 |
 | `/auth/callback` | Discord OAuth code 처리 | 없음 |
-| `/admin` | 관리 대시보드 · 테스트 초기화 | 푸터 비밀번호 **또는** Discord admin |
+| `/admin` | 관리 대시보드 · 테스트 초기화 | Discord **admin** 로그인 |
 | `/admin/members` | 회원 명단 (로그인 전 사전 등록 가능) | 동일 |
 | `/admin/points` | 기간별 포인트 집계 | 동일 |
 | `/suggestions` | 건의함 목록 (제목·작성자·작성일·처리상태) | 없음 |
 | `/suggestions/:id` | 건의 상세 (추후 답변 `replies[]` 예비) | 없음 |
-| `/admin/suggestions` | 건의함 관리 (상태 변경) | 푸터 비밀번호 **또는** Discord admin |
+| `/admin/suggestions` | 건의함 관리 (상태 변경) | Discord **admin** 로그인 |
 
 ### 서버 API (편성표·건의함)
 
@@ -83,7 +83,8 @@
 | POST | `/api/schedule/unpublish` | Admin JWT | 공개 취소 |
 | GET/POST | `/api/suggestions` | 공개 | 목록·등록 |
 | GET/PATCH | `/api/suggestions/:id` | GET 공개 / PATCH Admin | 상세·상태 변경 |
-| POST | `/api/admin/token` | 공개 | 푸터 비밀번호 → Admin JWT |
+
+Admin JWT는 Discord **admin** OAuth 콜백 시 `adminToken`으로 발급됩니다.
 
 로컬: `vite.config.ts` → `appApiMiddleware()`. 프로덕션: `api/*` → `server/appApi/vercelHandler.ts`.
 
@@ -301,7 +302,7 @@ dadnosleep/
 │   │   │   ├── cell/                 # CellInner, scheduleSlot
 │   │   │   ├── modals/               # EditCellModal, ScheduleEditModal
 │   │   │   └── ScheduleTable.tsx 등  # re-export
-│   │   ├── community/                # CommunityPage, Review*, PointRanking …
+│   │   ├── community/                # CommunityPage(조합), PageHeader, PromoSection, ReviewSection, RankingAside …
 │   │   ├── admin/
 │   │   │   ├── feedback/             # AdminAlert, AdminFeedbackBanner
 │   │   │   ├── members/              # MemberAddForm, MemberTable …
@@ -322,7 +323,7 @@ dadnosleep/
 │   │   │   ├── useScheduleEditForm.ts
 │   │   │   └── useSchedule.ts        # Core·Loader·Random·Publish·Ui 조합
 │   │   ├── suggestion/               # useSuggestionForm
-│   │   ├── community/                # useCommunity, useReviewForm
+│   │   ├── community/                # useCommunityLoad, useCommunityMutations, useReviewForm
 │   │   ├── members/                  # useMemberVipKeys
 │   │   ├── admin/
 │   │   │   ├── members/              # useMembersListQuery, useMembersMutations …
@@ -399,6 +400,10 @@ dadnosleep/
 
 **건의함** (`hooks/suggestion/` · `utils/suggestion/` · `pages/suggestions/`): `useSuggestionForm` → API 등록 · `useAdminSuggestions` → 상태 변경.
 
+**커뮤니티 훅** (`hooks/community/`): `useCommunityLoad`(조회·storage 동기화) · `useCommunityMutations`(persist·CRUD) → `useCommunity.ts`에서 조합.
+
+**커뮤니티 UI** (`components/community/`): `CommunityPageHeader` · `CommunityPromoSection` · `CommunityRankingAside` · `CommunityReviewSection` → `CommunityPage.tsx`에서 조합.
+
 **JSONBin** (`utils/jsonbin/`): `fetch` · `put` · `communityPut` · `membersBin` · `extractMembers` — `jsonbinRecord.ts`는 re-export.
 
 **메인 페이지** (`pages/` + `pages/home/`):
@@ -424,14 +429,13 @@ dadnosleep/
 | `components/ApiCard.tsx` · `MediaDrawer.tsx` | `components/home/media/*` |
 | `hooks/useClock.ts` 등 | `hooks/shared/*` |
 
-### 더 나눌 수 있는 후보 (점진적)
+### 분리 완료 (참고)
 
-| 영역 | 제안 |
+| 영역 | 구조 |
 |------|------|
-| `components/community/CommunityPage.tsx` | 후기 목록·폼·랭킹 탭 분리 |
-| `hooks/community/useCommunity.ts` | load / persist / storage 이벤트 분리 |
-
-`components/layout/overlays/` — `HomeSuggestionOverlays` · `HomeScheduleOverlays` · `HomeMediaOverlays` (분리 완료)
+| `components/community/` | Header · Promo · RankingAside · ReviewSection → `CommunityPage` |
+| `hooks/community/` | `useCommunityLoad` · `useCommunityMutations` → `useCommunity` |
+| `components/layout/overlays/` | `HomeSuggestionOverlays` · `HomeScheduleOverlays` · `HomeMediaOverlays` |
 
 ### import 규칙 (예시)
 
@@ -517,7 +521,7 @@ cp .env.example .env.local
 | `VITE_JSONBIN_BIN_MEMBERS` | △ | 회원 전용 Bin (비우면 아래 Bin에 `members` 필드로 통합) |
 | `VITE_DISCORD_CLIENT_ID` | ○ | Discord Application Client ID |
 | `VITE_DISCORD_REDIRECT_URI` | ○ | OAuth Redirect (로컬/프로덕션 각각) |
-| `VITE_ADMIN_PASSWORD` | △ | 푸터 관리자 비밀번호 (브라우저 — `/admin` 진입) |
+| `VITE_ADMIN_DISCORD_USERS` | △ | Discord 관리자 @username (쉼표 구분, 비우면 `constants/adminUsers.ts` 기본값) |
 
 > **`VITE_DISCORD_CLIENT_SECRET` 사용 금지** — 브라우저에 노출됩니다. 반드시 `DISCORD_CLIENT_SECRET`(서버 전용)을 쓰세요.
 
@@ -528,13 +532,13 @@ cp .env.example .env.local
 | `DISCORD_CLIENT_ID` | ○ | Client ID (`VITE_`와 동일) |
 | `DISCORD_CLIENT_SECRET` | ○ | Client Secret (**Git·VITE_ 금지**) |
 | `DISCORD_REDIRECT_URI` | ○ | Redirect URI (`VITE_`와 동일) |
-| `JWT_SECRET` | ○* | Admin JWT 서명 (Discord adminToken·password adminToken) — 프로덕션 32자+ 랜덤 |
-| `ADMIN_PASSWORD` | △ | 서버 API 인증용 — **`VITE_ADMIN_PASSWORD`와 동일 값 권장** |
+| `JWT_SECRET` | ○* | Discord adminToken JWT 서명 — 프로덕션 32자+ 랜덤 |
+| `ADMIN_DISCORD_USERS` | △ | 서버 측 관리자 username (쉼표 구분, 비우면 코드 기본값) |
 | `JSONBIN_USERS_BIN_ID` | △ | (선택) 이메일 회원 Bin |
 | `JSONBIN_ACCESS_KEY` | ○ | 서버 JSONBin (편성표·건의함 patch) |
 | `ADMIN_EMAILS` | △ | (선택) 이메일 admin 목록 |
 
-\* 편성표·건의 API를 쓰려면 `JWT_SECRET` + `ADMIN_PASSWORD`(또는 `VITE_ADMIN_PASSWORD`) + `JSONBIN_ACCESS_KEY` 필요.
+\* 편성표·건의 API를 쓰려면 `JWT_SECRET` + `JSONBIN_ACCESS_KEY` + Discord **admin** 로그인 필요.
 
 로컬 개발 시 `vite.config.ts`의 `loadEnv`가 `.env.local`의 `DISCORD_*`를 `process.env`에 주입해 dev API가 동작합니다.
 
@@ -557,58 +561,13 @@ DISCORD_CLIENT_ID=your_client_id
 DISCORD_CLIENT_SECRET=your_client_secret
 DISCORD_REDIRECT_URI=http://localhost:5173/auth/callback
 
-# 관리자 비밀번호 — 아래 두 줄은 반드시 같은 값
-VITE_ADMIN_PASSWORD=your_admin_pw
-ADMIN_PASSWORD=your_admin_pw
+# Discord 관리자 @username (쉼표 구분, 선택)
+VITE_ADMIN_DISCORD_USERS=your_discord_username,another_admin
+ADMIN_DISCORD_USERS=your_discord_username,another_admin
 
 # Admin JWT 서명 (프로덕션 필수)
 JWT_SECRET=your_random_32_char_or_longer_secret
 ```
-
-### ADMIN_PASSWORD 설정 가이드 (자세히)
-
-관리자 비밀번호는 **역할이 두 가지**입니다. 헷갈리기 쉬우니 **같은 문자열**로 맞추는 것을 권장합니다.
-
-| 변수 | 어디서 쓰나 | 하는 일 |
-|------|------------|---------|
-| `VITE_ADMIN_PASSWORD` | **브라우저** (Vite 빌드) | 푸터 「관리자」 클릭 → 비밀번호 입력 → `/admin` 페이지 진입 (`sessionStorage`) |
-| `ADMIN_PASSWORD` | **서버** (Vercel·로컬 API) | `POST /api/admin/token` 에서 비밀번호 검증 → **Admin JWT** 발급 |
-
-**Admin JWT**가 필요한 API (Authorization: `Bearer <token>`):
-
-- 편성표 draft 저장·공개·비공개 (`/api/schedule/*`)
-- 건의함 처리 상태 변경 (`PATCH /api/suggestions/:id`)
-
-**JWT를 받는 방법 (둘 중 하나):**
-
-1. **푸터 비밀번호** — `/admin` 진입 시 `AdminPasswordModal`이 `POST /api/admin/token` 호출 → `sessionStorage`에 JWT 저장
-2. **Discord 관리자 로그인** — OAuth 콜백 응답의 `adminToken` 자동 저장
-
-**설정 순서 (로컬):**
-
-1. `.env.example` → `.env.local` 복사
-2. 원하는 비밀번호 정하기 (예: `dad-admin-2026`)
-3. `.env.local`에 입력:
-   ```env
-   VITE_ADMIN_PASSWORD=dad-admin-2026
-   ADMIN_PASSWORD=dad-admin-2026
-   JWT_SECRET=랜덤_32자_이상_문자열
-   VITE_JSONBIN_BIN_ID=...
-   VITE_JSONBIN_ACCESS_KEY=...
-   JSONBIN_ACCESS_KEY=...   # 서버용 (클라이언트 키와 동일 Bin이면 같은 값)
-   ```
-4. `npm run dev` 재시작 (env 변경 반영)
-5. 푸터 관리자 비밀번호 입력 → `/admin` 접속 확인
-6. Discord **admin** 계정으로 편성표 **공개** 버튼 동작 확인
-
-**Vercel 배포 시:** Project → Settings → Environment Variables 에 **Production** 기준으로  
-`VITE_ADMIN_PASSWORD`, `ADMIN_PASSWORD`, `JWT_SECRET`, `JSONBIN_ACCESS_KEY`, `VITE_JSONBIN_*` 등록 후 **Redeploy**.
-
-**주의:**
-
-- `VITE_ADMIN_PASSWORD`만 넣고 `ADMIN_PASSWORD`를 비우면 → `/admin` UI는 열리지만 **편성표 API·건의 상태 변경이 401** 될 수 있음 (서버는 `ADMIN_PASSWORD` → 없으면 `VITE_ADMIN_PASSWORD` fallback)
-- `JWT_SECRET` 미설정 시 개발용 기본값 사용 — **프로덕션에서는 반드시 변경**
-- Discord **admin**만 편성표 **UI 편집** 가능 (`canEditSchedule`). 푸터 비밀번호만으로는 `/admin`·건의 관리는 되지만 메인 편성 **셀 편집 버튼은 숨김**
 
 ---
 
@@ -708,7 +667,10 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 | `DISCORD_CLIENT_ID` | ✅ |
 | `DISCORD_CLIENT_SECRET` | ✅ |
 | `DISCORD_REDIRECT_URI` | ✅ 프로덕션 URL |
-| `VITE_ADMIN_PASSWORD` | △ |
+| `JWT_SECRET` | ✅ |
+| `JSONBIN_ACCESS_KEY` | ✅ |
+| `VITE_ADMIN_DISCORD_USERS` | △ (비우면 코드 기본값) |
+| `ADMIN_DISCORD_USERS` | △ |
 | `VITE_JSONBIN_BIN_MEMBERS` | △ (비워도 됨) |
 
 3. Discord Portal Redirects에 프로덕션 콜백 URL 추가
@@ -763,11 +725,11 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 2. **닉네임 변경** → 검증 후 저장
 3. JSONBin `members[].nickname` + `sessionStorage.nickname` 동시 반영
 
-### 12-5. 푸터 관리자
+### 12-5. 관리자 페이지
 
-1. 페이지 최하단 **관리자** (11px muted)
-2. `VITE_ADMIN_PASSWORD` 입력 (5회 실패 시 30초 잠금)
-3. `/admin` 이동 — 탭 닫으면 세션 만료
+1. Discord **관리자 계정**으로 로그인 (README §14 「관리자 추가」 참고)
+2. 푸터 **관리자** 링크 또는 모바일 메뉴 **관리자 페이지** → `/admin`
+3. 미로그인·비관리자는 로그인 안내 모달 표시
 
 ### 12-6. 회원 명단·탈퇴 (관리자)
 
@@ -862,7 +824,6 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 | `dadnosleep-friend-invites-v1` | 지인 초대 fallback | 동일 |
 | `dadnosleep-my-nickname` | 후기 「나」 뱃지용 | — |
 | `reviews_migrated` | `1` = 레거시 마이그레이션 완료 | — |
-| `admin_fail_count` / `admin_lock_until` | 푸터 비밀번호 잠금 | sessionStorage 쪽은 `adminSession` |
 
 ### Cell 타입 (`types/index.ts`)
 
@@ -879,10 +840,43 @@ JWT_SECRET=your_random_32_char_or_longer_secret
 
 ### `/admin` 접근 조건
 
-`PrivateRoute`는 다음 중 하나면 통과합니다.
+`PrivateRoute`는 Discord **admin** 역할 로그인 시에만 통과합니다 (`DiscordAuthContext.isAdmin`).
 
-- 푸터 **관리자** 비밀번호 → `sessionStorage.isAdmin === 'true'`
-- Discord **admin** 역할 로그인 (`DiscordAuthContext.isAdmin`)
+편성표·건의 API도 동일하게 Discord admin OAuth 시 발급되는 `adminToken`(JWT)으로 인증합니다.
+
+### 관리자 추가 방법
+
+관리자는 Discord **@username**(로그인 식별 이름) 기준입니다. 아래 **둘 중 하나**로 추가하세요.
+
+**방법 1 — 코드 상수 (권장·로컬 개발)**
+
+`src/constants/adminUsers.ts` 의 `DEFAULT_ADMIN_DISCORD_USERS` 배열에 username 추가:
+
+```ts
+export const DEFAULT_ADMIN_DISCORD_USERS = [
+  '1000hyehyang1',
+  'sweet__rain',
+  '새관리자_username',  // ← 추가
+] as const;
+```
+
+서버는 `server/constants/adminUsers.ts` 의 동일 기본 목록을 사용합니다. 배포 전 **두 파일을 맞추거나** 방법 2 env를 쓰세요.
+
+**방법 2 — 환경변수 (Vercel·재배포 없이 목록 변경 시)**
+
+```env
+VITE_ADMIN_DISCORD_USERS=username1,username2
+ADMIN_DISCORD_USERS=username1,username2
+```
+
+- 클라이언트: 로그인 시 admin 역할 판별
+- 서버: OAuth 콜백에서 `adminToken` 발급 여부 판별
+
+**적용 확인**
+
+1. 해당 Discord 계정으로 로그인
+2. 헤더에 **관리자** 뱃지 표시
+3. `/admin` 접속 · 편성표 **공개** 버튼 · 건의 상태 변경 동작
 
 ### 메뉴
 

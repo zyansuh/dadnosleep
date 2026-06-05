@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleAdminToken } from '../admin/handlers';
 import {
   handleScheduleDraft,
   handleSchedulePublished,
@@ -29,11 +28,6 @@ export async function dispatchAppApi(
 ): Promise<boolean> {
   const nodeReq = toNodeReq(req);
   const nodeRes = toNodeRes(res);
-
-  if (segments[0] === 'admin' && segments[1] === 'token' && req.method === 'POST') {
-    await handleAdminToken(nodeReq, nodeRes);
-    return true;
-  }
 
   if (segments[0] === 'schedule') {
     if (segments[1] === 'published' && req.method === 'GET') {
