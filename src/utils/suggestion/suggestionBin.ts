@@ -1,9 +1,21 @@
-import type { SavedSuggestion, SuggestionStatus } from '../../types/suggestion';
+import type { SavedSuggestion, SuggestionReply, SuggestionStatus } from '../../types/suggestion';
 import type { SuggForm } from '../../types';
 import { fetchJsonBinRecord, putJsonBinRecord } from '../jsonbin/jsonbinRecord';
 import { getCommunityBinId, hasJsonBinAccessKey } from '../jsonbin/jsonbinEnv';
 
 const VALID_STATUS = new Set<SuggestionStatus>(['pending', 'reviewing', 'answered', 'closed']);
+
+function normalizeReplies(raw: unknown): SuggestionReply[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item): item is SuggestionReply => {
+    if (!item || typeof item !== 'object') return false;
+    const o = item as SuggestionReply;
+    return typeof o.id === 'string'
+      && typeof o.body === 'string'
+      && typeof o.createdAt === 'string'
+      && o.authorRole === 'admin';
+  });
+}
 
 function normalizeList(raw: unknown): SavedSuggestion[] {
   if (!Array.isArray(raw)) return [];
@@ -17,6 +29,7 @@ function normalizeList(raw: unknown): SavedSuggestion[] {
   }).map(item => ({
     ...item,
     status: VALID_STATUS.has(item.status) ? item.status : 'pending',
+    replies: normalizeReplies(item.replies),
   }));
 }
 
@@ -70,6 +83,36 @@ export async function updateSuggestionStatusInBin(
   const idx = list.findIndex(s => s.id === id);
   if (idx < 0) throw new Error('건의사항을 찾을 수 없습니다.');
   list[idx] = { ...list[idx], status };
+  await putJsonBinRecord(binId, { ...record, suggestions: list });
+  return list[idx];
+}
+
+export async function addSuggestionReplyInBin(
+  id: string,
+  body: string,
+): Promise<SavedSuggestion> {
+  if (!canUseSuggestionBin()) {
+    throw new Error('건의함 저장소가 연결되지 않았습니다.');
+  }
+  const text = body.trim();
+  if (!text) throw new Error('답변 내용을 입력해 주세요.');
+
+  const binId = getCommunityBinId();
+  const record = await fetchJsonBinRecord(binId);
+  const list = normalizeList(record.suggestions);
+  const idx = list.findIndex(s => s.id === id);
+  if (idx < 0) throw new Error('건의사항을 찾을 수 없습니다.');
+
+  const reply: SuggestionReply = {
+    id:         `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    body:       text,
+    createdAt:  new Date().toISOString(),
+    authorRole: 'admin',
+  };
+  const prev = list[idx];
+  const replies = [...(prev.replies ?? []), reply];
+  const status = prev.status === 'closed' ? 'closed' : 'answered';
+  list[idx] = { ...prev, replies, status };
   await putJsonBinRecord(binId, { ...record, suggestions: list });
   return list[idx];
 }

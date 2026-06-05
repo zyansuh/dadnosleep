@@ -21,6 +21,7 @@ export async function putCommunityBinRecord(
   const members = patch.members ?? (extracted.length > 0 ? extracted : existing.members);
 
   const record: JsonBinFullRecord = {
+    ...existing,
     reviews:       patch.reviews,
     friendInvites: patch.friendInvites,
     points:        patch.points,

@@ -8,7 +8,6 @@ export interface SuggForm {
   nick:     string;
 }
 
-/** 추후 관리자 답변 기능용 */
 export interface SuggestionReply {
   id:         string;
   body:       string;

@@ -5,6 +5,7 @@ import { SuggestionPageShell } from '../../components/suggestion/SuggestionPageS
 import { SuggestionStatusBadge } from '../../components/suggestion/SuggestionStatusBadge';
 import { useDiscordAuth } from '../../context/DiscordAuthContext';
 import {
+  addSuggestionReply,
   fetchSuggestionById,
   updateSuggestionStatus,
 } from '../../utils/suggestion/suggestionApi';
@@ -24,8 +25,11 @@ export function SuggestionDetailPage() {
   const [item, setItem]         = useState<SavedSuggestion | null>(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
-  const [statusBusy, setBusy]   = useState(false);
-  const [statusError, setStErr] = useState('');
+  const [statusBusy, setBusy]     = useState(false);
+  const [statusError, setStErr]   = useState('');
+  const [replyBody, setReplyBody]   = useState('');
+  const [replyBusy, setReplyBusy]   = useState(false);
+  const [replyError, setReplyError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -59,6 +63,21 @@ export function SuggestionDetailPage() {
       setStErr(e instanceof Error ? e.message : '상태 변경에 실패했습니다.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleReplySubmit = async () => {
+    if (!id || !replyBody.trim()) return;
+    setReplyBusy(true);
+    setReplyError('');
+    try {
+      const updated = await addSuggestionReply(id, replyBody);
+      setItem(updated);
+      setReplyBody('');
+    } catch (e) {
+      setReplyError(e instanceof Error ? e.message : '답변 등록에 실패했습니다.');
+    } finally {
+      setReplyBusy(false);
     }
   };
 
@@ -135,9 +154,37 @@ export function SuggestionDetailPage() {
 
           <section className="sugg-replies-section" aria-label="관리자 답변">
             <h3>관리자 답변</h3>
-            {(item.replies?.length ?? 0) === 0 ? (
-              <p className="sugg-muted">아직 답변이 없습니다.</p>
-            ) : (
+
+            {isAdmin && (
+              <form
+                className="sugg-reply-form"
+                onSubmit={e => {
+                  e.preventDefault();
+                  void handleReplySubmit();
+                }}
+              >
+                <textarea
+                  className="sugg-reply-input"
+                  rows={4}
+                  placeholder="답변을 입력하세요. 등록 시 처리 상태가 「답변 완료」로 변경됩니다."
+                  value={replyBody}
+                  disabled={replyBusy}
+                  onChange={e => setReplyBody(e.target.value)}
+                />
+                <div className="sugg-reply-form-actions">
+                  <button
+                    type="submit"
+                    className="btn-coral-sm"
+                    disabled={replyBusy || !replyBody.trim()}
+                  >
+                    {replyBusy ? '등록 중…' : '답변 등록'}
+                  </button>
+                </div>
+                {replyError && <p className="sugg-inline-error">{replyError}</p>}
+              </form>
+            )}
+
+            {(item.replies?.length ?? 0) > 0 ? (
               <ul className="sugg-replies-list">
                 {item.replies!.map(r => (
                   <li key={r.id} className="sugg-reply-item">
@@ -146,7 +193,9 @@ export function SuggestionDetailPage() {
                   </li>
                 ))}
               </ul>
-            )}
+            ) : !isAdmin ? (
+              <p className="sugg-muted">아직 답변이 없습니다.</p>
+            ) : null}
           </section>
         </article>
       )}

@@ -1,6 +1,7 @@
 import type { SavedSuggestion, SuggestionStatus } from '../../types/suggestion';
 import type { SuggForm } from '../../types';
 import {
+  addSuggestionReplyInBin,
   createSuggestionInBin,
   loadSuggestionByIdFromBin,
   loadSuggestionsFromBin,
@@ -26,4 +27,11 @@ export async function updateSuggestionStatus(
   status: SuggestionStatus,
 ): Promise<SavedSuggestion> {
   return updateSuggestionStatusInBin(id, status);
+}
+
+export async function addSuggestionReply(
+  id: string,
+  body: string,
+): Promise<SavedSuggestion> {
+  return addSuggestionReplyInBin(id, body);
 }

@@ -217,6 +217,43 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.sugg-reply-form {
+  margin-bottom: 20px;
+}
+
+.sugg-reply-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 96px;
+}
+
+.sugg-reply-input:focus {
+  outline: none;
+  border-color: rgba(88, 101, 242, 0.5);
+}
+
+.sugg-reply-input:disabled {
+  opacity: 0.6;
+}
+
+.sugg-reply-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.sugg-replies-section .sugg-muted {
+  margin-top: 4px;
+}
+
 .sugg-replies-list {
   list-style: none;
   margin: 0;
