@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { dispatchAppApi } from '../../server/appApi/vercelHandler';
+import { handleSchedulePublish } from '../../server/schedule/handlers';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const handled = await dispatchAppApi(req, res, ['schedule', 'publish']);
-  if (!handled) res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  await handleSchedulePublish(req, res);
 }

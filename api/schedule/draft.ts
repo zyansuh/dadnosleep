@@ -1,7 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { dispatchAppApi } from '../../server/appApi/vercelHandler';
+import { handleScheduleDraft, handleScheduleSaveDraft } from '../../server/schedule/handlers';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const handled = await dispatchAppApi(req, res, ['schedule', 'draft']);
-  if (!handled) res.status(405).json({ error: 'Method not allowed' });
+  if (req.method === 'GET') {
+    await handleScheduleDraft(req, res);
+    return;
+  }
+  if (req.method === 'PUT') {
+    await handleScheduleSaveDraft(req, res);
+    return;
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
 }
